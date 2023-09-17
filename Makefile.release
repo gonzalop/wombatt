@@ -1,0 +1,45 @@
+NAME:=wombatt
+VERSION:=0.0.1
+LINUX_ARCH:=amd64 arm arm64
+
+all:
+	@echo Use the 'release' target to build a release
+
+release: build tar
+
+.PHONY: build
+build:
+	@go version
+	@echo Cleaning old builds
+	@rm -rf build && mkdir build
+	@echo Building: darwin/amd64 - $(VERSION)
+	mkdir -p build/darwin/amd64 && GOOS=darwin GOARCH=amd64 $(MAKE) $(NAME) BINARY=build/darwin/amd64/$(NAME)
+	@echo Building: darwin/arm64 - $(VERSION)
+	mkdir -p build/darwin/arm64 && GOOS=darwin GOARCH=arm64 $(MAKE) $(NAME) BINARY=build/darwin/arm64/$(NAME)
+	@echo Building: windows/amd64 - $(VERSION)
+	mkdir -p build/windows/amd64 && GOOS=windows GOARCH=amd64 $(MAKE) $(NAME) BINARY=build/windows/amd64/$(NAME).exe
+	@echo Building: linux/$(LINUX_ARCH) - $(VERSION) ;\
+	for arch in $(LINUX_ARCH); do \
+	    mkdir -p build/linux/$$arch  && GOOS=linux GOARCH=$$arch $(MAKE) $(NAME) BINARY=build/linux/$$arch/$(NAME) ;\
+	done
+
+.PHONY: tar
+tar:
+	@echo Cleaning old releases
+	@rm -rf release && mkdir release
+	tar -zcf release/$(NAME)_$(VERSION)_darwin_amd64.tgz -C build/darwin/amd64 $(NAME)
+	tar -zcf release/$(NAME)_$(VERSION)_darwin_arm64.tgz -C build/darwin/arm64 $(NAME)
+	tar -zcf release/$(NAME)_$(VERSION)_windows_amd64.tgz -C build/windows/amd64 $(NAME).exe
+	for arch in $(LINUX_ARCH); do \
+	    tar -zcf release/$(NAME)_$(VERSION)_linux_$$arch.tgz -C build/linux/$$arch $(NAME) ;\
+	done
+
+.PHONY: version
+version:
+	@echo $(VERSION)
+
+.PHONY: clean
+clean:
+	rm -rf release
+	rm -rf build
+	rm -f wombatt
