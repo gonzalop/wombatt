@@ -1,0 +1,471 @@
+views:
+  - title: Hour
+    badges: []
+    cards:
+      - type: vertical-stack
+        cards:
+          - type: history-graph
+            entities:
+              - entity: sensor.eg4_1_battery_capacity
+              - entity: sensor.eg4_1_grid_voltage
+              - entity: sensor.eg4_2_grid_voltage
+            title: Input
+            hours_to_show: 1
+          - type: history-graph
+            entities:
+              - entity: sensor.eg4_1_ac_output_voltage
+              - entity: sensor.eg4_2_ac_output_voltage
+              - entity: sensor.eg4_1_load_percentage
+              - entity: sensor.eg4_2_load_percentage
+              - entity: sensor.eg4_1_battery_charging_current
+              - entity: sensor.eg4_2_battery_charging_current
+            title: Output
+            hours_to_show: 1
+          - type: history-graph
+            entities:
+              - sensor.eg4_1_fan_pwm_speed
+              - sensor.eg4_2_fan_pwm_speed
+            title: Fan PWM
+            hours_to_show: 1
+          - type: history-graph
+            entities:
+              - entity: sensor.eg4_1_inverter_temperature
+              - entity: sensor.eg4_2_inverter_temperature
+              - entity: sensor.eg4_1_internal_heat_sink_temperature
+              - entity: sensor.eg4_2_internal_heat_sink_temperature
+              - entity: sensor.eg4_1_transformer_temperature
+              - entity: sensor.eg4_2_transformer_temperature
+              - entity: sensor.eg4_1_battery_temperature
+              - entity: sensor.eg4_2_battery_temperature
+              - entity: sensor.eg4_1_scc_pwm_temperature
+              - entity: sensor.eg4_2_scc_pwm_temperature
+            title: Temperature
+            hours_to_show: 1
+      - type: vertical-stack
+        cards:
+          - type: entity
+            entity: input_boolean.eg4_display
+          - type: entity
+            entity: input_select.eg4_output_source_priority
+      - type: entities
+        entities:
+          - entity: sensor.eg4_1_work_mode
+          - entity: sensor.eg4_2_work_mode
+          - entity: sensor.eg4_1_fan_lock_status
+          - entity: sensor.eg4_2_fan_lock_status
+          - entity: sensor.eg4_1_inverter_charge_status
+          - entity: sensor.eg4_2_inverter_charge_status
+          - entity: sensor.eg4_1_output_source_priority
+          - entity: sensor.eg4_2_output_source_priority
+          - entity: sensor.eg4_1_charger_source_priority
+          - entity: sensor.eg4_1_total_charging_current
+          - entity: sensor.eg4_2_battery_discharge_current
+          - entity: sensor.eg4_1_parallel_warning
+          - entity: sensor.eg4_2_parallel_warning
+        title: Status
+        state_color: true
+  - title: Day
+    path: day
+    badges: []
+    cards:
+      - type: vertical-stack
+        cards:
+          - type: history-graph
+            entities:
+              - entity: sensor.eg4_1_battery_capacity
+              - entity: sensor.eg4_1_grid_voltage
+              - entity: sensor.eg4_2_grid_voltage
+            title: Input
+            hours_to_show: 24
+          - type: history-graph
+            entities:
+              - entity: sensor.eg4_1_ac_output_voltage
+              - entity: sensor.eg4_2_ac_output_voltage
+              - entity: sensor.eg4_1_load_percentage
+              - entity: sensor.eg4_2_load_percentage
+              - entity: sensor.eg4_1_battery_charging_current
+              - entity: sensor.eg4_2_battery_charging_current
+            title: Output
+            hours_to_show: 24
+          - type: history-graph
+            entities:
+              - sensor.eg4_1_fan_pwm_speed
+              - sensor.eg4_2_fan_pwm_speed
+            title: Fan PWM
+            hours_to_show: 24
+          - type: history-graph
+            entities:
+              - entity: sensor.eg4_1_inverter_temperature
+              - entity: sensor.eg4_2_inverter_temperature
+              - entity: sensor.eg4_1_internal_heat_sink_temperature
+              - entity: sensor.eg4_2_internal_heat_sink_temperature
+              - entity: sensor.eg4_1_transformer_temperature
+              - entity: sensor.eg4_2_transformer_temperature
+              - entity: sensor.eg4_1_battery_temperature
+              - entity: sensor.eg4_2_battery_temperature
+              - entity: sensor.eg4_1_scc_pwm_temperature
+              - entity: sensor.eg4_2_scc_pwm_temperature
+            title: Temperature
+            hours_to_show: 24
+      - type: vertical-stack
+        cards:
+          - type: entity
+            entity: input_boolean.eg4_display
+          - type: entity
+            entity: input_select.eg4_output_source_priority
+      - type: entities
+        entities:
+          - entity: sensor.eg4_1_work_mode
+          - entity: sensor.eg4_2_work_mode
+          - entity: sensor.eg4_1_fan_lock_status
+          - entity: sensor.eg4_2_fan_lock_status
+          - entity: sensor.eg4_1_inverter_charge_status
+          - entity: sensor.eg4_2_inverter_charge_status
+          - entity: sensor.eg4_1_output_source_priority
+          - entity: sensor.eg4_2_output_source_priority
+          - entity: sensor.eg4_1_charger_source_priority
+          - entity: sensor.eg4_1_total_charging_current
+          - entity: sensor.eg4_1_parallel_warning
+          - entity: sensor.eg4_2_parallel_warning
+        title: Status
+        state_color: true
+  - title: Battery 2
+    path: battery-2
+    icon: ''
+    badges: []
+    cards:
+      - show_name: true
+        show_icon: false
+        show_state: true
+        type: glance
+        entities:
+          - entity: sensor.eg4_battery_2_min_cell_voltage
+          - entity: sensor.eg4_battery_2_max_cell_voltage
+          - entity: sensor.eg4_battery_2_mean_cell_voltage
+          - entity: sensor.eg4_battery_2_median_cell_voltage
+        title: Battery cells voltage
+        state_color: true
+        columns: 2
+      - show_name: true
+        show_icon: false
+        show_state: true
+        type: glance
+        entities:
+          - entity: sensor.eg4_battery_2_pcb_temp
+          - entity: sensor.eg4_battery_2_avg_temp
+          - entity: sensor.eg4_battery_2_max_temp
+        title: Battery temperature
+        state_color: false
+        columns: 1
+      - type: entities
+        entities:
+          - entity: sensor.eg4_battery_2_status
+          - entity: sensor.eg4_battery_2_warning
+          - entity: sensor.eg4_battery_2_protection
+          - entity: sensor.eg4_battery_2_error_code
+        title: Error status
+  - title: Battery 3
+    path: battery-3
+    icon: ''
+    badges: []
+    cards:
+      - show_name: true
+        show_icon: false
+        show_state: true
+        type: glance
+        entities:
+          - entity: sensor.eg4_battery_3_min_cell_voltage
+          - entity: sensor.eg4_battery_3_max_cell_voltage
+          - entity: sensor.eg4_battery_3_mean_cell_voltage
+          - entity: sensor.eg4_battery_3_median_cell_voltage
+        title: Battery cells voltage
+        state_color: true
+        columns: 2
+      - show_name: true
+        show_icon: false
+        show_state: true
+        type: glance
+        entities:
+          - entity: sensor.eg4_battery_3_pcb_temp
+          - entity: sensor.eg4_battery_3_avg_temp
+          - entity: sensor.eg4_battery_3_max_temp
+        title: Battery temperature
+        state_color: false
+        columns: 1
+      - type: entities
+        entities:
+          - entity: sensor.eg4_battery_3_status
+          - entity: sensor.eg4_battery_3_warning
+          - entity: sensor.eg4_battery_3_protection
+          - entity: sensor.eg4_battery_3_error_code
+        title: Error status
+  - title: Battery 4
+    path: battery-4
+    icon: ''
+    badges: []
+    cards:
+      - show_name: true
+        show_icon: false
+        show_state: true
+        type: glance
+        entities:
+          - entity: sensor.eg4_battery_4_min_cell_voltage
+          - entity: sensor.eg4_battery_4_max_cell_voltage
+          - entity: sensor.eg4_battery_4_mean_cell_voltage
+          - entity: sensor.eg4_battery_4_median_cell_voltage
+        title: Battery cells voltage
+        state_color: true
+        columns: 2
+      - show_name: true
+        show_icon: false
+        show_state: true
+        type: glance
+        entities:
+          - entity: sensor.eg4_battery_4_pcb_temp
+          - entity: sensor.eg4_battery_4_avg_temp
+          - entity: sensor.eg4_battery_4_max_temp
+        title: Battery temperature
+        state_color: false
+        columns: 1
+      - type: entities
+        entities:
+          - entity: sensor.eg4_battery_4_status
+          - entity: sensor.eg4_battery_4_warning
+          - entity: sensor.eg4_battery_4_protection
+          - entity: sensor.eg4_battery_4_error_code
+        title: Error status
+  - title: Battery 5
+    path: battery-5
+    icon: ''
+    badges: []
+    cards:
+      - show_name: true
+        show_icon: false
+        show_state: true
+        type: glance
+        entities:
+          - entity: sensor.eg4_battery_5_min_cell_voltage
+          - entity: sensor.eg4_battery_5_max_cell_voltage
+          - entity: sensor.eg4_battery_5_mean_cell_voltage
+          - entity: sensor.eg4_battery_5_median_cell_voltage
+        title: Battery cells voltage
+        state_color: true
+        columns: 2
+      - show_name: true
+        show_icon: false
+        show_state: true
+        type: glance
+        entities:
+          - entity: sensor.eg4_battery_5_pcb_temp
+          - entity: sensor.eg4_battery_5_avg_temp
+          - entity: sensor.eg4_battery_5_max_temp
+        title: Battery temperature
+        state_color: false
+        columns: 1
+      - type: entities
+        entities:
+          - entity: sensor.eg4_battery_5_status
+          - entity: sensor.eg4_battery_5_warning
+          - entity: sensor.eg4_battery_5_protection
+          - entity: sensor.eg4_battery_5_error_code
+        title: Error status
+  - title: Battery 6
+    path: battery-6
+    icon: ''
+    badges: []
+    cards:
+      - show_name: true
+        show_icon: false
+        show_state: true
+        type: glance
+        entities:
+          - entity: sensor.eg4_battery_6_min_cell_voltage
+          - entity: sensor.eg4_battery_6_max_cell_voltage
+          - entity: sensor.eg4_battery_6_mean_cell_voltage
+          - entity: sensor.eg4_battery_6_median_cell_voltage
+        title: Battery cells voltage
+        state_color: true
+        columns: 2
+      - show_name: true
+        show_icon: false
+        show_state: true
+        type: glance
+        entities:
+          - entity: sensor.eg4_battery_6_pcb_temp
+          - entity: sensor.eg4_battery_6_avg_temp
+          - entity: sensor.eg4_battery_6_max_temp
+        title: Battery temperature
+        state_color: false
+        columns: 1
+      - type: entities
+        entities:
+          - entity: sensor.eg4_battery_6_status
+          - entity: sensor.eg4_battery_6_warning
+          - entity: sensor.eg4_battery_6_protection
+          - entity: sensor.eg4_battery_6_error_code
+        title: Error status
+  - title: Batteries
+    path: batteries
+    icon: ''
+    badges: []
+    cards:
+      - type: vertical-stack
+        cards:
+          - type: gauge
+            entity: sensor.eg4_battery_2_soc
+            unit: '%'
+            severity:
+              green: 50
+              yellow: 30
+              red: 0
+            needle: true
+            name: Battery 2 SOC
+          - type: gauge
+            entity: sensor.eg4_battery_2_current
+            max: 40
+            needle: true
+            segments:
+              - from: -45
+                color: var(--error-color)
+              - from: -35
+                color: var(--warning-color)
+              - from: -25
+                color: var(--success-color)
+              - from: 20
+                color: var(--success-color)
+              - from: 25
+                color: var(--warning-color)
+              - from: 35
+                color: var(--error-color)
+            min: -45
+      - type: vertical-stack
+        cards:
+          - type: gauge
+            entity: sensor.eg4_battery_3_soc
+            unit: '%'
+            severity:
+              green: 50
+              yellow: 30
+              red: 0
+            needle: true
+            name: Battery 3 SOC
+          - type: gauge
+            entity: sensor.eg4_battery_3_current
+            max: 40
+            needle: true
+            segments:
+              - from: -45
+                color: var(--error-color)
+              - from: -35
+                color: var(--warning-color)
+              - from: -25
+                color: var(--success-color)
+              - from: 20
+                color: var(--success-color)
+              - from: 25
+                color: var(--warning-color)
+              - from: 35
+                color: var(--error-color)
+            min: -45
+      - type: vertical-stack
+        cards:
+          - type: gauge
+            entity: sensor.eg4_battery_4_soc
+            unit: '%'
+            severity:
+              green: 50
+              yellow: 30
+              red: 0
+            needle: true
+            name: Battery 4 SOC
+          - type: gauge
+            entity: sensor.eg4_battery_4_current
+            max: 40
+            needle: true
+            segments:
+              - from: -45
+                color: var(--error-color)
+              - from: -35
+                color: var(--warning-color)
+              - from: -25
+                color: var(--success-color)
+              - from: 20
+                color: var(--success-color)
+              - from: 25
+                color: var(--warning-color)
+              - from: 35
+                color: var(--error-color)
+            min: -45
+      - type: vertical-stack
+        cards:
+          - type: gauge
+            entity: sensor.eg4_battery_5_soc
+            unit: '%'
+            severity:
+              green: 50
+              yellow: 30
+              red: 0
+            needle: true
+            name: Battery 5 SOC
+          - type: gauge
+            entity: sensor.eg4_battery_5_current
+            max: 40
+            needle: true
+            segments:
+              - from: -45
+                color: var(--error-color)
+              - from: -35
+                color: var(--warning-color)
+              - from: -25
+                color: var(--success-color)
+              - from: 20
+                color: var(--success-color)
+              - from: 25
+                color: var(--warning-color)
+              - from: 35
+                color: var(--error-color)
+            min: -45
+      - type: vertical-stack
+        cards:
+          - type: gauge
+            entity: sensor.eg4_battery_6_soc
+            unit: '%'
+            severity:
+              green: 50
+              yellow: 30
+              red: 0
+            needle: true
+            name: Battery 6 SOC
+          - type: gauge
+            entity: sensor.eg4_battery_6_current
+            max: 40
+            needle: true
+            segments:
+              - from: -45
+                color: var(--error-color)
+              - from: -35
+                color: var(--warning-color)
+              - from: -25
+                color: var(--success-color)
+              - from: 20
+                color: var(--success-color)
+              - from: 25
+                color: var(--warning-color)
+              - from: 35
+                color: var(--error-color)
+            min: -45
+      - type: vertical-stack
+        cards:
+          - type: gauge
+            entity: sensor.eg4_1_battery_discharge_current
+          - type: gauge
+            entity: sensor.eg4_2_battery_discharge_current
+      - graph: line
+        type: sensor
+        entity: sensor.eg4_1_battery_capacity
+        detail: 1
+        icon: mdi:battery
+        unit: '%'
+        hours_to_show: 6
+        name: Battery capacity
+
