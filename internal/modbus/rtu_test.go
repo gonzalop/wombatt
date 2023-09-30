@@ -57,7 +57,7 @@ func TestReadRTURequest(t *testing.T) {
 			t.Fatalf("malformed request string in test: %s", tt.req)
 		}
 		r := bytes.NewReader(req)
-		frame, err := ReadRTURequest(r)
+		frame, err := readRTURequest(r)
 		if err != nil && tt.errstr == "" {
 			t.Errorf("read request failed(%s): got %v; want no error", tt.req, err)
 			continue
@@ -138,7 +138,7 @@ func TestReadRTUResponse(t *testing.T) {
 			t.Fatalf("malformed response string in test: %s", tt.resp)
 		}
 		r := bytes.NewReader(resp)
-		frame, err := ReadRTUResponse(r)
+		frame, err := readRTUResponse(r)
 		if err != nil && tt.errstr == "" {
 			t.Errorf("read response failed(%s): got %v; want no error", tt.resp, err)
 			continue
@@ -165,9 +165,16 @@ func TestReadRTUResponse(t *testing.T) {
 	}
 }
 
-type readWriter struct {
-	io.Reader
-	io.Writer
+type bytePort struct {
+	reader io.Reader
+}
+
+func NewBytePort(buf []byte) *bytePort {
+	return &bytePort{bytes.NewReader(buf)}
+}
+
+func (bp *bytePort) ReadRegisters(id uint8, start uint16, count uint8) (*RTUFrame, error) {
+	return readRTUResponse(bp.reader)
 }
 
 func TestReadRegisters(t *testing.T) {
@@ -195,8 +202,8 @@ func TestReadRegisters(t *testing.T) {
 		if err != nil {
 			t.Fatalf("malformed response string in test: %s", tt.resp)
 		}
-		r := bytes.NewReader(resp)
-		frame, err := ReadRegisters(&readWriter{r, io.Discard}, 1, 16, 1)
+		port := NewBytePort(resp)
+		frame, err := port.ReadRegisters(1, 16, 1)
 		if err != nil && tt.errstr == "" {
 			t.Errorf("read response failed(%s): got %v; want no error", tt.resp, err)
 			continue

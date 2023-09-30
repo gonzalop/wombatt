@@ -8,6 +8,7 @@ import (
 
 	"wombatt/internal/batteries"
 	"wombatt/internal/common"
+	"wombatt/internal/modbus"
 	"wombatt/internal/mqttha"
 	"wombatt/internal/web"
 
@@ -29,6 +30,9 @@ type MonitorBatteriesCmd struct {
 	MQTTPrefix  string      `default:"eg4" help:"MQTT prefix for the fields published"`
 
 	WebServerAddress string `short:"w" help:"Address to use for serving HTTP. <IP>:<Port>, i.e., 127.0.0.1:8080"`
+
+	Protocol   string `default:"auto" enum:"auto,RTU,TCP"`
+	DeviceType string `short:"T" default:"serial" enum:"${device_types}" help:"Device type"`
 }
 
 type batteryInfo struct {
@@ -36,34 +40,34 @@ type batteryInfo struct {
 	Info any
 }
 
-func (mb *MonitorBatteriesCmd) Run(globals *Globals) error {
-	for _, id := range mb.IDs {
+func (cmd *MonitorBatteriesCmd) Run(globals *Globals) error {
+	for _, id := range cmd.IDs {
 		if id == 0 || id >= 247 {
 			log.Fatalf("id out of range: %d", id)
 		}
 	}
 	var webServer *web.Server
-	if len(mb.WebServerAddress) > 0 {
-		webServer = web.NewServer(mb.WebServerAddress, "/battery/")
+	if len(cmd.WebServerAddress) > 0 {
+		webServer = web.NewServer(cmd.WebServerAddress, "/battery/")
 		if err := webServer.Start(); err != nil {
 			log.Fatalf("%v", err)
 		}
 	}
-	battery := batteries.Instance(string(mb.BatteryType))
+	battery := batteries.Instance(string(cmd.BatteryType))
 	var mqttChannel chan *batteryInfo
-	if mb.MQTTBroker != "" {
-		mqttChannel = make(chan *batteryInfo, len(mb.IDs))
-		client, err := mqttha.Connect(mb.MQTTBroker, mb.MQTTUser, mb.MQTTPassword)
+	if cmd.MQTTBroker != "" {
+		mqttChannel = make(chan *batteryInfo, len(cmd.IDs))
+		client, err := mqttha.Connect(cmd.MQTTBroker, cmd.MQTTUser, cmd.MQTTPassword)
 		if err != nil {
-			log.Fatalf("error connecting to MQTT broker at %s: %v\n", mb.MQTTBroker, err)
+			log.Fatalf("error connecting to MQTT broker at %s: %v\n", cmd.MQTTBroker, err)
 		}
 		defer client.Disconnect(250)
-		go mqttPublish(client, mqttChannel, mb, battery.InfoInstance())
+		go mqttPublish(client, mqttChannel, cmd, battery.InfoInstance())
 	}
 	if webServer == nil && mqttChannel == nil {
 		log.Fatalf("need at least MQTT or web server argument to publish info to.\n")
 	}
-	ch := make(chan *batteryInfo, len(mb.IDs))
+	ch := make(chan *batteryInfo, len(cmd.IDs))
 	go func() {
 		for bi := range ch {
 			if mqttChannel != nil {
@@ -75,20 +79,25 @@ func (mb *MonitorBatteriesCmd) Run(globals *Globals) error {
 		}
 	}()
 	portOptions := &common.PortOptions{
-		Name: mb.SerialPort,
-		Mode: &serial.Mode{BaudRate: int(mb.BaudRate)},
+		Address: cmd.SerialPort,
+		Mode:    &serial.Mode{BaudRate: int(cmd.BaudRate)},
+		Type:    common.DeviceTypeFromString[cmd.DeviceType],
 	}
 	port := common.OpenPortOrFatal(portOptions)
-	monitorBatteries(ch, port, mb, battery)
+	monitorBatteries(ch, port, cmd, battery)
 	return nil
 }
 
-func monitorBatteries(ch chan *batteryInfo, port common.Port, opts *MonitorBatteriesCmd, battery batteries.Battery) {
+func monitorBatteries(ch chan *batteryInfo, port common.Port, cmd *MonitorBatteriesCmd, battery batteries.Battery) {
+	reader, err := modbus.ReaderFromProtocol(port, cmd.Protocol)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
 	for {
 		log.Printf("Fetching info from batteries\n")
 		success := []uint{}
-		for _, id := range opts.IDs {
-			info, err := battery.ReadInfo(port, uint8(id), opts.ReadTimeout)
+		for _, id := range cmd.IDs {
+			info, err := battery.ReadInfo(reader, uint8(id), cmd.ReadTimeout)
 			if err != nil {
 				if err := port.ReopenWithBackoff(); err != nil {
 					log.Printf("error reopening: %v\n", err)
@@ -105,7 +114,7 @@ func monitorBatteries(ch chan *batteryInfo, port common.Port, opts *MonitorBatte
 			success = append(success, id)
 		}
 		log.Printf("Published info for %v\n", success)
-		time.Sleep(opts.PollInterval)
+		time.Sleep(cmd.PollInterval)
 	}
 }
 

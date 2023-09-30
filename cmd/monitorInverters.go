@@ -20,7 +20,6 @@ import (
 type MonitorInvertersCmd struct {
 	MQTTFlags `embed:""`
 
-	DeviceType   string        `short:"T" default:"serial" enum:"${device_types}" help:"Device type"`
 	BaudRate     uint          `short:"B" default:"2400" help:"Baud rate for serial ports"`
 	PollInterval time.Duration `short:"P" default:"10s" help:"Time to wait between polling cycles"`
 	ReadTimeout  time.Duration `short:"t" default:"5s" help:"Timeout when reading from serial ports"`
@@ -28,27 +27,29 @@ type MonitorInvertersCmd struct {
 	Monitors []string `arg:"" required:"" help:"<device>,<command1[:command2:command3...]>[,<mqtt_prefix>]. E.g. /dev/ttyS0,QPIRI:QPGS1,eg4_1"`
 
 	WebServerAddress string `short:"w" help:"Address to use for serving HTTP. <IP>:<Port>, i.e., 127.0.0.1:8080"`
+
+	DeviceType string `short:"T" default:"serial" enum:"${device_types}" help:"Device type"`
 }
 
-func (im *MonitorInvertersCmd) Run(globals *Globals) error {
-	if len(im.Monitors) == 0 {
+func (cmd *MonitorInvertersCmd) Run(globals *Globals) error {
+	if len(cmd.Monitors) == 0 {
 		return fmt.Errorf("missing inverter ports")
 	}
-	monitors, err := getMonitors(im.Monitors)
+	monitors, err := getMonitors(cmd.Monitors)
 	if err != nil {
 		log.Fatal(err)
 	}
 	var client mqttha.Client
-	if im.MQTTBroker != "" {
+	if cmd.MQTTBroker != "" {
 		var err error
-		client, err = mqttha.Connect(im.MQTTBroker, im.MQTTUser, im.MQTTPassword)
+		client, err = mqttha.Connect(cmd.MQTTBroker, cmd.MQTTUser, cmd.MQTTPassword)
 		if err != nil {
-			log.Fatalf("error connecting to MQTT broker at %s: %v\n", im.MQTTBroker, err)
+			log.Fatalf("error connecting to MQTT broker at %s: %v\n", cmd.MQTTBroker, err)
 		}
 	}
 	var webServer *web.Server
-	if len(im.WebServerAddress) > 0 {
-		webServer = web.NewServer(im.WebServerAddress, "/inverter/")
+	if len(cmd.WebServerAddress) > 0 {
+		webServer = web.NewServer(cmd.WebServerAddress, "/inverter/")
 		if err := webServer.Start(); err != nil {
 			log.Fatalf("%v", err)
 		}
@@ -57,7 +58,7 @@ func (im *MonitorInvertersCmd) Run(globals *Globals) error {
 		m.client = client
 		m.webServer = webServer
 	}
-	return runInverterMonitor(im, monitors)
+	return runInverterMonitor(cmd, monitors)
 }
 
 type inverterMonitor struct {
@@ -69,10 +70,10 @@ type inverterMonitor struct {
 	webServer *web.Server
 }
 
-func runInverterMonitor(opts *MonitorInvertersCmd, monitors []*inverterMonitor) error {
+func runInverterMonitor(cmd *MonitorInvertersCmd, monitors []*inverterMonitor) error {
 	var wg sync.WaitGroup
 	if monitors[0].client != nil {
-		invertersDiscoveryConfig(opts.MQTTTopicPrefix, monitors)
+		invertersDiscoveryConfig(cmd.MQTTTopicPrefix, monitors)
 	}
 	ctx := context.Background()
 	for {
@@ -82,9 +83,9 @@ func runInverterMonitor(opts *MonitorInvertersCmd, monitors []*inverterMonitor) 
 			go func(i int, m *inverterMonitor) {
 				defer wg.Done()
 				portOptions := &common.PortOptions{
-					Name: m.Device,
-					Mode: &serial.Mode{BaudRate: int(opts.BaudRate)},
-					Type: common.DeviceTypeFromString[opts.DeviceType],
+					Address: m.Device,
+					Mode:    &serial.Mode{BaudRate: int(cmd.BaudRate)},
+					Type:    common.DeviceTypeFromString[cmd.DeviceType],
 				}
 				port, err := common.OpenPort(portOptions)
 				if err != nil {
@@ -93,7 +94,7 @@ func runInverterMonitor(opts *MonitorInvertersCmd, monitors []*inverterMonitor) 
 					return
 				}
 				defer port.Close()
-				ctx_to, cancel := context.WithTimeout(ctx, opts.ReadTimeout)
+				ctx_to, cancel := context.WithTimeout(ctx, cmd.ReadTimeout)
 				defer cancel()
 				results, errors := pi30.RunCommands(ctx_to, port, m.Commands)
 				responses[i] = &cmdResponse{results, errors, m}
@@ -102,7 +103,7 @@ func runInverterMonitor(opts *MonitorInvertersCmd, monitors []*inverterMonitor) 
 		wg.Wait()
 		for i, r := range responses {
 			m := r.monitor
-			m.Publish(opts.MQTTTopicPrefix, r.Responses, r.Errors)
+			m.Publish(cmd.MQTTTopicPrefix, r.Responses, r.Errors)
 			for ic, ir := range r.Responses {
 				if r.Errors[ic] != nil {
 					continue
@@ -110,7 +111,7 @@ func runInverterMonitor(opts *MonitorInvertersCmd, monitors []*inverterMonitor) 
 				m.webServer.Publish(fmt.Sprintf("%d/%s", i+1, r.monitor.Commands[ic]), ir)
 			}
 		}
-		time.Sleep(opts.PollInterval)
+		time.Sleep(cmd.PollInterval)
 	}
 }
 

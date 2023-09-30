@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net"
 	"os"
 	"sync"
 	"time"
@@ -17,24 +18,27 @@ type DeviceType int
 const (
 	SerialDevice DeviceType = iota
 	HidRawDevice
+	TCPDevice
 )
 
 var DeviceTypeFromString = map[string]DeviceType{
 	"serial": SerialDevice,
 	"hidraw": HidRawDevice,
+	"tcp":    TCPDevice,
 }
 
 // PortOptions contains the port name and the settings used when opening it.
 type PortOptions struct {
 	*serial.Mode
 
-	Name string
-	Type DeviceType
+	Type    DeviceType
+	Address string
 }
 
 var deviceOpen = map[DeviceType]func(*PortOptions) (Port, error){
 	SerialDevice: openSerial,
 	HidRawDevice: openHidRaw,
+	TCPDevice:    openTCP,
 }
 
 type internalPort struct {
@@ -45,7 +49,7 @@ type internalPort struct {
 }
 
 func openSerial(opts *PortOptions) (Port, error) {
-	p, err := serial.Open(opts.Name, opts.Mode)
+	p, err := serial.Open(opts.Address, opts.Mode)
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +61,7 @@ func openSerial(opts *PortOptions) (Port, error) {
 
 func openHidRaw(opts *PortOptions) (Port, error) {
 	// TOOD: maybe try to emulate the baud rate from opts?
-	f, err := os.OpenFile(opts.Name, os.O_RDWR, 0755)
+	f, err := os.OpenFile(opts.Address, os.O_RDWR, 0755)
 	if err != nil {
 		return nil, err
 	}
@@ -65,10 +69,21 @@ func openHidRaw(opts *PortOptions) (Port, error) {
 	return &internalPort{ReadWriteCloser: f, PortOptions: &o}, nil
 }
 
+func openTCP(opts *PortOptions) (Port, error) {
+	log.Printf("Opening %s...\n", opts.Address)
+	conn, err := net.Dial("tcp", opts.Address)
+	if err != nil {
+		return nil, err
+	}
+	o := *opts
+	return &internalPort{ReadWriteCloser: conn, PortOptions: &o}, nil
+}
+
 // Port adds one more functions opening a port with retries and exponential backoff.
 type Port interface {
 	io.ReadWriteCloser
 	ReopenWithBackoff() error
+	Type() DeviceType
 }
 
 // OpenPort opens a device.
@@ -79,7 +94,7 @@ func OpenPort(opts *PortOptions) (Port, error) {
 	}
 	c, err := open(opts)
 	if err != nil {
-		return nil, fmt.Errorf("error opening %s: %v", opts.Name, err)
+		return nil, fmt.Errorf("error opening '%s': %v", opts.Address, err)
 	}
 	return c, nil
 }
@@ -88,7 +103,7 @@ func OpenPort(opts *PortOptions) (Port, error) {
 func OpenPortOrFatal(opts *PortOptions) Port {
 	res, err := OpenPort(opts)
 	if err != nil {
-		log.Fatalf("error opening %s: %v", opts.Name, err)
+		log.Fatalf("%v", err)
 	}
 	return res
 }
@@ -99,7 +114,7 @@ func OpenPortWithBackoff(opts *PortOptions, d time.Duration) (Port, error) {
 		return OpenPort(opts)
 	}
 	n := func(err error, d time.Duration) {
-		log.Printf("error opening %s: %v (%v elapsed)", opts.Name, err, d)
+		log.Printf("error opening '%s': %v (%v elapsed)", opts.Address, err, d)
 	}
 
 	b := backoff.NewExponentialBackOff()
@@ -110,6 +125,10 @@ func OpenPortWithBackoff(opts *PortOptions, d time.Duration) (Port, error) {
 		return port, err
 	}
 	return port, nil
+}
+
+func (p *internalPort) Type() DeviceType {
+	return p.PortOptions.Type
 }
 
 // ReopenWithBackoff will close the port and forever try to open it until it succeeds.

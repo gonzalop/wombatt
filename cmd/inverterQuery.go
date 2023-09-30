@@ -22,21 +22,21 @@ type InverterQueryCmd struct {
 	DeviceType  string        `short:"T" default:"serial" enum:"${device_types}" help:"Device type"`
 }
 
-func (iq *InverterQueryCmd) Run(globals *Globals) error {
+func (cmd *InverterQueryCmd) Run(globals *Globals) error {
 	ctx := context.Background()
-	for _, dev := range iq.SerialPorts {
+	for _, dev := range cmd.SerialPorts {
 		portOptions := &common.PortOptions{
-			Name: dev,
-			Mode: &serial.Mode{BaudRate: int(iq.BaudRate)},
-			Type: common.DeviceTypeFromString[iq.DeviceType],
+			Address: dev,
+			Mode:    &serial.Mode{BaudRate: int(cmd.BaudRate)},
+			Type:    common.DeviceTypeFromString[cmd.DeviceType],
 		}
 		port, err := common.OpenPort(portOptions)
 		if err != nil {
 			log.Printf("error opening %s: %v\n", dev, err)
 			continue
 		}
-		tctx, cancel := context.WithTimeout(ctx, iq.ReadTimeout)
-		results, errors := pi30.RunCommands(tctx, port, iq.Commands)
+		tctx, cancel := context.WithTimeout(ctx, cmd.ReadTimeout)
+		results, errors := pi30.RunCommands(tctx, port, cmd.Commands)
 		cancel()
 		if results == nil && len(errors) == 1 {
 			fmt.Printf("error running commands on port %s: %v\n", dev, errors[0])
@@ -44,7 +44,7 @@ func (iq *InverterQueryCmd) Run(globals *Globals) error {
 			continue
 		}
 		for i, res := range results {
-			cmd := iq.Commands[i]
+			cmd := cmd.Commands[i]
 			if errors[i] != nil {
 				fmt.Printf("error running %s on port %s: %v\n", cmd, dev, errors[i])
 				port.Close()

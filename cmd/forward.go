@@ -12,13 +12,13 @@ import (
 )
 
 type ForwardCmd struct {
-	Controller  string `name:"controller-port" required:"" help:"Serial port of the RS485 controller"`
-	Subordinate string `name:"subordinate-port" required:"" help:"A subordinate device in the RS485 bus"`
+	Controller  string `name:"controller-port" required:"" help:"Serial port or address of the RS485 controller"`
+	Subordinate string `name:"subordinate-port" required:"" help:"Serial por or address of a subordinate RS485 device"`
 	BaudRate    uint   `short:"B" default:"9600" help:"Baud rate"`
 }
 
-func (fc *ForwardCmd) Run(globals *Globals) error {
-	f := NewForward(fc)
+func (cmd *ForwardCmd) Run(globals *Globals) error {
+	f := NewForward(cmd)
 	if err := f.Init(); err != nil {
 		log.Fatalf("error initializing: %v\n", err)
 	}
@@ -33,22 +33,22 @@ type Forward struct {
 	subordinate common.Port
 }
 
-func NewForward(fo *ForwardCmd) *Forward {
-	return &Forward{ForwardCmd: *fo}
+func NewForward(cmd *ForwardCmd) *Forward {
+	return &Forward{ForwardCmd: *cmd}
 }
 
 func (f *Forward) Init() error {
 	opts := &common.PortOptions{
 		Mode: &serial.Mode{BaudRate: int(f.BaudRate)},
 	}
-	opts.Name = f.Controller
+	opts.Address = f.Controller
 	port, err := common.OpenPort(opts)
 	if err != nil {
 		return err
 	}
 	f.controller = port
 
-	opts.Name = f.Subordinate
+	opts.Address = f.Subordinate
 	port, err = common.OpenPort(opts)
 	if err != nil {
 		f.controller.Close()

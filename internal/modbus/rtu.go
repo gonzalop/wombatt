@@ -6,6 +6,9 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
+	"log"
+
+	"wombatt/internal/common"
 )
 
 // RTUFunction represents RTU function codes.
@@ -77,8 +80,7 @@ func NewRTUFrame(rawData []byte) *RTUFrame {
 	return &RTUFrame{rawData: rawData}
 }
 
-// BuildReadRequestRTUFrame creates a new RTUFrame for a read request.
-func BuildReadRequestRTUFrame(id uint8, function RTUFunction, address uint16, length uint16) *RTUFrame {
+func buildReadRequestRTUFrame(id uint8, function RTUFunction, address uint16, length uint16) *RTUFrame {
 	var b bytes.Buffer
 	b.WriteByte(id)
 	b.WriteByte(byte(function))
@@ -117,10 +119,10 @@ func (f *RTUFrame) CRC() uint16 {
 	return uint16(f.rawData[len(f.rawData)-2]) + (uint16(f.rawData[len(f.rawData)-1]) * uint16(256))
 }
 
-// ReadRTUResponse reads an entire RTUFrame.
+// readRTUResponse reads an entire RTUFrame.
 //
 // The frame returned will be nil in case of an error, except for protocol and/or CRC errors.
-func ReadRTUResponse(port io.Reader) (*RTUFrame, error) {
+func readRTUResponse(port io.Reader) (*RTUFrame, error) {
 	b := make([]byte, MaxRTUFrameLength)
 	n, err := io.ReadFull(port, b[0:3])
 	if err != nil {
@@ -174,8 +176,8 @@ func CRC(data []byte) uint16 {
 	return crc16
 }
 
-// ReadRTURequest reads an entire RTUFrame for a request.
-func ReadRTURequest(port io.Reader) (*RTUFrame, error) {
+// readRTURequest reads an entire RTUFrame for a request.
+func readRTURequest(port io.Reader) (*RTUFrame, error) {
 	b := make([]byte, MaxRTUFrameLength)
 	// Reading 8 works for all request types.
 	n, err := io.ReadFull(port, b[0:8])
@@ -202,14 +204,27 @@ func ReadRTURequest(port io.Reader) (*RTUFrame, error) {
 	return frame, nil
 }
 
+type RTU struct {
+	port common.Port
+}
+
+func NewRTU(port common.Port) RegisterReader {
+	return &RTU{port: port}
+}
+
+func (r *RTU) Close() {
+	r.port.Close()
+}
+
 // ReadRegisters requests 'count' holding registers from unit 'id' from the 'start' memory address.
 // and reads the response back.
-func ReadRegisters(port io.ReadWriter, id uint8, start uint16, count uint8) (*RTUFrame, error) {
-	f := BuildReadRequestRTUFrame(id, ReadHoldingRegisters, start, uint16(count))
-	if _, err := port.Write(f.RawData()); err != nil {
+func (r *RTU) ReadRegisters(id uint8, start uint16, count uint8) (*RTUFrame, error) {
+	log.Printf("RTU ReadRegisters")
+	f := buildReadRequestRTUFrame(id, ReadHoldingRegisters, start, uint16(count))
+	if _, err := r.port.Write(f.RawData()); err != nil {
 		return nil, err
 	}
-	return ReadRTUResponse(port)
+	return readRTUResponse(r.port)
 }
 
 func expectedResponseLength(functionCode RTUFunction, receivedLength uint8) int {

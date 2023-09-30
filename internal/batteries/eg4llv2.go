@@ -8,15 +8,14 @@ import (
 	"log"
 	"time"
 
-	"wombatt/internal/common"
 	"wombatt/internal/modbus"
 
 	"golang.org/x/exp/slices"
 )
 
 type Battery interface {
-	ReadInfo(common.Port, uint8, time.Duration) (any, error)
-	ReadExtraInfo(common.Port, uint8, time.Duration) (any, error)
+	ReadInfo(modbus.RegisterReader, uint8, time.Duration) (any, error)
+	ReadExtraInfo(modbus.RegisterReader, uint8, time.Duration) (any, error)
 	InfoInstance() any
 }
 
@@ -41,9 +40,9 @@ func (*EG4LLv2) InfoInstance() any {
 	return &EG4ModbusBatteryInfo{}
 }
 
-func (*EG4LLv2) ReadInfo(port common.Port, id uint8, timeout time.Duration) (any, error) {
+func (*EG4LLv2) ReadInfo(reader modbus.RegisterReader, id uint8, timeout time.Duration) (any, error) {
 	var info EG4ModbusBatteryInfo
-	if err := readIntoStruct(&info, port, timeout, id, 0, 39); err != nil {
+	if err := readIntoStruct(&info, reader, timeout, id, 0, 39); err != nil {
 		return nil, err
 	}
 	result := EG4BatteryInfo{EG4ModbusBatteryInfo: info}
@@ -52,17 +51,17 @@ func (*EG4LLv2) ReadInfo(port common.Port, id uint8, timeout time.Duration) (any
 	return &result, nil
 }
 
-func (*EG4LLv2) ReadExtraInfo(port common.Port, id uint8, timeout time.Duration) (any, error) {
+func (*EG4LLv2) ReadExtraInfo(reader modbus.RegisterReader, id uint8, timeout time.Duration) (any, error) {
 	var extra EG4ModbusExtraBatteryInfo
-	err := readIntoStruct(&extra, port, timeout, id, 105, 23)
+	err := readIntoStruct(&extra, reader, timeout, id, 105, 23)
 	if err != nil {
 		return nil, err
 	}
 	return &extra, nil
 }
 
-func readIntoStruct(result any, port common.Port, timeout time.Duration, id uint8, address uint16, count uint8) error {
-	frame, err := readWithTimeout(port, timeout, id, address, count)
+func readIntoStruct(result any, reader modbus.RegisterReader, timeout time.Duration, id uint8, address uint16, count uint8) error {
+	frame, err := readWithTimeout(reader, timeout, id, address, count)
 	if err != nil {
 		return err
 	}
@@ -80,12 +79,12 @@ func readIntoStruct(result any, port common.Port, timeout time.Duration, id uint
 	return nil
 }
 
-func readWithTimeout(port common.Port, timeout time.Duration, id uint8, start uint16, count uint8) (*modbus.RTUFrame, error) {
+func readWithTimeout(reader modbus.RegisterReader, timeout time.Duration, id uint8, start uint16, count uint8) (*modbus.RTUFrame, error) {
 	var frame *modbus.RTUFrame
 	var err error
 	result := make(chan struct{}, 1)
 	go func() {
-		frame, err = modbus.ReadRegisters(port, id, start, count)
+		frame, err = reader.ReadRegisters(id, start, count)
 		result <- struct{}{}
 	}()
 	select {
