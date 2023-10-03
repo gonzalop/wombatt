@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -42,9 +43,11 @@ func (cmd *BatteryInfoCmd) Run(globals *Globals) error {
 		log.Fatal(err.Error())
 	}
 	defer reader.Close()
+	var failed error
 	for _, id := range cmd.IDs {
 		binfo, err := battery.ReadInfo(reader, uint8(id), cmd.ReadTimeout)
 		if err != nil {
+			failed = errors.Join(failed, fmt.Errorf("error getting info of ID#%d: %w", id, err))
 			if err := port.ReopenWithBackoff(); err != nil {
 				log.Fatalf("error reopening port: %v", err)
 				return err
@@ -53,6 +56,7 @@ func (cmd *BatteryInfoCmd) Run(globals *Globals) error {
 		}
 		extra, err := battery.ReadExtraInfo(reader, uint8(id), cmd.ReadTimeout)
 		if err != nil {
+			failed = errors.Join(failed, fmt.Errorf("error getting extra info of ID#%d: %w", id, err))
 			if err := port.ReopenWithBackoff(); err != nil {
 				log.Fatalf("error reopening port: %v", err)
 				return err
@@ -65,6 +69,9 @@ func (cmd *BatteryInfoCmd) Run(globals *Globals) error {
 			writeBatteryInfo(extra)
 		}
 		fmt.Println()
+	}
+	if failed != nil {
+		log.Fatal(failed)
 	}
 	return nil
 }
