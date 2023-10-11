@@ -16,7 +16,7 @@ import (
 )
 
 type InverterQueryCmd struct {
-	SerialPorts []string      `short:"p" required:"" help:"Serial ports used for communication with the inverters"`
+	SerialPorts []string      `short:"p" required:"" help:"Ports or addresses used for communication with the inverters"`
 	Commands    []string      `short:"c" required:"" help:"Commands to send to the inverters"`
 	BaudRate    uint          `short:"B" default:"2400" help:"Baud rate"`
 	ReadTimeout time.Duration `short:"t" default:"5s" help:"Per inverter timeout for processing all the commands being sent"`

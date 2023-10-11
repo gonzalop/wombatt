@@ -60,7 +60,7 @@ func openSerial(opts *PortOptions) (Port, error) {
 }
 
 func openHidRaw(opts *PortOptions) (Port, error) {
-	// TOOD: maybe try to emulate the baud rate from opts?
+	// TODO: maybe try to emulate the baud rate from opts?
 	f, err := os.OpenFile(opts.Address, os.O_RDWR, 0755)
 	if err != nil {
 		return nil, err

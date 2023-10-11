@@ -12,9 +12,10 @@ import (
 )
 
 type ForwardCmd struct {
-	Controller  string `name:"controller-port" required:"" help:"Serial port or address of the RS485 controller"`
-	Subordinate string `name:"subordinate-port" required:"" help:"Serial por or address of a subordinate RS485 device"`
+	Controller  string `name:"controller-port" required:"" help:"Serial port or address of the controller"`
+	Subordinate string `name:"subordinate-port" required:"" help:"Serial por or address of the subordinate device"`
 	BaudRate    uint   `short:"B" default:"9600" help:"Baud rate"`
+	DeviceType  string `short:"T" default:"serial" enum:"${device_types}" help:"Device type"`
 }
 
 func (cmd *ForwardCmd) Run(globals *Globals) error {
@@ -39,7 +40,9 @@ func NewForward(cmd *ForwardCmd) *Forward {
 
 func (f *Forward) Init() error {
 	opts := &common.PortOptions{
-		Mode: &serial.Mode{BaudRate: int(f.BaudRate)},
+		Address: f.Controller,
+		Mode:    &serial.Mode{BaudRate: int(f.BaudRate)},
+		Type:    common.DeviceTypeFromString[f.DeviceType],
 	}
 	opts.Address = f.Controller
 	port, err := common.OpenPort(opts)
