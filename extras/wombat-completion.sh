@@ -2,33 +2,47 @@
 
 _wombatt_completions() {
     local cur prev
+    local common bi br bt dt mqtt p pi sp rto webs
+
+    common="-h --help -v --version -l --log-level"
+
+    bi="-i --battery-ids"
+    br="-B --baud-rate"
+    bt="--battery-type"
+    dt="-T --device-type"
+    mqtt="--mqtt-server --mqtt-password --mqtt-topic-prefix --mqtt-user"
+    p="--protocol"
+    pi="-P --poll-interval"
+    sp="-p --address"
+    rto="-t --read-timeout"
+    webs="-w --web-server-address"
 
     cur=${COMP_WORDS[COMP_CWORD]}
     prev=${COMP_WORDS[COMP_CWORD-1]}
 
     case ${COMP_CWORD} in
         1)
-            COMPREPLY=($(compgen -W "monitor-inverters monitor-batteries inverter-query battery-info forward" -- "${COMP_WORDS[1]}"))
+            COMPREPLY=($(compgen -W "battery-info forward inverter-query monitor-batteries monitor-inverters" -- "${COMP_WORDS[1]}"))
             ;;
         *)
             case ${prev} in
             "battery-info")
-                COMPREPLY=($(compgen -W "-B --baud-rate -p --serial-port -i --battery-ids -t --read-timeout --battery-type" -- ${cur}))
+                COMPREPLY=($(compgen -W "$common $bi $br $bt $dt $p $rto $sp" -- ${cur}))
                 ;;
             "forward")
-                COMPREPLY=($(compgen -W "-B --baud-rate --controller-port --subordinate-port" -- ${cur}))
+                COMPREPLY=($(compgen -W "$common $br $bt --controller-port --subordinate-port" -- ${cur}))
                 ;;
             "inverter-query")
-                COMPREPLY=($(compgen -W "-p --serial-port -c --commands -t --read-timeout -B --baud-rate -T --device-type" -- ${cur}))
+                COMPREPLY=($(compgen -W "$common $br $dt $rto $sp -c --command" -- ${cur}))
                 ;;
             "modbus-read")
-                COMPREPLY=($(compgen -W "--protocol -B --baud-rate -p --serial-port --id --start --count -t --read-timeout --battery-type" -- ${cur}))
+                COMPREPLY=($(compgen -W "$common $br $dt $p $rto $sp --id --start --count" -- ${cur}))
                 ;;
             "monitor-batteries")
-                COMPREPLY=($(compgen -W "-B --baud-rate -p --serial-port -i --battery-ids -P --poll-interval -t --read-timeout --battery-type -w --web-port " -- ${cur}))
+                COMPREPLY=($(compgen -W "$common $bi $br $bt $dt $mqtt $p $pi $rto $sp $webs --mqtt-prefix" -- ${cur}))
                 ;;
             "monitor-inverters")
-                COMPREPLY=($(compgen -W "-B --baud-rate -P --poll-interval -t --read-timeout -w --web-port -T --device-type" -- ${cur}))
+                COMPREPLY=($(compgen -W "$common $dt $mqtt $pi $rto $webs" -- ${cur}))
                 ;;
         esac
     esac

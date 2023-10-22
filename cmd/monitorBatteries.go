@@ -18,10 +18,10 @@ import (
 type MonitorBatteriesCmd struct {
 	MQTTFlags `embed:""`
 
-	SerialPort string `short:"p" required:"" help:"Serial port attached to all batteries, except maybe battery ID 1"`
-	BaudRate   uint   `short:"B" default:"9600" help:"Baud rate for serial ports"`
+	Address  string `short:"p" required:"" help:"Serial port attached to all batteries, except maybe battery ID 1"`
+	BaudRate uint   `short:"B" default:"9600" help:"Baud rate for serial ports"`
 
-	IDs []uint `short:"i" required:"" name:"battery-ids" help:"IDs of the batteries to monitor"`
+	ID []uint `short:"i" required:"" name:"battery-id" help:"IDs of the batteries to monitor"`
 
 	PollInterval time.Duration `short:"P" default:"10s" help:"Time to wait between polling cycles"`
 	ReadTimeout  time.Duration `short:"t" default:"500ms" help:"Timeout when reading from serial ports"`
@@ -41,7 +41,7 @@ type batteryInfo struct {
 }
 
 func (cmd *MonitorBatteriesCmd) Run(globals *Globals) error {
-	for _, id := range cmd.IDs {
+	for _, id := range cmd.ID {
 		if id == 0 || id >= 247 {
 			log.Fatalf("id out of range: %d", id)
 		}
@@ -56,7 +56,7 @@ func (cmd *MonitorBatteriesCmd) Run(globals *Globals) error {
 	battery := batteries.Instance(string(cmd.BatteryType))
 	var mqttChannel chan *batteryInfo
 	if cmd.MQTTBroker != "" {
-		mqttChannel = make(chan *batteryInfo, len(cmd.IDs))
+		mqttChannel = make(chan *batteryInfo, len(cmd.ID))
 		client, err := mqttha.Connect(cmd.MQTTBroker, cmd.MQTTUser, cmd.MQTTPassword)
 		if err != nil {
 			log.Fatalf("error connecting to MQTT broker at %s: %v\n", cmd.MQTTBroker, err)
@@ -67,7 +67,7 @@ func (cmd *MonitorBatteriesCmd) Run(globals *Globals) error {
 	if webServer == nil && mqttChannel == nil {
 		log.Fatalf("need at least MQTT or web server argument to publish info to.\n")
 	}
-	ch := make(chan *batteryInfo, len(cmd.IDs))
+	ch := make(chan *batteryInfo, len(cmd.ID))
 	go func() {
 		for bi := range ch {
 			if mqttChannel != nil {
@@ -79,7 +79,7 @@ func (cmd *MonitorBatteriesCmd) Run(globals *Globals) error {
 		}
 	}()
 	portOptions := &common.PortOptions{
-		Address: cmd.SerialPort,
+		Address: cmd.Address,
 		Mode:    &serial.Mode{BaudRate: int(cmd.BaudRate)},
 		Type:    common.DeviceTypeFromString[cmd.DeviceType],
 	}
@@ -96,7 +96,7 @@ func monitorBatteries(ch chan *batteryInfo, port common.Port, cmd *MonitorBatter
 	for {
 		log.Printf("Fetching info from batteries\n")
 		success := []uint{}
-		for _, id := range cmd.IDs {
+		for _, id := range cmd.ID {
 			info, err := battery.ReadInfo(reader, uint8(id), cmd.ReadTimeout)
 			if err != nil {
 				if err := port.ReopenWithBackoff(); err != nil {
@@ -118,36 +118,36 @@ func monitorBatteries(ch chan *batteryInfo, port common.Port, cmd *MonitorBatter
 	}
 }
 
-func mqttPublish(client mqttha.Client, ch chan *batteryInfo, opts *MonitorBatteriesCmd, emptyInfo any) {
-	createDiscoveryConfig(client, opts, emptyInfo)
+func mqttPublish(client mqttha.Client, ch chan *batteryInfo, cmd *MonitorBatteriesCmd, emptyInfo any) {
+	createDiscoveryConfig(client, cmd, emptyInfo)
 	for bi := range ch {
 		config := make(map[string]interface{})
 		f := func(info map[string]string, value any) {
 			config[info["name"]] = value
 		}
 		common.TraverseStruct(bi.Info, f)
-		topic := fmt.Sprintf("%s/sensor/%s_battery%d_info/state", opts.MQTTTopicPrefix, opts.MQTTPrefix, bi.ID)
+		topic := fmt.Sprintf("%s/sensor/%s_battery%d_info/state", cmd.MQTTTopicPrefix, cmd.MQTTPrefix, bi.ID)
 		if err := client.PublishMap(topic, config); err != nil {
-			log.Printf("[mqtt] error publishing to %s: %v\n", opts.MQTTBroker, err)
+			log.Printf("[mqtt] error publishing to %s: %v\n", cmd.MQTTBroker, err)
 		}
 	}
 }
 
-func createDiscoveryConfig(client mqttha.Client, opts *MonitorBatteriesCmd, emptyInfo any) {
-	for _, id := range opts.IDs {
-		addDiscoveryConfig(client, opts, id, emptyInfo)
+func createDiscoveryConfig(client mqttha.Client, cmd *MonitorBatteriesCmd, emptyInfo any) {
+	for _, id := range cmd.ID {
+		addDiscoveryConfig(client, cmd, id, emptyInfo)
 	}
 }
 
-func addDiscoveryConfig(client mqttha.Client, opts *MonitorBatteriesCmd, id uint, st any) {
+func addDiscoveryConfig(client mqttha.Client, cmd *MonitorBatteriesCmd, id uint, st any) {
 	f := func(info map[string]string, value any) {
 		name := info["name"]
 		config := map[string]interface{}{
 			// "expire_after":?
 			// "force_update":   true,
-			"state_topic":    fmt.Sprintf("%s/sensor/%s_battery%d_info/state", opts.MQTTTopicPrefix, opts.MQTTPrefix, id),
+			"state_topic":    fmt.Sprintf("%s/sensor/%s_battery%d_info/state", cmd.MQTTTopicPrefix, cmd.MQTTPrefix, id),
 			"name":           fmt.Sprintf("Battery %d %s", id, strings.ReplaceAll(name, "_", " ")),
-			"object_id":      fmt.Sprintf("%s_battery_%d_%s", opts.MQTTPrefix, id, name),
+			"object_id":      fmt.Sprintf("%s_battery_%d_%s", cmd.MQTTPrefix, id, name),
 			"value_template": fmt.Sprintf("{{ value_json.%s }}", name),
 		}
 		config["unique_id"] = config["object_id"]
@@ -165,9 +165,9 @@ func addDiscoveryConfig(client mqttha.Client, opts *MonitorBatteriesCmd, id uint
 			config["icon"] = icon
 		}
 
-		topic := fmt.Sprintf("%s/sensor/%s_battery%d_%s/config", opts.MQTTTopicPrefix, opts.MQTTPrefix, id, name)
+		topic := fmt.Sprintf("%s/sensor/%s_battery%d_%s/config", cmd.MQTTTopicPrefix, cmd.MQTTPrefix, id, name)
 		if err := client.PublishMap(topic, config); err != nil {
-			log.Printf("[mqtt] error publishing to %s: %v\n", opts.MQTTBroker, err)
+			log.Printf("[mqtt] error publishing to %s: %v\n", cmd.MQTTBroker, err)
 		}
 	}
 	common.TraverseStruct(st, f)
