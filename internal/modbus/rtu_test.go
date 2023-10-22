@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
-	"io"
 	"strings"
 	"testing"
+
+	"wombatt/internal/common"
 )
 
 func TestReadRTURequest(t *testing.T) {
@@ -165,18 +166,6 @@ func TestReadRTUResponse(t *testing.T) {
 	}
 }
 
-type bytePort struct {
-	reader io.Reader
-}
-
-func NewBytePort(buf []byte) *bytePort {
-	return &bytePort{bytes.NewReader(buf)}
-}
-
-func (bp *bytePort) ReadRegisters(id uint8, start uint16, count uint8) (*RTUFrame, error) {
-	return readRTUResponse(bp.reader)
-}
-
 func TestReadRegisters(t *testing.T) {
 	tests := []struct {
 		resp   string
@@ -186,8 +175,8 @@ func TestReadRegisters(t *testing.T) {
 		crc    uint16
 	}{
 		{
-			resp:   "",
-			errstr: "EOF",
+			resp:   "0103",
+			errstr: "invalid crc",
 		},
 		{
 			resp:  "01032000670000006314d3ff10001f09c49ab09c400204000000060000000015e0000070c0",
@@ -202,8 +191,9 @@ func TestReadRegisters(t *testing.T) {
 		if err != nil {
 			t.Fatalf("malformed response string in test: %s", tt.resp)
 		}
-		port := NewBytePort(resp)
-		frame, err := port.ReadRegisters(1, 16, 1)
+		port, _ := common.OpenPort(&common.PortOptions{Type: common.TestByteDevice, Address: string(resp)})
+		rtu, _ := ReaderFromProtocol(port, "RTU")
+		frame, err := rtu.ReadRegisters(1, 16, 1)
 		if err != nil && tt.errstr == "" {
 			t.Errorf("read response failed(%s): got %v; want no error", tt.resp, err)
 			continue

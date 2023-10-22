@@ -1,6 +1,7 @@
 package common
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"log"
@@ -16,12 +17,14 @@ import (
 type DeviceType int
 
 const (
-	SerialDevice DeviceType = iota
+	TestByteDevice DeviceType = iota
+	SerialDevice
 	HidRawDevice
 	TCPDevice
 )
 
 var DeviceTypeFromString = map[string]DeviceType{
+	"test":   TestByteDevice,
 	"serial": SerialDevice,
 	"hidraw": HidRawDevice,
 	"tcp":    TCPDevice,
@@ -36,9 +39,10 @@ type PortOptions struct {
 }
 
 var deviceOpen = map[DeviceType]func(*PortOptions) (Port, error){
-	SerialDevice: openSerial,
-	HidRawDevice: openHidRaw,
-	TCPDevice:    openTCP,
+	TestByteDevice: openTest,
+	SerialDevice:   openSerial,
+	HidRawDevice:   openHidRaw,
+	TCPDevice:      openTCP,
 }
 
 type internalPort struct {
@@ -46,6 +50,24 @@ type internalPort struct {
 	*PortOptions
 
 	lock sync.Mutex
+}
+
+type testPort struct {
+	io.ReadWriter
+}
+
+func (testPort) Close() error {
+	return nil
+}
+
+func newTestPort(b string) testPort {
+	return testPort{bytes.NewBufferString(b)}
+}
+
+func openTest(opts *PortOptions) (Port, error) {
+	tp := newTestPort(opts.Address)
+	o := *opts
+	return &internalPort{ReadWriteCloser: tp, PortOptions: &o}, nil
 }
 
 func openSerial(opts *PortOptions) (Port, error) {
