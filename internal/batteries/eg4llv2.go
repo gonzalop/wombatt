@@ -37,7 +37,7 @@ func NewEG4LLv2() Battery {
 }
 
 func (*EG4LLv2) InfoInstance() any {
-	return &EG4ModbusBatteryInfo{}
+	return &EG4BatteryInfo{}
 }
 
 func (*EG4LLv2) ReadInfo(reader modbus.RegisterReader, id uint8, timeout time.Duration) (any, error) {
