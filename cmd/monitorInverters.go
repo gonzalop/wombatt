@@ -111,6 +111,7 @@ func runInverterMonitor(cmd *MonitorInvertersCmd, monitors []*inverterMonitor) e
 				m.webServer.Publish(fmt.Sprintf("%d/%s", i+1, r.monitor.Commands[ic]), ir)
 			}
 		}
+		responses = nil
 		time.Sleep(cmd.PollInterval)
 	}
 }
@@ -197,15 +198,15 @@ func addStructDiscoveryConfig(client mqttha.Client, st any, topicPrefix, tag str
 
 func (im *inverterMonitor) publishToMQTT(mqttTopicPrefix string, results []any, errors []error) {
 	config := make(map[string]interface{})
+	f := func(info map[string]string, value any) {
+		config[info["name"]] = value
+	}
 	for i, st := range results {
-		f := func(info map[string]string, value any) {
-			config[info["name"]] = value
-		}
-		if errors[i] == nil {
-			common.TraverseStruct(st, f)
-		} else {
+		if errors[i] != nil {
 			log.Printf("%v\n", errors[i])
+			continue
 		}
+		common.TraverseStruct(st, f)
 	}
 	if len(config) == 0 {
 		return

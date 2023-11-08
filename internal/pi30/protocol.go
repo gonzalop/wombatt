@@ -33,7 +33,7 @@ func RunCommand(ctx context.Context, port io.ReadWriter, cmd string) (any, error
 		strs []string
 		err  error
 	}
-	ch := make(chan *data)
+	ch := make(chan *data, 1)
 	go func() {
 		err := sendCommand(port, cmd)
 		if err != nil {
