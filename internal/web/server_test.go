@@ -1,6 +1,7 @@
 package web
 
 import (
+	"context"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -14,6 +15,9 @@ type Example struct {
 
 func TestServer(t *testing.T) {
 	srv := NewServer(":5000", "/test")
+	defer func() {
+		_ = srv.Shutdown(context.Background())
+	}()
 	// Create a channel to signal server start
 
 	// Publish before Start is a no-op

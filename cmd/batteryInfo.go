@@ -20,7 +20,7 @@ type BatteryInfoCmd struct {
 	ReadTimeout time.Duration `short:"t" default:"500ms" help:"Timeout when reading from serial ports"`
 	BaudRate    uint          `short:"B" default:"9600" help:"Baud rate"`
 	BatteryType BatteryType   `default:"EG4LLv2" help:"Battery type" enum:"${battery_types}"`
-	Protocol    string        `default:"auto" enum:"auto,RTU,TCP,"`
+	Protocol    string        `default:"auto" enum:"${protocols}"`
 	DeviceType  string        `short:"T" default:"serial" enum:"${device_types}" help:"Device type"`
 }
 
@@ -37,6 +37,9 @@ func (cmd *BatteryInfoCmd) Run(globals *Globals) error {
 		Type:    common.DeviceTypeFromString[cmd.DeviceType],
 	}
 	battery := batteries.Instance(string(cmd.BatteryType))
+	if cmd.Protocol == "auto" {
+		cmd.Protocol = battery.DefaultProtocol()
+	}
 	port := common.OpenPortOrFatal(portOptions)
 	reader, err := modbus.ReaderFromProtocol(port, cmd.Protocol)
 	if err != nil {

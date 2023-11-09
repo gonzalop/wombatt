@@ -26,6 +26,8 @@ func ReaderFromProtocol(port common.Port, protocol string) (RegisterReader, erro
 		return NewRTU(port), nil
 	case "TCP":
 		return NewTCP(port), nil
+	case "lifepower4":
+		return NewLFP4(port), nil
 	default:
 		return nil, fmt.Errorf("unknown protocol: %v", protocol)
 	}

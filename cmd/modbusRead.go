@@ -19,7 +19,7 @@ type ModbusReadCmd struct {
 	Count       uint8         `required:"" help:"Number of registers to read"`
 	BaudRate    uint          `short:"B" default:"9600" help:"Timeout when reading from serial ports"`
 	ReadTimeout time.Duration `short:"t" default:"500ms" help:"Baud rate"`
-	Protocol    string        `default:"auto" enum:"auto,RTU,TCP"`
+	Protocol    string        `default:"auto" enum:"${protocols}"`
 	DeviceType  string        `short:"T" default:"serial" enum:"${device_types}" help:"Device type"`
 }
 

@@ -31,7 +31,7 @@ type MonitorBatteriesCmd struct {
 
 	WebServerAddress string `short:"w" help:"Address to use for serving HTTP. <IP>:<Port>, i.e., 127.0.0.1:8080"`
 
-	Protocol   string `default:"auto" enum:"auto,RTU,TCP"`
+	Protocol   string `default:"auto" enum:"${protocols}"`
 	DeviceType string `short:"T" default:"serial" enum:"${device_types}" help:"Device type"`
 }
 
@@ -54,6 +54,9 @@ func (cmd *MonitorBatteriesCmd) Run(globals *Globals) error {
 		}
 	}
 	battery := batteries.Instance(string(cmd.BatteryType))
+	if cmd.Protocol == "auto" {
+		cmd.Protocol = battery.DefaultProtocol()
+	}
 	var mqttChannel chan *batteryInfo
 	if cmd.MQTTBroker != "" {
 		mqttChannel = make(chan *batteryInfo, len(cmd.ID))

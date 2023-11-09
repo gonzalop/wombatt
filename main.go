@@ -22,8 +22,9 @@ func main() {
 		}),
 		kong.Vars{
 			"version":       "0.0.2",
-			"battery_types": "EG4LLv2",
+			"battery_types": "EG4LLv2,lifepower4",
 			"device_types":  "serial,hidraw,tcp",
+			"protocols":     "auto,RTU,TCP,lifepower4",
 		})
 	err := ctx.Run(&cli.Globals)
 	ctx.FatalIfErrorf(err)
