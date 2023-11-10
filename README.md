@@ -2,7 +2,7 @@
 # wombatt
 
 wombatt is a set of tools to monitor batteries and inverters, and to send commands to inverters.
-The initial version only supports EG4LLv2 batteries and any inverter using the PI30 protocol family.
+At the moment, it supports EG4LLv2 and EG4 Lifepower4 batteries, and any inverter using the PI30 protocol family.
 
 ## Compilation from Source
 
