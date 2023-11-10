@@ -81,11 +81,11 @@ func TraverseStruct(data any, cb TraverseStructCallback) {
 			continue
 		}
 		flags := f.Tag.Get("flags")
-		if flags != "" && (f.Type.Name() == "uint8" || f.Type.Name() == "uint16") {
-			u16 := v.Convert(reflect.TypeOf(uint16(0))).Interface().(uint16)
-			val = handleFlagsTag(flags, u16)
+		if flags != "" && (f.Type.Name() == "uint8" || f.Type.Name() == "uint16" || f.Type.Name() == "uint32") {
+			u32 := v.Convert(reflect.TypeOf(uint32(0))).Interface().(uint32)
+			val = handleFlagsTag(flags, u32)
 			if val == "" {
-				val = u16
+				val = u32
 			}
 		}
 		bgroups := f.Tag.Get("bitgroups")
@@ -132,7 +132,7 @@ func handleMultiplier(multiplier string, field reflect.Value) (interface{}, erro
 	return r, nil
 }
 
-func handleFlagsTag(flags string, val uint16) string {
+func handleFlagsTag(flags string, val uint32) string {
 	result := ""
 	fl := strings.Split(flags, ",")
 	nbits := len(fl)
@@ -175,7 +175,7 @@ func handleBitgroupsTag(bgroups string, val string) string {
 				gi++
 			}
 		}
-		f := handleFlagsTag(strings.Join(strs, ","), uint16(v))
+		f := handleFlagsTag(strings.Join(strs, ","), uint32(v))
 		if f == "" {
 			continue
 		}

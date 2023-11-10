@@ -39,6 +39,10 @@ type OneFieldFlags2 struct {
 	Fld uint16 `flags:"a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p"`
 }
 
+type OneFieldFlags3 struct {
+	Fld uint32 `flags:"a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,aa,ab,ac,ad,ae,af,ag,ah,ai,aj,ak,al,am,an,ao,ap"`
+}
+
 type oneFieldArray struct {
 	Fld []uint16 `name:"name_%d" multiplier:"1.5"`
 }
@@ -85,11 +89,13 @@ func TestTraverseStruct(t *testing.T) {
 		{st: &oneFieldValues{Fld: "001"}, values: []any{"001"}},
 		{st: &oneFieldBadValues{Fld: "00"}, values: []any{"00"}},
 		{st: &OneFieldFlags{Fld: 0x03}, values: []any{"g, h"}},
-		{st: &OneFieldFlags{Fld: 0}, values: []any{uint16(0)}},
+		{st: &OneFieldFlags{Fld: 0}, values: []any{uint32(0)}},
 		{st: &OneFieldFlags{Fld: 127}, values: []any{"b, c, d, e, f, g, h"}},
 		{st: &OneFieldFlags{Fld: 16}, values: []any{"d"}},
 		{st: &OneFieldFlags2{Fld: 16}, values: []any{"l"}},
 		{st: &OneFieldFlags2{Fld: 0xc000}, values: []any{"a, b"}},
+		{st: &OneFieldFlags3{Fld: 0xc000}, values: []any{"aa, ab"}},
+		{st: &OneFieldFlags3{Fld: 0xa000c000}, values: []any{"a, c, aa, ab"}},
 		{st: &oneFieldArray{Fld: []uint16{1, 2}}, values: []any{1.5, 3.0}},
 		{st: &embeddedStruct{OneFieldFlags: OneFieldFlags{1}, Fld2: 2}, values: []any{"h", 3.0}, nfields: 2},
 		{st: &byteArrayStruct{Fld: [5]byte{'H', 'e', 'l', 'l', 'o'}}, values: []any{"Hello"}},

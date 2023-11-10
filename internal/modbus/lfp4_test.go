@@ -12,27 +12,18 @@ import (
 type testPort struct {
 	reader io.Reader
 	writer io.Writer
-	cb     CB
 }
 
-type CB func(b []byte)
-
 // NewTestPort implements the common.Port interface
-func NewTestPort(cb CB, r io.Reader, w io.Writer) *testPort {
-	return &testPort{cb: cb, reader: r, writer: w}
+func NewTestPort(r io.Reader, w io.Writer) *testPort {
+	return &testPort{reader: r, writer: w}
 }
 
 func (tp *testPort) Read(b []byte) (n int, err error) {
-	if tp.cb != nil {
-		tp.cb(b)
-	}
 	return tp.reader.Read(b)
 }
 
 func (tp *testPort) Write(b []byte) (n int, err error) {
-	if tp.cb != nil {
-		tp.cb(b)
-	}
 	return tp.writer.Write(b)
 }
 
@@ -104,7 +95,7 @@ func TestLFP4Response(t *testing.T) {
 		if err != nil {
 			t.Fatalf("malformed response string in test %d: %s", tid, tt.resp)
 		}
-		port := NewTestPort(nil, bytes.NewReader(resp), io.Discard)
+		port := NewTestPort(bytes.NewReader(resp), io.Discard)
 		reader, _ := ReaderFromProtocol(port, "lifepower4")
 		defer reader.Close()
 		lfp4, ok := reader.(*LFP4)
@@ -147,7 +138,7 @@ func TestLFP4ReadRegisters(t *testing.T) {
 		if err != nil {
 			t.Fatalf("malformed raw response string in test %d: %s", tid, tt.rawResp)
 		}
-		port := NewTestPort(nil, bytes.NewReader(rawResp), io.Discard)
+		port := NewTestPort(bytes.NewReader(rawResp), io.Discard)
 		lfp4, _ := ReaderFromProtocol(port, "lifepower4")
 		defer lfp4.Close()
 		// dataResp needs double decoding: one from the test data to rawData and one from that to actual binary data
