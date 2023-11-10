@@ -78,10 +78,10 @@ type LFP4AlarmInformation struct {
 	CellVoltageAlarmStatus  [16]uint8 `name:"cell_%d_alarm_status" flags:"0x80,0x40,0x20,0x10,0x08,0x04,upper limit alarm,lower limit alarm"`
 	_                       uint8     `skip:"1"` // always 4
 	CellTemps               [4]uint8  `name:"cell_temp_%d" flags:"0x80,0x40,0x20,0x10,0x08,0x04,upper limit alarm,lower limit alarm"`
-	EnvTempAlartmStatus     uint8     `name:"cell_temp_%d" flags:"0x80,0x40,0x20,0x10,0x08,0x04,upper limit alarm,lower limit alarm"`
-	MOSFETTempAlarmStatus   uint8     `name:"cell_temp_%d" flags:"0x80,0x40,0x20,0x10,0x08,0x04,upper limit alarm,lower limit alarm"`
-	PackCurrentAlartmStatus uint8     `name:"cell_temp_%d" flags:"0x80,0x40,0x20,0x10,0x08,0x04,upper limit alarm,lower limit alarm"`
-	PackVoltageAlartmStatus uint8     `name:"cell_temp_%d" flags:"0x80,0x40,0x20,0x10,0x08,0x04,upper limit alarm,lower limit alarm"`
+	EnvTempAlarmStatus      uint8     `name:"environment_temp_alarm_status" flags:"0x80,0x40,0x20,0x10,0x08,0x04,upper limit alarm,lower limit alarm"`
+	MOSFETTempAlarmStatus   uint8     `name:"mosfet_temp_alarm_status" flags:"0x80,0x40,0x20,0x10,0x08,0x04,upper limit alarm,lower limit alarm"`
+	PackCurrentAlartmStatus uint8     `name:"pack_current_alarm_status" flags:"0x80,0x40,0x20,0x10,0x08,0x04,upper limit alarm,lower limit alarm"`
+	PackVoltageAlartmStatus uint8     `name:"pack_voltage_alarm_status" flags:"0x80,0x40,0x20,0x10,0x08,0x04,upper limit alarm,lower limit alarm"`
 	UserDefined             uint8     `name:"user_defined"`
 	BalanceEventCode        uint8     `name:"balance_event_code" flags:"0x80,discharge MOS fault alarm,charge MOS fault alarm,cell voltage difference alarm,0x08,0x04,0x02,balance module"`
 	VoltageEventCode        uint8     `name:"voltage_event_code" flags:"pack UV protection,pack UV alarm,pack OV protection,pack OV alarm,cell UV protection,cell UV alarm,cell OV protection,cell OV alarm"`
