@@ -23,7 +23,7 @@ func (*LFP4) DefaultProtocol() string {
 
 func (*LFP4) ReadInfo(reader modbus.RegisterReader, id uint8, timeout time.Duration) (any, error) {
 	var result LFP4AnalogValueBatteryInfo
-	if err := readIntoStruct2(&result, reader, timeout, id, 0, 39); err != nil {
+	if err := readIntoStruct2(&result, reader, timeout, id, 0, 0x42); err != nil {
 		return nil, err
 	}
 	return &result, nil
