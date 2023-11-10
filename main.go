@@ -21,7 +21,7 @@ func main() {
 			//			Compact: true,
 		}),
 		kong.Vars{
-			"version":       "0.0.2",
+			"version":       "0.0.3",
 			"battery_types": "EG4LLv2,lifepower4",
 			"device_types":  "serial,hidraw,tcp",
 			"protocols":     "auto,RTU,TCP,lifepower4",
