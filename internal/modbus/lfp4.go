@@ -57,6 +57,15 @@ func (t *LFP4) ReadResponse(id uint8) (*RTUFrame, error) {
 	if _, err := io.ReadFull(t.port, header); err != nil {
 		return nil, err
 	}
+	// Check RTN
+	ret, err := asciiToBin(header[7:9])
+	if err != nil {
+		return nil, err
+	}
+	if ret != 0 {
+		return nil, fmt.Errorf("received error code %d", ret)
+	}
+	// Check LCHKSUM
 	bin, err := asciiToBin(header[9:13])
 	if err != nil {
 		return nil, err
@@ -75,15 +84,28 @@ func (t *LFP4) ReadResponse(id uint8) (*RTUFrame, error) {
 	if n != (len(ascii) - 13) {
 		return nil, fmt.Errorf("short response. got %d, want %d", n, len(ascii))
 	}
+	// Check CHKSUM
+	err = verifyChecksum(ascii) // if there's an error here, it's sent back with the data.
 	if ascii[len(ascii)-1] != 0xd {
 		log.Printf("warning: EOI missing in response")
 	}
-	// Check EOI and maybe other bytes.
-	return NewRTUFrame(ascii), nil
+	return NewRTUFrame(ascii), err
 }
 
 func (t *LFP4) Close() {
 	t.port.Close()
+}
+
+func verifyChecksum(b []byte) error {
+	targetCRC, err := asciiToBin(b[len(b)-5 : len(b)-1])
+	if err != nil {
+		return fmt.Errorf("error getting target CRC: %w", err)
+	}
+	sum := lfp4Checksum(b[:len(b)-5])
+	if sum != uint16(targetCRC) {
+		return fmt.Errorf("CHKSUM error: got %X, want %X", sum, targetCRC)
+	}
+	return nil
 }
 
 func lfp4Checksum(b []byte) uint16 {
