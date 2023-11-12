@@ -5,7 +5,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
-	"sync"
+	"sync/atomic"
 
 	"wombatt/internal/common"
 )
@@ -22,6 +22,8 @@ type TCPRTUFrame struct {
 	RTUFrame
 }
 
+var tid atomic.Uint32
+
 type TCP struct {
 	port common.Port
 }
@@ -35,7 +37,7 @@ func NewTCP(port common.Port) RegisterReader {
 func (t *TCP) ReadRegisters(id uint8, start uint16, count uint8) (*RTUFrame, error) {
 	f := buildReadRequestRTUFrame(id, ReadHoldingRegisters, start, uint16(count))
 	tf := &TCPRTUFrame{RTUFrame: *f, TCPRTUHeader: TCPRTUHeader{PID: 0}}
-	tf.TID = getTID()
+	tf.TID = uint16(tid.Add(1) & 0x0ffff)
 	tf.Length = uint16(len(f.RawData())) - 2 // -2 for CRC
 	tf.UnitID = id
 
@@ -74,14 +76,4 @@ func (t *TCP) ReadTCPResponse(tid uint16, unitID uint8) (*RTUFrame, error) {
 
 func (t *TCP) Close() {
 	t.port.Close()
-}
-
-var lck sync.Mutex
-var tid uint16
-
-func getTID() uint16 {
-	lck.Lock()
-	defer lck.Unlock()
-	tid++
-	return tid
 }
