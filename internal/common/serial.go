@@ -1,7 +1,6 @@
 package common
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"log"
@@ -13,6 +12,37 @@ import (
 	"github.com/cenkalti/backoff/v4"
 	"go.bug.st/serial"
 )
+
+type TestPort struct {
+	reader io.Reader
+	writer io.Writer
+}
+
+// NewTestPort implements the Port interface
+func NewTestPort(r io.Reader, w io.Writer) *TestPort {
+	return &TestPort{reader: r, writer: w}
+}
+
+func (tp *TestPort) Read(b []byte) (n int, err error) {
+	return tp.reader.Read(b)
+}
+
+func (tp *TestPort) Write(b []byte) (n int, err error) {
+	return tp.writer.Write(b)
+}
+
+func (*TestPort) ReopenWithBackoff() error {
+	return nil
+}
+
+func (*TestPort) Type() DeviceType {
+	return TestByteDevice
+
+}
+
+func (*TestPort) Close() error {
+	return nil
+}
 
 type DeviceType int
 
@@ -39,7 +69,7 @@ type PortOptions struct {
 }
 
 var deviceOpen = map[DeviceType]func(*PortOptions) (Port, error){
-	TestByteDevice: openTest,
+	TestByteDevice: func(*PortOptions) (Port, error) { panic("can't open a test device") },
 	SerialDevice:   openSerial,
 	HidRawDevice:   openHidRaw,
 	TCPDevice:      openTCP,
@@ -50,24 +80,6 @@ type internalPort struct {
 	*PortOptions
 
 	lock sync.Mutex
-}
-
-type testPort struct {
-	io.ReadWriter
-}
-
-func (testPort) Close() error {
-	return nil
-}
-
-func newTestPort(b string) testPort {
-	return testPort{bytes.NewBufferString(b)}
-}
-
-func openTest(opts *PortOptions) (Port, error) {
-	tp := newTestPort(opts.Address)
-	o := *opts
-	return &internalPort{ReadWriteCloser: tp, PortOptions: &o}, nil
 }
 
 func openSerial(opts *PortOptions) (Port, error) {

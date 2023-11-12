@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
+	"io"
 	"strings"
 	"testing"
 
@@ -166,7 +167,7 @@ func TestReadRTUResponse(t *testing.T) {
 	}
 }
 
-func TestReadRegisters(t *testing.T) {
+func TestRTUReadRegisters(t *testing.T) {
 	tests := []struct {
 		resp   string
 		errstr string
@@ -176,6 +177,10 @@ func TestReadRegisters(t *testing.T) {
 	}{
 		{
 			resp:   "0103",
+			errstr: "short frame: got 2, want at least 3 bytes",
+		},
+		{
+			resp:   "0103000000",
 			errstr: "invalid crc",
 		},
 		{
@@ -191,7 +196,7 @@ func TestReadRegisters(t *testing.T) {
 		if err != nil {
 			t.Fatalf("malformed response string in test: %s", tt.resp)
 		}
-		port, _ := common.OpenPort(&common.PortOptions{Type: common.TestByteDevice, Address: string(resp)})
+		port := common.NewTestPort(bytes.NewReader(resp), io.Discard)
 		rtu, _ := ReaderFromProtocol(port, "RTU")
 		frame, err := rtu.ReadRegisters(1, 16, 1)
 		if err != nil && tt.errstr == "" {

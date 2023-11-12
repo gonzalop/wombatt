@@ -73,7 +73,3 @@ func (t *TCP) ReadTCPResponse(tid uint16, unitID uint8) (*RTUFrame, error) {
 	}
 	return NewRTUFrame(rtu), nil
 }
-
-func (t *TCP) Close() {
-	t.port.Close()
-}

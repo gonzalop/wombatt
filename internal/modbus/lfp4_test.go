@@ -9,37 +9,6 @@ import (
 	"wombatt/internal/common"
 )
 
-type testPort struct {
-	reader io.Reader
-	writer io.Writer
-}
-
-// NewTestPort implements the common.Port interface
-func NewTestPort(r io.Reader, w io.Writer) *testPort {
-	return &testPort{reader: r, writer: w}
-}
-
-func (tp *testPort) Read(b []byte) (n int, err error) {
-	return tp.reader.Read(b)
-}
-
-func (tp *testPort) Write(b []byte) (n int, err error) {
-	return tp.writer.Write(b)
-}
-
-func (*testPort) ReopenWithBackoff() error {
-	return nil
-}
-
-func (*testPort) Type() common.DeviceType {
-	return common.TestByteDevice
-
-}
-
-func (*testPort) Close() error {
-	return nil
-}
-
 // test data from examples in https://eg4electronics.com/backend/wp-content/uploads/2023/04/EG4_LifePower4_Communication_Protocol.pdf
 // TestLFP4Request test the raw requests content.
 func TestLFP4Request(t *testing.T) {
@@ -95,7 +64,7 @@ func TestLFP4Response(t *testing.T) {
 		if err != nil {
 			t.Fatalf("malformed response string in test %d: %s", tid, tt.resp)
 		}
-		port := NewTestPort(bytes.NewReader(resp), io.Discard)
+		port := common.NewTestPort(bytes.NewReader(resp), io.Discard)
 		reader, _ := ReaderFromProtocol(port, "lifepower4")
 		lfp4, ok := reader.(*LFP4)
 		if !ok {
@@ -150,7 +119,7 @@ func TestLFP4ReadRegisters(t *testing.T) {
 		if err != nil {
 			t.Fatalf("malformed raw response string in test %d: %s", tid, tt.rawResp)
 		}
-		port := NewTestPort(bytes.NewReader(rawResp), io.Discard)
+		port := common.NewTestPort(bytes.NewReader(rawResp), io.Discard)
 		lfp4, _ := ReaderFromProtocol(port, "lifepower4")
 		// dataResp needs double decoding: one from the test data to rawData and one from that to actual binary data
 		// which is what ReadRegisters returns.
