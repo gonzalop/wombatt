@@ -24,15 +24,15 @@ type MonitorBatteriesCmd struct {
 	ID []uint `short:"i" required:"" name:"battery-id" help:"IDs of the batteries to monitor"`
 
 	PollInterval time.Duration `short:"P" default:"10s" help:"Time to wait between polling cycles"`
-	ReadTimeout  time.Duration `short:"t" default:"500ms" help:"Timeout when reading from serial ports"`
+	ReadTimeout  time.Duration `short:"t" default:"500ms" help:"Timeout when reading from devices"`
 
-	BatteryType BatteryType `default:"EG4LLv2" help:"Battery type" enum:"${battery_types}"`
+	BatteryType BatteryType `default:"EG4LLv2" help:"One of ${battery_types}" enum:"${battery_types}"`
 	MQTTPrefix  string      `default:"eg4" help:"MQTT prefix for the fields published"`
 
 	WebServerAddress string `short:"w" help:"Address to use for serving HTTP. <IP>:<Port>, i.e., 127.0.0.1:8080"`
 
-	Protocol   string `default:"auto" enum:"${protocols}"`
-	DeviceType string `short:"T" default:"serial" enum:"${device_types}" help:"Device type"`
+	Protocol   string `default:"auto" enum:"${protocols}" help:"One of ${protocols}"`
+	DeviceType string `short:"T" default:"serial" enum:"${device_types}" help:"One of ${device_types}"`
 }
 
 type batteryInfo struct {

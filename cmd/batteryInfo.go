@@ -16,21 +16,15 @@ import (
 
 type BatteryInfoCmd struct {
 	Address     string        `required:"" short:"p" help:"Serial port or address used for communication"`
-	IDs         []uint        `short:"i" name:"battery-ids" help:"IDs of the batteries to get info from. Default: 1 thru 64"`
+	IDs         []uint        `required:"" short:"i" name:"battery-ids" help:"IDs of the batteries to get info from."`
 	ReadTimeout time.Duration `short:"t" default:"500ms" help:"Timeout when reading from serial ports"`
 	BaudRate    uint          `short:"B" default:"9600" help:"Baud rate"`
 	BatteryType BatteryType   `default:"EG4LLv2" help:"Battery type" enum:"${battery_types}"`
 	Protocol    string        `default:"auto" enum:"${protocols}"`
-	DeviceType  string        `short:"T" default:"serial" enum:"${device_types}" help:"Device type"`
+	DeviceType  string        `short:"T" default:"serial" enum:"${device_types}" help:"One of ${device_types}"`
 }
 
 func (cmd *BatteryInfoCmd) Run(globals *Globals) error {
-	if len(cmd.IDs) == 0 {
-		cmd.IDs = make([]uint, 64)
-		for i := range cmd.IDs {
-			cmd.IDs[i] = uint(i) + 1
-		}
-	}
 	portOptions := &common.PortOptions{
 		Address: cmd.Address,
 		Mode:    &serial.Mode{BaudRate: int(cmd.BaudRate)},

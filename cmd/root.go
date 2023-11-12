@@ -26,10 +26,10 @@ type CLI struct {
 	Globals
 
 	BatteryInfo      BatteryInfoCmd      `cmd:"" help:"Displays battery information"`
-	Forward          ForwardCmd          `cmd:"" help:"Forwards commands between a RS485 controller and a slave device."`
+	Forward          ForwardCmd          `cmd:"" help:"Forwards commands between a two devices"`
 	InverterQuery    InverterQueryCmd    `cmd:"" help:"Sends PI30 protocol commands to inverters"`
 	ModbusRead       ModbusReadCmd       `cmd:"" help:"Reads Modbus holding registers"`
-	MonitorBatteries MonitorBatteriesCmd `cmd:"" help:"Monitors EG4LL-v2 batteries state, MQTT publishing optional"`
+	MonitorBatteries MonitorBatteriesCmd `cmd:"" help:"Monitors batteries state, MQTT publishing optional"`
 	MonitorInverters MonitorInvertersCmd `cmd:"" help:"Monitors inverters using PI30 protocol, MQTT publishing optional"`
 }
 

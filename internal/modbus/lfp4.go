@@ -113,7 +113,6 @@ func lfp4Checksum(b []byte) uint16 {
 	for _, c := range b[1:] {
 		sum += uint32(c)
 	}
-	sum = sum & 65535
 	sum = (^sum + 1) & 65535
 	return uint16(sum)
 }
@@ -123,7 +122,7 @@ func checkLengthChecksum(length uint16) error {
 	d11 := (length & 0x0f00) >> 8
 	d7 := (length & 0x00f0) >> 4
 	d3 := (length & 0x000f)
-	sum := (d11 + d7 + d3) & 0xf
+	sum := (d11 + d7 + d3)
 	sum = (^sum + 1) & 0xf
 	if chksum != sum {
 		return fmt.Errorf("LCHKSUM error")

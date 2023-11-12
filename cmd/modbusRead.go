@@ -14,13 +14,13 @@ import (
 
 type ModbusReadCmd struct {
 	Address     string        `short:"p" required:"" help:"Port or TCP address used for communication"`
-	ID          uint8         `required:"" help:"RTU device ID"`
+	ID          uint8         `required:"" help:"Device ID"`
 	Start       uint16        `required:"" help:"Start address of the first register to read"`
 	Count       uint8         `required:"" help:"Number of registers to read"`
-	BaudRate    uint          `short:"B" default:"9600" help:"Timeout when reading from serial ports"`
-	ReadTimeout time.Duration `short:"t" default:"500ms" help:"Baud rate"`
-	Protocol    string        `default:"auto" enum:"${protocols}"`
-	DeviceType  string        `short:"T" default:"serial" enum:"${device_types}" help:"Device type"`
+	BaudRate    uint          `short:"B" default:"9600" help:"Baud rate"`
+	ReadTimeout time.Duration `short:"t" default:"500ms" help:"Timeout when reading from serial ports"`
+	Protocol    string        `default:"auto" enum:"${protocols}" help:"One of ${protocols}"`
+	DeviceType  string        `short:"T" default:"serial" enum:"${device_types}" help:"One of ${device_types}"`
 }
 
 func (cmd *ModbusReadCmd) Run(globals *Globals) error {
@@ -44,7 +44,7 @@ func (cmd *ModbusReadCmd) Run(globals *Globals) error {
 	frame, err := reader.ReadRegisters(cmd.ID, cmd.Start, cmd.Count)
 	if err != nil {
 		log.Printf("Error reading registers %v: %v\n", cmd.Address, err)
-		return nil
+		log.Fatal(err.Error())
 	}
 	fmt.Printf("%v ID#%d:\n%s\n", cmd.Address, cmd.ID, hex.Dump(frame.RawData()))
 	return nil

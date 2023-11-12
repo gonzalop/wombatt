@@ -20,7 +20,7 @@ type InverterQueryCmd struct {
 	Command     []string      `short:"c" required:"" help:"Commands to send to the inverters"`
 	BaudRate    uint          `short:"B" default:"2400" help:"Baud rate"`
 	ReadTimeout time.Duration `short:"t" default:"5s" help:"Per inverter timeout for processing all the commands being sent"`
-	DeviceType  string        `short:"T" default:"serial" enum:"${device_types}" help:"Device type"`
+	DeviceType  string        `short:"T" default:"serial" enum:"${device_types}" help:"One of ${device_types}"`
 }
 
 func (cmd *InverterQueryCmd) Run(globals *Globals) error {

@@ -15,7 +15,7 @@ type ForwardCmd struct {
 	Controller  string `name:"controller-port" required:"" help:"Serial port or address of the controller"`
 	Subordinate string `name:"subordinate-port" required:"" help:"Serial por or address of the subordinate device"`
 	BaudRate    uint   `short:"B" default:"9600" help:"Baud rate"`
-	DeviceType  string `short:"T" default:"serial" enum:"${device_types}" help:"Device type"`
+	DeviceType  string `short:"T" default:"serial" enum:"${device_types}" help:"One of ${device_types}"`
 }
 
 func (cmd *ForwardCmd) Run(globals *Globals) error {

@@ -92,24 +92,24 @@ type LFP4AnalogValueBatteryInfo struct {
 }
 
 type LFP4AlarmInformation struct {
-	DataFlag                uint8     `name:"alarm_flag" flags:"0x80,0x40,0x20,0x10,0x08,0x04,no unread alarms,unread alarms"`
-	_                       uint8     `name:"pack_group"`
-	NumberOfCells           uint8     `skip:"1"` // 16 or 8, if it's 8, loading data will not work!
-	CellVoltageAlarmStatus  [16]uint8 `name:"cell_%d_alarm_status" flags:"0x80,0x40,0x20,0x10,0x08,0x04,upper limit alarm,lower limit alarm"`
-	_                       uint8     `skip:"1"` // always 4
-	CellTemps               [4]uint8  `name:"cell_temp_%d" flags:"0x80,0x40,0x20,0x10,0x08,0x04,upper limit alarm,lower limit alarm"`
-	EnvTempAlarmStatus      uint8     `name:"environment_temp_alarm_status" flags:"0x80,0x40,0x20,0x10,0x08,0x04,upper limit alarm,lower limit alarm"`
-	MOSFETTempAlarmStatus   uint8     `name:"mosfet_temp_alarm_status" flags:"0x80,0x40,0x20,0x10,0x08,0x04,upper limit alarm,lower limit alarm"`
-	PackCurrentAlartmStatus uint8     `name:"pack_current_alarm_status" flags:"0x80,0x40,0x20,0x10,0x08,0x04,upper limit alarm,lower limit alarm"`
-	PackVoltageAlartmStatus uint8     `name:"pack_voltage_alarm_status" flags:"0x80,0x40,0x20,0x10,0x08,0x04,upper limit alarm,lower limit alarm"`
-	UserDefined             uint8     `name:"user_defined"`
-	BalanceEventCode        uint8     `name:"balance_event_code" flags:"0x80,discharge MOS fault alarm,charge MOS fault alarm,cell voltage difference alarm,0x08,0x04,0x02,balance module"`
-	VoltageEventCode        uint8     `name:"voltage_event_code" flags:"pack UV protection,pack UV alarm,pack OV protection,pack OV alarm,cell UV protection,cell UV alarm,cell OV protection,cell OV alarm"`
-	TempEventCode           uint16    `name:"temperature_event_code" flags:"0x8000,0x4000,fire alarm event,MOSFET high temperature protection,environment low temparature protection,environment low temparature alarm,environment high temperature protection,environment high temperature alarm,discharge low temperature protection,discharge low temperature alarm,discharge high temperature protection,discharge high temperature alarm,charge low temperature protection,charge low temperature alarm,charge high temperature protection,charge high temperature alarm"`
-	CurrentEventCode        uint8     `name:"current_event_code" flags:"output SC lockout,discharge level 2 OC lockout,output SC protection,discharge level 2 OC protection,discharge OC protection,discharge OC alarm,charge OC protection,charge OC alarm"`
-	RemainingCapacityAlarm  uint8     `name:"current_event_code" flags:"0x80,0x40,0x20,0x10,0x08,0x04,0x02,SOC low alarm"`
-	FETStatusCode           uint8     `name:"fet_status_code" flags:"0x80,0x40,0x20,0x10,heater,charge current limiter,charge MOS,discharge MOS"`
-	SystemStatusCode        uint8     `name:"system_status_code" flags:"0x80,0x40,0x20,0x10,standby,0x04,charging,discharging"`
-	BalanceStatusCode       uint32    `name:"balance_status_code" flags:"0x80000000,0x40000000,0x20000000,0x10000000,0x08000000,0x04000000,0x02000000,0x01000000,0x00800000,0x00400000,0x00200000,0x00100000,0x00080000,0x00040000,0x00020000,0x00010000,cell 16 equalization on,cell 15 equalization on,cell 14 equalization on,cell 13 equalization on,cell 12 equalization on,cell 11 equalization on,cell 10 equalization on,cell 9 equalization on,cell 8 equalization on,cell 7 equalization on,cell 6 equalization on,cell 5 equalization on,cell 4 equalization on,cell 3 equalization on,cell 2 equalization on,cell 1 equalization on"`
-	_                       uint8     `skip:"1"`
+	DataFlag               uint8     `name:"alarm_flag" flags:"0x80,0x40,0x20,0x10,0x08,0x04,no unread alarms,unread alarms"`
+	_                      uint8     `name:"pack_group"`
+	NumberOfCells          uint8     `skip:"1"` // 16 or 8, if it's 8, loading data will not work!
+	CellVoltageAlarmStatus [16]uint8 `name:"cell_%d_alarm_status" flags:"0x80,0x40,0x20,0x10,0x08,0x04,upper limit alarm,lower limit alarm"`
+	_                      uint8     `skip:"1"` // always 4
+	CellTemps              [4]uint8  `name:"cell_temp_%d" flags:"0x80,0x40,0x20,0x10,0x08,0x04,upper limit alarm,lower limit alarm"`
+	EnvTempAlarmStatus     uint8     `name:"environment_temp_alarm_status" flags:"0x80,0x40,0x20,0x10,0x08,0x04,upper limit alarm,lower limit alarm"`
+	MOSFETTempAlarmStatus  uint8     `name:"mosfet_temp_alarm_status" flags:"0x80,0x40,0x20,0x10,0x08,0x04,upper limit alarm,lower limit alarm"`
+	PackCurrentAlarmStatus uint8     `name:"pack_current_alarm_status" flags:"0x80,0x40,0x20,0x10,0x08,0x04,upper limit alarm,lower limit alarm"`
+	PackVoltageAlarmStatus uint8     `name:"pack_voltage_alarm_status" flags:"0x80,0x40,0x20,0x10,0x08,0x04,upper limit alarm,lower limit alarm"`
+	UserDefined            uint8     `name:"user_defined"`
+	BalanceEventCode       uint8     `name:"balance_event_code" flags:"0x80,discharge MOS fault alarm,charge MOS fault alarm,cell voltage difference alarm,0x08,0x04,0x02,balance module"`
+	VoltageEventCode       uint8     `name:"voltage_event_code" flags:"pack UV protection,pack UV alarm,pack OV protection,pack OV alarm,cell UV protection,cell UV alarm,cell OV protection,cell OV alarm"`
+	TempEventCode          uint16    `name:"temperature_event_code" flags:"0x8000,0x4000,fire alarm event,MOSFET high temperature protection,environment low temparature protection,environment low temparature alarm,environment high temperature protection,environment high temperature alarm,discharge low temperature protection,discharge low temperature alarm,discharge high temperature protection,discharge high temperature alarm,charge low temperature protection,charge low temperature alarm,charge high temperature protection,charge high temperature alarm"`
+	CurrentEventCode       uint8     `name:"current_event_code" flags:"output SC lockout,discharge level 2 OC lockout,output SC protection,discharge level 2 OC protection,discharge OC protection,discharge OC alarm,charge OC protection,charge OC alarm"`
+	RemainingCapacityAlarm uint8     `name:"current_event_code" flags:"0x80,0x40,0x20,0x10,0x08,0x04,0x02,SOC low alarm"`
+	FETStatusCode          uint8     `name:"fet_status_code" flags:"0x80,0x40,0x20,0x10,heater,charge current limiter,charge MOS,discharge MOS"`
+	SystemStatusCode       uint8     `name:"system_status_code" flags:"0x80,0x40,0x20,0x10,standby,0x04,charging,discharging"`
+	BalanceStatusCode      uint32    `name:"balance_status_code" flags:"0x80000000,0x40000000,0x20000000,0x10000000,0x08000000,0x04000000,0x02000000,0x01000000,0x00800000,0x00400000,0x00200000,0x00100000,0x00080000,0x00040000,0x00020000,0x00010000,cell 16 equalization on,cell 15 equalization on,cell 14 equalization on,cell 13 equalization on,cell 12 equalization on,cell 11 equalization on,cell 10 equalization on,cell 9 equalization on,cell 8 equalization on,cell 7 equalization on,cell 6 equalization on,cell 5 equalization on,cell 4 equalization on,cell 3 equalization on,cell 2 equalization on,cell 1 equalization on"`
+	_                      uint8     `skip:"1"`
 }

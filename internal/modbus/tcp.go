@@ -63,8 +63,8 @@ func (t *TCP) ReadTCPResponse(tid uint16, unitID uint8) (*RTUFrame, error) {
 	if err := binary.Read(bytes.NewReader(mbap), binary.BigEndian, &header); err != nil {
 		return nil, err
 	}
-	rtu := make([]byte, header.Length+2)
-	n, err := io.ReadFull(t.port, rtu[0:len(rtu)-2]) // Add 2 more bytes because RTUFrame expects a CRC there.
+	rtu := make([]byte, header.Length+2) // Add 2 more bytes because RTUFrame expects a CRC there.
+	n, err := io.ReadFull(t.port, rtu[0:len(rtu)-2])
 	if err != nil {
 		return nil, err
 	}

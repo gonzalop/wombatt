@@ -18,7 +18,7 @@ type haClient struct {
 	mqtt.Client
 }
 
-// Connect connects the the given MQTT instance.
+// Connect connects to the given MQTT instance.
 func Connect(host, user, password string) (Client, error) {
 	opts := mqtt.NewClientOptions()
 	opts.Order = false

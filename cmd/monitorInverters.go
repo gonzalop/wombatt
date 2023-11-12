@@ -22,13 +22,13 @@ type MonitorInvertersCmd struct {
 
 	BaudRate     uint          `short:"B" default:"2400" help:"Baud rate for serial ports"`
 	PollInterval time.Duration `short:"P" default:"10s" help:"Time to wait between polling cycles"`
-	ReadTimeout  time.Duration `short:"t" default:"5s" help:"Timeout when reading from serial ports"`
+	ReadTimeout  time.Duration `short:"t" default:"5s" help:"Timeout when reading from devices"`
 
 	Monitors []string `arg:"" required:"" help:"<device>,<command1[:command2:command3...]>[,<mqtt_prefix>]. E.g. /dev/ttyS0,QPIRI:QPGS1,eg4_1"`
 
 	WebServerAddress string `short:"w" help:"Address to use for serving HTTP. <IP>:<Port>, i.e., 127.0.0.1:8080"`
 
-	DeviceType string `short:"T" default:"serial" enum:"${device_types}" help:"Device type"`
+	DeviceType string `short:"T" default:"serial" enum:"${device_types}" help:"One of ${device_types}"`
 }
 
 func (cmd *MonitorInvertersCmd) Run(globals *Globals) error {

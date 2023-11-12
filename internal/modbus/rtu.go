@@ -109,7 +109,7 @@ func (f *RTUFrame) Data() []byte {
 	return f.rawData[3 : len(f.rawData)-2]
 }
 
-// RawData returns the the entire RTU buffer, including ID, function, and CRC.
+// RawData returns the entire RTU buffer, including ID, function, and CRC.
 func (f *RTUFrame) RawData() []byte {
 	return f.rawData
 }
@@ -166,8 +166,8 @@ func CRC(data []byte) uint16 {
 	for i := 0; i < l; i++ {
 		crc16 ^= uint16(data[i])
 		for j := 0; j < 8; j++ {
-			if crc16&0x0001 > 0 {
-				crc16 = (crc16 >> 1) ^ 0xA001
+			if crc16&1 > 0 {
+				crc16 = (crc16 >> 1) ^ 0xa001
 			} else {
 				crc16 >>= 1
 			}

@@ -100,7 +100,7 @@ func updateDerivedFields(bi *EG4BatteryInfo) {
 type EG4ModbusBatteryInfo struct {
 	// The following fields must be in the same order as the Modbus registers available
 	// starting at address 0 and reading 39 registers.
-	// Reference at https://eg4electronics.com/wp-content/uploads/2023/06/EG4-LL-MODBUS-Communication-Protocol.pdf
+	// Reference at https://eg4electronics.com/backend/wp-content/uploads/2023/06/EG4-LL-MODBUS-Communication-Protocol.pdf
 	Voltage            uint16     `name:"battery_voltage" dclass:"voltage" unit:"V" multiplier:"0.01"`
 	Current            int16      `name:"current" dclass:"current" unit:"A" multiplier:"0.01"`
 	CellVoltages       [16]uint16 `name:"cell_%d_voltage" dclass:"voltage" unit:"V" multiplier:"0.001"`
