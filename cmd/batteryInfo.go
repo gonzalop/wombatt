@@ -19,8 +19,8 @@ type BatteryInfoCmd struct {
 	IDs         []uint        `required:"" short:"i" name:"battery-ids" help:"IDs of the batteries to get info from."`
 	ReadTimeout time.Duration `short:"t" default:"500ms" help:"Timeout when reading from serial ports"`
 	BaudRate    uint          `short:"B" default:"9600" help:"Baud rate"`
-	BatteryType BatteryType   `default:"EG4LLv2" help:"Battery type" enum:"${battery_types}"`
-	Protocol    string        `default:"auto" enum:"${protocols}"`
+	BatteryType BatteryType   `default:"EG4LLv2" help:"One of ${battery_types}" enum:"${battery_types}"`
+	Protocol    string        `default:"auto" enum:"${protocols}" help:"One of ${protocols}"`
 	DeviceType  string        `short:"T" default:"serial" enum:"${device_types}" help:"One of ${device_types}"`
 }
 
@@ -39,7 +39,6 @@ func (cmd *BatteryInfoCmd) Run(globals *Globals) error {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	defer reader.Close()
 	var failed error
 	for _, id := range cmd.IDs {
 		binfo, err := battery.ReadInfo(reader, uint8(id), cmd.ReadTimeout)

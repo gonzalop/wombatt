@@ -63,7 +63,7 @@ func (t *LFP4) ReadResponse(id uint8) (*RTUFrame, error) {
 		return nil, err
 	}
 	if ret != 0 {
-		return nil, fmt.Errorf("received error code %d", ret)
+		return nil, fmt.Errorf("%s", lfp4ErrorString(LFP4ReturnCode(ret)))
 	}
 	// Check LCHKSUM
 	bin, err := asciiToBin(header[9:13])
@@ -90,10 +90,6 @@ func (t *LFP4) ReadResponse(id uint8) (*RTUFrame, error) {
 		log.Printf("warning: EOI missing in response")
 	}
 	return NewRTUFrame(ascii), err
-}
-
-func (t *LFP4) Close() {
-	t.port.Close()
 }
 
 func verifyChecksum(b []byte) error {
@@ -140,4 +136,34 @@ func asciiToBin(ascii []byte) (int, error) {
 		result = (result << 8) + int(b[i])
 	}
 	return result, nil
+}
+
+type LFP4ReturnCode uint8
+
+const (
+	Normal LFP4ReturnCode = iota
+	VersionError
+	ChecksumError
+	LengthChecksumError
+	InvalidCID2
+	FormatError
+	InvalidData
+)
+
+var lfp4ReturnCode = map[LFP4ReturnCode]string{
+	Normal:              "",
+	VersionError:        "version error",
+	ChecksumError:       "CHKSUM error",
+	LengthChecksumError: "LCHKSUM error",
+	InvalidCID2:         "invalid CID2",
+	FormatError:         "format error",
+	InvalidData:         "invalid data",
+}
+
+func lfp4ErrorString(v LFP4ReturnCode) string {
+	ret, ok := lfp4ReturnCode[v]
+	if !ok {
+		ret = fmt.Sprintf("unknown error code 0x%02x", uint8(v))
+	}
+	return ret
 }

@@ -212,10 +212,6 @@ func NewRTU(port common.Port) RegisterReader {
 	return &RTU{port: port}
 }
 
-func (r *RTU) Close() {
-	r.port.Close()
-}
-
 // ReadRegisters requests 'count' holding registers from unit 'id' from the 'start' memory address.
 // and reads the response back.
 func (r *RTU) ReadRegisters(id uint8, start uint16, count uint8) (*RTUFrame, error) {

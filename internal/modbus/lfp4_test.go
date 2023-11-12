@@ -97,7 +97,6 @@ func TestLFP4Response(t *testing.T) {
 		}
 		port := NewTestPort(bytes.NewReader(resp), io.Discard)
 		reader, _ := ReaderFromProtocol(port, "lifepower4")
-		defer reader.Close()
 		lfp4, ok := reader.(*LFP4)
 		if !ok {
 			t.Fatalf("wrong reader type: got %T want *LFP4", lfp4)
@@ -119,6 +118,7 @@ func TestLFP4ReadRegisters(t *testing.T) {
 		cid2     uint8
 		rawResp  string
 		dataResp string
+		errText  string
 	}{
 		{
 			id:       1,
@@ -132,6 +132,18 @@ func TestLFP4ReadRegisters(t *testing.T) {
 			rawResp:  "7e323030313441303037303534303130313130303030303030303030303030303030303030303030303030303030303030303030343030303030303030303030303030303030393030303030303030303030313033303030303030303030303030454443340d",
 			dataResp: "3031303131303030303030303030303030303030303030303030303030303030303030303030303430303030303030303030303030303030303930303030303030303030303130333030303030303030303030304544",
 		},
+		{
+			id:      1,
+			cid2:    0x42,
+			rawResp: "7e323030333441303430303030",
+			errText: "invalid CID2",
+		},
+		{
+			id:      1,
+			cid2:    0x42,
+			rawResp: "7e323030333441303830303030",
+			errText: "unknown error code 0x08",
+		},
 	}
 	for tid, tt := range tests {
 		rawResp, err := hex.DecodeString(tt.rawResp)
@@ -140,7 +152,6 @@ func TestLFP4ReadRegisters(t *testing.T) {
 		}
 		port := NewTestPort(bytes.NewReader(rawResp), io.Discard)
 		lfp4, _ := ReaderFromProtocol(port, "lifepower4")
-		defer lfp4.Close()
 		// dataResp needs double decoding: one from the test data to rawData and one from that to actual binary data
 		// which is what ReadRegisters returns.
 		dataResp, err := hex.DecodeString(tt.dataResp)
@@ -153,7 +164,9 @@ func TestLFP4ReadRegisters(t *testing.T) {
 		}
 		frame, err := lfp4.ReadRegisters(tt.id, 0, tt.cid2)
 		if err != nil {
-			t.Errorf("test got error %v", err)
+			if tt.errText != err.Error() {
+				t.Errorf("test got error '%v', expected '%v'", err, tt.errText)
+			}
 		} else if !bytes.Equal(frame.RawData(), dataResp) {
 			t.Errorf("test %d got \n'%s'; want \n'%s'", tid, hex.EncodeToString(frame.RawData()), hex.EncodeToString(dataResp))
 		}

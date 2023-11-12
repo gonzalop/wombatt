@@ -8,7 +8,6 @@ import (
 
 type RegisterReader interface {
 	ReadRegisters(id uint8, start uint16, count uint8) (*RTUFrame, error)
-	Close()
 }
 
 func ReaderFromProtocol(port common.Port, protocol string) (RegisterReader, error) {

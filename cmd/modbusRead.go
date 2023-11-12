@@ -40,7 +40,6 @@ func (cmd *ModbusReadCmd) Run(globals *Globals) error {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	defer reader.Close()
 	frame, err := reader.ReadRegisters(cmd.ID, cmd.Start, cmd.Count)
 	if err != nil {
 		log.Printf("Error reading registers %v: %v\n", cmd.Address, err)

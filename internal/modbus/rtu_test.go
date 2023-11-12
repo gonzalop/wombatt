@@ -193,7 +193,6 @@ func TestReadRegisters(t *testing.T) {
 		}
 		port, _ := common.OpenPort(&common.PortOptions{Type: common.TestByteDevice, Address: string(resp)})
 		rtu, _ := ReaderFromProtocol(port, "RTU")
-		defer rtu.Close()
 		frame, err := rtu.ReadRegisters(1, 16, 1)
 		if err != nil && tt.errstr == "" {
 			t.Errorf("read response failed(%s): got %v; want no error", tt.resp, err)
