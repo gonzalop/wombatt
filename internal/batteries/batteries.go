@@ -1,9 +1,6 @@
 package batteries
 
 import (
-	"bytes"
-	"encoding/binary"
-	"encoding/hex"
 	"fmt"
 	"log"
 	"time"
@@ -26,37 +23,6 @@ func Instance(batteryType string) Battery {
 		return NewLFP4()
 	default:
 		log.Fatalf("Unsupported battery type: %v", batteryType)
-	}
-	return nil
-}
-
-func readIntoStruct2(result any, reader modbus.RegisterReader, timeout time.Duration, id uint8, address uint16, count uint8) error {
-	frame, err := readWithTimeout(reader, timeout, id, address, count)
-	if err != nil {
-		return err
-	}
-
-	buf := bytes.NewBuffer(frame.RawData())
-	if err := binary.Read(buf, binary.BigEndian, result); err != nil {
-		return err
-	}
-	return nil
-}
-
-func readIntoStruct(result any, reader modbus.RegisterReader, timeout time.Duration, id uint8, address uint16, count uint8) error {
-	frame, err := readWithTimeout(reader, timeout, id, address, count)
-	if err != nil {
-		return err
-	}
-
-	data := frame.Data()
-	if len(data) != (int(count) * 2) {
-		log.Printf("%s\n", hex.EncodeToString(data))
-		return fmt.Errorf("unexpected data length: got %d, want 78", len(data))
-	}
-	buf := bytes.NewBuffer(data)
-	if err := binary.Read(buf, binary.BigEndian, result); err != nil {
-		return err
 	}
 	return nil
 }

@@ -1,11 +1,24 @@
 package batteries
 
 import (
+	"bytes"
+	"encoding/binary"
+	"encoding/hex"
+	"fmt"
+	"log"
 	"time"
 
 	"wombatt/internal/modbus"
 
 	"golang.org/x/exp/slices"
+)
+
+const (
+	modbusBasicInfoAddress       uint16 = 0
+	modbusBasicInfoRegisterCount uint8  = 39
+
+	modbusExtraInfoAddress       uint16 = 105
+	modbusExtraInfoRegisterCount uint8  = 23
 )
 
 type EG4LLv2 struct {
@@ -23,9 +36,9 @@ func (*EG4LLv2) DefaultProtocol() string {
 	return "RTU"
 }
 
-func (*EG4LLv2) ReadInfo(reader modbus.RegisterReader, id uint8, timeout time.Duration) (any, error) {
+func (e *EG4LLv2) ReadInfo(reader modbus.RegisterReader, id uint8, timeout time.Duration) (any, error) {
 	var info EG4ModbusBatteryInfo
-	if err := readIntoStruct(&info, reader, timeout, id, 0, 39); err != nil {
+	if err := e.readIntoStruct(&info, reader, timeout, id, modbusBasicInfoAddress, modbusBasicInfoRegisterCount); err != nil {
 		return nil, err
 	}
 	result := EG4BatteryInfo{EG4ModbusBatteryInfo: info}
@@ -34,13 +47,31 @@ func (*EG4LLv2) ReadInfo(reader modbus.RegisterReader, id uint8, timeout time.Du
 	return &result, nil
 }
 
-func (*EG4LLv2) ReadExtraInfo(reader modbus.RegisterReader, id uint8, timeout time.Duration) (any, error) {
+func (e *EG4LLv2) ReadExtraInfo(reader modbus.RegisterReader, id uint8, timeout time.Duration) (any, error) {
 	var extra EG4ModbusExtraBatteryInfo
-	err := readIntoStruct(&extra, reader, timeout, id, 105, 23)
+	err := e.readIntoStruct(&extra, reader, timeout, id, modbusExtraInfoAddress, modbusExtraInfoRegisterCount)
 	if err != nil {
 		return nil, err
 	}
 	return &extra, nil
+}
+
+func (*EG4LLv2) readIntoStruct(result any, reader modbus.RegisterReader, timeout time.Duration, id uint8, address uint16, count uint8) error {
+	frame, err := readWithTimeout(reader, timeout, id, address, count)
+	if err != nil {
+		return err
+	}
+
+	data := frame.Data()
+	if len(data) != (int(count) * 2) {
+		log.Printf("%s\n", hex.EncodeToString(data))
+		return fmt.Errorf("unexpected data length: got %d, want 78", len(data))
+	}
+	buf := bytes.NewBuffer(data)
+	if err := binary.Read(buf, binary.BigEndian, result); err != nil {
+		return err
+	}
+	return nil
 }
 
 func updateDerivedFields(bi *EG4BatteryInfo) {
