@@ -74,8 +74,8 @@ type LFP4AnalogValueBatteryInfo struct {
 	FullCapacity      uint16     `name:"full_capacity:" unit:"Ah" multiplier:"0.01"`
 	CycleCounts       uint16     `name:"cycle_counts" icon:"mdi:battery-sync"`
 	UserDefined       uint8      `name:"user_defined"`
-	SOH               uint16     `name:"soh" unit:"%"`
 	SOC               uint16     `name:"soc" dclass:"battery" unit:"%"`
+	SOH               uint16     `name:"soh" unit:"%"`
 	MaxCellVoltage    uint16     `name:"max_cell_voltage" dclass:"voltage" unit:"V" multiplier:"0.001"`
 	MinCellVoltage    uint16     `name:"min_cell_voltage" dclass:"voltage" unit:"V" multiplier:"0.001"`
 	CellVoltageDiff   uint16     `name:"diff_cell_voltage" dclass:"voltage" unit:"V" multiplier:"0.001"`
