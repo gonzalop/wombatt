@@ -197,7 +197,7 @@ func TestRTUReadRegisters(t *testing.T) {
 			t.Fatalf("malformed response string in test: %s", tt.resp)
 		}
 		port := common.NewTestPort(bytes.NewReader(resp), io.Discard)
-		rtu, _ := ReaderFromProtocol(port, "RTU")
+		rtu, _ := ReaderFromProtocol(port, RTUProtocol)
 		frame, err := rtu.ReadRegisters(1, 16, 1)
 		if err != nil && tt.errstr == "" {
 			t.Errorf("read response failed(%s): got %v; want no error", tt.resp, err)

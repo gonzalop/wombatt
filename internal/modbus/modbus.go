@@ -6,6 +6,12 @@ import (
 	"wombatt/internal/common"
 )
 
+const (
+	RTUProtocol = "ModbusRTU"
+	TCPProtocol = "ModbusTCP"
+	Lifepower4  = "lifepower4"
+)
+
 type RegisterReader interface {
 	ReadRegisters(id uint8, start uint16, count uint8) (*RTUFrame, error)
 }
@@ -21,11 +27,11 @@ func ReaderFromProtocol(port common.Port, protocol string) (RegisterReader, erro
 		default:
 			return nil, fmt.Errorf("unable to guess a protocol")
 		}
-	case "RTU":
+	case RTUProtocol:
 		return NewRTU(port), nil
-	case "TCP":
+	case TCPProtocol:
 		return NewTCP(port), nil
-	case "lifepower4":
+	case Lifepower4:
 		return NewLFP4(port), nil
 	default:
 		return nil, fmt.Errorf("unknown protocol: %v", protocol)

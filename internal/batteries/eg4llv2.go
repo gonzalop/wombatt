@@ -32,8 +32,13 @@ func (*EG4LLv2) InfoInstance() any {
 	return &EG4BatteryInfo{}
 }
 
-func (*EG4LLv2) DefaultProtocol() string {
-	return "RTU"
+func (*EG4LLv2) DefaultProtocol(deviceType string) string {
+	switch deviceType {
+	case "tcp":
+		return modbus.TCPProtocol
+	default:
+		return modbus.RTUProtocol
+	}
 }
 
 func (e *EG4LLv2) ReadInfo(reader modbus.RegisterReader, id uint8, timeout time.Duration) (any, error) {

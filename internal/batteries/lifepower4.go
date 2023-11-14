@@ -24,7 +24,7 @@ func (*LFP4) InfoInstance() any {
 	return &LFP4AnalogValueBatteryInfo{}
 }
 
-func (*LFP4) DefaultProtocol() string {
+func (*LFP4) DefaultProtocol(_ string) string {
 	return "lifepower4"
 }
 

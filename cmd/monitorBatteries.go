@@ -55,7 +55,7 @@ func (cmd *MonitorBatteriesCmd) Run(globals *Globals) error {
 	}
 	battery := batteries.Instance(string(cmd.BatteryType))
 	if cmd.Protocol == "auto" {
-		cmd.Protocol = battery.DefaultProtocol()
+		cmd.Protocol = battery.DefaultProtocol(cmd.DeviceType)
 	}
 	var mqttChannel chan *batteryInfo
 	if cmd.MQTTBroker != "" {

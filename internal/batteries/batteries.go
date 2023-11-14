@@ -12,7 +12,7 @@ type Battery interface {
 	ReadInfo(modbus.RegisterReader, uint8, time.Duration) (any, error)
 	ReadExtraInfo(modbus.RegisterReader, uint8, time.Duration) (any, error)
 	InfoInstance() any
-	DefaultProtocol() string
+	DefaultProtocol(deviceType string) string
 }
 
 func Instance(batteryType string) Battery {

@@ -24,7 +24,7 @@ func main() {
 			"version":       "0.0.3",
 			"battery_types": "EG4LLv2,lifepower4",
 			"device_types":  "serial,hidraw,tcp",
-			"protocols":     "auto,RTU,TCP,lifepower4",
+			"protocols":     "auto,ModbusRTU,ModbusTCP,lifepower4",
 		})
 	err := ctx.Run(&cli.Globals)
 	ctx.FatalIfErrorf(err)

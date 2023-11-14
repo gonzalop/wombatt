@@ -39,7 +39,7 @@ func TestTCPReadRegisters(t *testing.T) {
 			t.Fatalf("malformed response string in test: %s", tt.resp)
 		}
 		port := common.NewTestPort(bytes.NewReader(resp), io.Discard)
-		tcp, _ := ReaderFromProtocol(port, "TCP")
+		tcp, _ := ReaderFromProtocol(port, TCPProtocol)
 		fmt.Printf("HEre\n")
 		frame, err := tcp.ReadRegisters(1, 16, 1)
 		if err != nil && tt.errstr == "" {
