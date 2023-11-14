@@ -130,7 +130,7 @@ func mqttPublish(client mqttha.Client, ch chan *batteryInfo, cmd *MonitorBatteri
 		}
 		common.TraverseStruct(bi.Info, f)
 		topic := fmt.Sprintf("%s/sensor/%s_battery%d_info/state", cmd.MQTTTopicPrefix, cmd.MQTTPrefix, bi.ID)
-		if err := client.PublishMap(topic, config); err != nil {
+		if err := client.PublishMap(topic, false, config); err != nil {
 			log.Printf("[mqtt] error publishing to %s: %v\n", cmd.MQTTBroker, err)
 		}
 	}
@@ -169,7 +169,7 @@ func addDiscoveryConfig(client mqttha.Client, cmd *MonitorBatteriesCmd, id uint,
 		}
 
 		topic := fmt.Sprintf("%s/sensor/%s_battery%d_%s/config", cmd.MQTTTopicPrefix, cmd.MQTTPrefix, id, name)
-		if err := client.PublishMap(topic, config); err != nil {
+		if err := client.PublishMap(topic, true, config); err != nil {
 			log.Printf("[mqtt] error publishing to %s: %v\n", cmd.MQTTBroker, err)
 		}
 	}

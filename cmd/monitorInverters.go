@@ -189,7 +189,7 @@ func addStructDiscoveryConfig(client mqttha.Client, st any, topicPrefix, tag str
 		}
 
 		topic := fmt.Sprintf("%s/sensor/%s_%s/config", topicPrefix, tag, name)
-		if err := client.PublishMap(topic, config); err != nil {
+		if err := client.PublishMap(topic, true, config); err != nil {
 			log.Printf("[mqtt] error publishing: %v\n", err)
 		}
 	}
@@ -212,7 +212,7 @@ func (im *inverterMonitor) publishToMQTT(mqttTopicPrefix string, results []any, 
 		return
 	}
 	topic := fmt.Sprintf("%s/sensor/%s_info/state", mqttTopicPrefix, im.MQTTTag)
-	if err := im.client.PublishMap(topic, config); err != nil {
+	if err := im.client.PublishMap(topic, false, config); err != nil {
 		log.Printf("[mqtt] error publishing: %v\n", err)
 	}
 }

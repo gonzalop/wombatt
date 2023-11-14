@@ -11,7 +11,7 @@ type Client interface {
 	mqtt.Client
 
 	// PublishMap will publish a JSON encoded map to the given topic.
-	PublishMap(topic string, config map[string]interface{}) error
+	PublishMap(topic string, retain bool, config map[string]interface{}) error
 }
 
 type haClient struct {
@@ -33,12 +33,12 @@ func Connect(host, user, password string) (Client, error) {
 }
 
 // PublishMap will publish a JSON encoded map to the given topic.
-func (c haClient) PublishMap(topic string, data map[string]interface{}) error {
+func (c haClient) PublishMap(topic string, retain bool, data map[string]interface{}) error {
 	j, err := json.Marshal(data)
 	if err != nil {
 		return err
 	}
-	token := c.Publish(topic, 0, true, j)
+	token := c.Publish(topic, 0, retain, j)
 	if token.Wait() && token.Error() != nil {
 		return token.Error()
 	}
