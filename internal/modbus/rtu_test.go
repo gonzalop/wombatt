@@ -140,7 +140,7 @@ func TestReadRTUResponse(t *testing.T) {
 			t.Fatalf("malformed response string in test: %s", tt.resp)
 		}
 		r := bytes.NewReader(resp)
-		frame, err := readRTUResponse(r)
+		data, err := readRTUResponse(r)
 		if err != nil && tt.errstr == "" {
 			t.Errorf("read response failed(%s): got %v; want no error", tt.resp, err)
 			continue
@@ -155,6 +155,7 @@ func TestReadRTUResponse(t *testing.T) {
 			}
 			continue
 		}
+		frame := NewRTUFrame(data)
 		if frame.ID() != tt.id {
 			t.Errorf("wrong ID in response(%s): got %02d; want %02d", tt.resp, frame.ID(), tt.id)
 		}
@@ -198,7 +199,7 @@ func TestRTUReadRegisters(t *testing.T) {
 		}
 		port := common.NewTestPort(bytes.NewReader(resp), io.Discard)
 		rtu, _ := ReaderFromProtocol(port, RTUProtocol)
-		frame, err := rtu.ReadRegisters(1, 16, 1)
+		data, err := rtu.ReadRegisters(1, 16, 1)
 		if err != nil && tt.errstr == "" {
 			t.Errorf("read response failed(%s): got %v; want no error", tt.resp, err)
 			continue
@@ -213,6 +214,7 @@ func TestRTUReadRegisters(t *testing.T) {
 			}
 			continue
 		}
+		frame := NewRTUFrame(data)
 		if frame.ID() != tt.id {
 			t.Errorf("wrong ID in response(%s): got %02d; want %02d", tt.resp, frame.ID(), tt.id)
 		}

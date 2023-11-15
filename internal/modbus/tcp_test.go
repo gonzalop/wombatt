@@ -19,20 +19,27 @@ func TestTCPReadRegisters(t *testing.T) {
 		fcode  RTUFunction
 	}{
 		{
-			resp:  "00000000001001032000670000006314d3ff10001f09c49ab09c400204000000060000000015e00000",
+			resp:  "00010000001001032000670000006314d3ff10001f09c49ab09c400204000000060000000015e00000",
 			id:    1,
 			fcode: 3,
 		},
 		{
-			resp:   "010203040506",
+			resp:   "00010000001001032000670000006314d3ff10001f09c49ab09c400204000000060000000015e00000",
+			id:     1,
+			fcode:  3,
+			errstr: "unexpected transaction ID: got 0x0001; want 0x0002",
+		},
+		{
+			resp:   "000303040506",
 			errstr: "EOF", // from the io package directly
 		},
 		{
-			resp:   "01020304050607",
+			resp:   "00040304050607",
 			errstr: "unexpected EOF",
 		},
 	}
 
+	tid.Store(0) // Reset the transaction counter in tcp.go so we get predictable TIDs
 	for _, tt := range tests {
 		resp, err := hex.DecodeString(tt.resp)
 		if err != nil {
@@ -40,8 +47,7 @@ func TestTCPReadRegisters(t *testing.T) {
 		}
 		port := common.NewTestPort(bytes.NewReader(resp), io.Discard)
 		tcp, _ := ReaderFromProtocol(port, TCPProtocol)
-		fmt.Printf("HEre\n")
-		frame, err := tcp.ReadRegisters(1, 16, 1)
+		data, err := tcp.ReadRegisters(1, 16, 1)
 		if err != nil && tt.errstr == "" {
 			t.Errorf("read response failed(%s): got %v; want no error", tt.resp, err)
 			continue
@@ -56,6 +62,7 @@ func TestTCPReadRegisters(t *testing.T) {
 			}
 			continue
 		}
+		frame := NewRTUFrame(data)
 		if frame.ID() != tt.id {
 			t.Errorf("wrong ID in response(%s): got %02d; want %02d", tt.resp, frame.ID(), tt.id)
 		}

@@ -33,9 +33,9 @@ func TestLFP4Request(t *testing.T) {
 		if err != nil {
 			t.Fatalf("malformed request string in test %d: %s", tid, tt.req)
 		}
-		frame := buildReadRequestLFP4Frame(tt.id, tt.cid2)
-		if !bytes.Equal(frame.RawData(), req) {
-			t.Errorf("test %d got '%s'; want '%s'", tid, hex.EncodeToString(frame.RawData()), tt.req)
+		data := buildReadRequestLFP4Frame(tt.id, tt.cid2)
+		if !bytes.Equal(data, req) {
+			t.Errorf("test %d got '%s'; want '%s'", tid, hex.EncodeToString(data), tt.req)
 		}
 	}
 }
@@ -70,11 +70,11 @@ func TestLFP4Response(t *testing.T) {
 		if !ok {
 			t.Fatalf("wrong reader type: got %T want *LFP4", lfp4)
 		}
-		frame, err := lfp4.ReadResponse(1)
+		data, err := lfp4.ReadResponse(1)
 		if err != nil {
 			t.Errorf("test got error %v", err)
-		} else if !bytes.Equal(frame.RawData(), resp) {
-			t.Errorf("test %d got \n'%s'; want \n'%s'", tid, hex.EncodeToString(frame.RawData()), tt.resp)
+		} else if !bytes.Equal(data, resp) {
+			t.Errorf("test %d got \n'%s'; want \n'%s'", tid, hex.EncodeToString(data), tt.resp)
 		}
 	}
 }
@@ -131,13 +131,13 @@ func TestLFP4ReadRegisters(t *testing.T) {
 		if err != nil {
 			t.Fatalf("malformed decoded data response string in test %d: %s", tid, tt.dataResp)
 		}
-		frame, err := lfp4.ReadRegisters(tt.id, 0, tt.cid2)
+		data, err := lfp4.ReadRegisters(tt.id, 0, tt.cid2)
 		if err != nil {
 			if tt.errText != err.Error() {
 				t.Errorf("test got error '%v', expected '%v'", err, tt.errText)
 			}
-		} else if !bytes.Equal(frame.RawData(), dataResp) {
-			t.Errorf("test %d got \n'%s'; want \n'%s'", tid, hex.EncodeToString(frame.RawData()), hex.EncodeToString(dataResp))
+		} else if !bytes.Equal(data, dataResp) {
+			t.Errorf("test %d got \n'%s'; want \n'%s'", tid, hex.EncodeToString(data), hex.EncodeToString(dataResp))
 		}
 	}
 }

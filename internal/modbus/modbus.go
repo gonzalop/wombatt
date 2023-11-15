@@ -13,7 +13,7 @@ const (
 )
 
 type RegisterReader interface {
-	ReadRegisters(id uint8, start uint16, count uint8) (*RTUFrame, error)
+	ReadRegisters(id uint8, start uint16, count uint8) ([]byte, error)
 }
 
 func ReaderFromProtocol(port common.Port, protocol string) (RegisterReader, error) {

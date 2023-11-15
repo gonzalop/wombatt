@@ -1,8 +1,6 @@
 package batteries
 
 import (
-	"bytes"
-	"encoding/binary"
 	"time"
 
 	"wombatt/internal/modbus"
@@ -28,34 +26,21 @@ func (*LFP4) DefaultProtocol(_ string) string {
 	return "lifepower4"
 }
 
-func (l *LFP4) ReadInfo(reader modbus.RegisterReader, id uint8, timeout time.Duration) (any, error) {
+func (*LFP4) ReadInfo(reader modbus.RegisterReader, id uint8, timeout time.Duration) (any, error) {
 	var result LFP4AnalogValueBatteryInfo
-	if err := l.readIntoStruct(&result, reader, timeout, id, cmdGetAnalogValue); err != nil {
+	if err := readIntoStruct(&result, reader, timeout, id, 0 /*ignored*/, cmdGetAnalogValue); err != nil {
 		return nil, err
 	}
 	return &result, nil
 }
 
-func (l *LFP4) ReadExtraInfo(reader modbus.RegisterReader, id uint8, timeout time.Duration) (any, error) {
+func (*LFP4) ReadExtraInfo(reader modbus.RegisterReader, id uint8, timeout time.Duration) (any, error) {
 	var extra LFP4AlarmInformation
-	err := l.readIntoStruct(&extra, reader, timeout, id, cmdGetAlarmInfo)
+	err := readIntoStruct(&extra, reader, timeout, id, 0 /*ignored*/, cmdGetAlarmInfo)
 	if err != nil {
 		return nil, err
 	}
 	return &extra, nil
-}
-
-func (*LFP4) readIntoStruct(result any, reader modbus.RegisterReader, timeout time.Duration, id uint8, cid2 uint8) error {
-	frame, err := readWithTimeout(reader, timeout, id, 0 /*ignored*/, cid2)
-	if err != nil {
-		return err
-	}
-
-	buf := bytes.NewBuffer(frame.RawData())
-	if err := binary.Read(buf, binary.BigEndian, result); err != nil {
-		return err
-	}
-	return nil
 }
 
 type LFP4AnalogValueBatteryInfo struct {

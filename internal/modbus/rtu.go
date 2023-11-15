@@ -80,7 +80,7 @@ func NewRTUFrame(rawData []byte) *RTUFrame {
 	return &RTUFrame{rawData: rawData}
 }
 
-func buildReadRequestRTUFrame(id uint8, function RTUFunction, address uint16, length uint16) *RTUFrame {
+func buildReadRequestRTUFrame(id uint8, function RTUFunction, address uint16, length uint16) []byte {
 	var b bytes.Buffer
 	b.WriteByte(id)
 	b.WriteByte(byte(function))
@@ -91,7 +91,7 @@ func buildReadRequestRTUFrame(id uint8, function RTUFunction, address uint16, le
 	checksum := CRC(b.Bytes())
 	b.WriteByte(uint8(checksum & uint16(0xff)))
 	b.WriteByte(uint8((checksum & uint16(0xff00) >> 8)))
-	return &RTUFrame{rawData: b.Bytes()}
+	return b.Bytes()
 }
 
 // ID returns the client ID of the RTUFrame.
@@ -122,7 +122,7 @@ func (f *RTUFrame) CRC() uint16 {
 // readRTUResponse reads an entire RTUFrame.
 //
 // The frame returned will be nil in case of an error, except for protocol and/or CRC errors.
-func readRTUResponse(port io.Reader) (*RTUFrame, error) {
+func readRTUResponse(port io.Reader) ([]byte, error) {
 	b := make([]byte, MaxRTUFrameLength)
 	n, err := io.ReadFull(port, b[0:3])
 	if err != nil {
@@ -156,7 +156,7 @@ func readRTUResponse(port io.Reader) (*RTUFrame, error) {
 			err = fmt.Errorf("%w (in addition, invalid crc: got %x, want %x)", err, frame.CRC(), checksum)
 		}
 	}
-	return frame, err
+	return frame.RawData(), err
 }
 
 // CRC returns the CRC16 for the given bytes.
@@ -214,10 +214,10 @@ func NewRTU(port common.Port) RegisterReader {
 
 // ReadRegisters requests 'count' holding registers from unit 'id' from the 'start' memory address.
 // and reads the response back.
-func (r *RTU) ReadRegisters(id uint8, start uint16, count uint8) (*RTUFrame, error) {
+func (r *RTU) ReadRegisters(id uint8, start uint16, count uint8) ([]byte, error) {
 	log.Printf("RTU ReadRegisters")
 	f := buildReadRequestRTUFrame(id, ReadHoldingRegisters, start, uint16(count))
-	if _, err := r.port.Write(f.RawData()); err != nil {
+	if _, err := r.port.Write(f); err != nil {
 		return nil, err
 	}
 	return readRTUResponse(r.port)

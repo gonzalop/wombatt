@@ -20,7 +20,7 @@ func NewLFP4(port common.Port) RegisterReader {
 	return &LFP4{port: port}
 }
 
-func buildReadRequestLFP4Frame(id uint8, cid2 uint8) *RTUFrame {
+func buildReadRequestLFP4Frame(id uint8, cid2 uint8) []byte {
 	var b bytes.Buffer
 	b.WriteByte(0x7e)                                           // SOI
 	b.WriteString("20")                                         // VER
@@ -30,29 +30,28 @@ func buildReadRequestLFP4Frame(id uint8, cid2 uint8) *RTUFrame {
 	b.WriteString("0000")                                       // LENGTH
 	b.WriteString(fmt.Sprintf("%04X", lfp4Checksum(b.Bytes()))) // CHKSUM
 	b.WriteByte(0x0d)                                           // EOI
-	return &RTUFrame{rawData: b.Bytes()}
+	return b.Bytes()
 }
 
 // ReadRegisters sends the cid2 command to unit id and returns the response.
-func (t *LFP4) ReadRegisters(id uint8, _ uint16, cid2 uint8) (*RTUFrame, error) {
+func (t *LFP4) ReadRegisters(id uint8, _ uint16, cid2 uint8) ([]byte, error) {
 	f := buildReadRequestLFP4Frame(id, cid2)
-	if _, err := t.port.Write(f.RawData()); err != nil {
+	if _, err := t.port.Write(f); err != nil {
 		return nil, err
 	}
-	rframe, err := t.ReadResponse(id)
+	ascii, err := t.ReadResponse(id)
 	if err != nil {
 		return nil, err
 	}
 	// Remove header info, crc and EOI.
-	ascii := rframe.RawData()
 	data, err := hex.DecodeString(string(ascii[13 : len(ascii)-3]))
 	if err != nil {
 		return nil, fmt.Errorf("error decoding ascii data: %w", err)
 	}
-	return NewRTUFrame(data), nil
+	return data, nil
 }
 
-func (t *LFP4) ReadResponse(id uint8) (*RTUFrame, error) {
+func (t *LFP4) ReadResponse(id uint8) ([]byte, error) {
 	header := make([]byte, 13) // 1 byte for SOI; 2 for each of VER, ADR, CIR1, and RTN; 4 for LENGTH
 	if _, err := io.ReadFull(t.port, header); err != nil {
 		return nil, err
@@ -89,7 +88,7 @@ func (t *LFP4) ReadResponse(id uint8) (*RTUFrame, error) {
 	if ascii[len(ascii)-1] != 0xd {
 		log.Printf("warning: EOI missing in response")
 	}
-	return NewRTUFrame(ascii), err
+	return ascii, err
 }
 
 func verifyChecksum(b []byte) error {

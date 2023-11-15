@@ -1,6 +1,8 @@
 package batteries
 
 import (
+	"bytes"
+	"encoding/binary"
 	"fmt"
 	"log"
 	"time"
@@ -27,18 +29,30 @@ func Instance(batteryType string) Battery {
 	return nil
 }
 
-func readWithTimeout(reader modbus.RegisterReader, timeout time.Duration, id uint8, start uint16, count uint8) (*modbus.RTUFrame, error) {
-	var frame *modbus.RTUFrame
+func readIntoStruct(result any, reader modbus.RegisterReader, timeout time.Duration, id uint8, address uint16, count uint8) error {
+	data, err := readWithTimeout(reader, timeout, id, address, count)
+	if err != nil {
+		return err
+	}
+	buf := bytes.NewBuffer(data)
+	if err := binary.Read(buf, binary.BigEndian, result); err != nil {
+		return err
+	}
+	return nil
+}
+
+func readWithTimeout(reader modbus.RegisterReader, timeout time.Duration, id uint8, start uint16, count uint8) ([]byte, error) {
+	var data []byte
 	var err error
 	result := make(chan struct{}, 1)
 	go func() {
-		frame, err = reader.ReadRegisters(id, start, count)
+		data, err = reader.ReadRegisters(id, start, count)
 		result <- struct{}{}
 	}()
 	select {
 	case <-time.After(timeout):
 		return nil, fmt.Errorf("timed out")
 	case <-result:
-		return frame, err
+		return data, err
 	}
 }
