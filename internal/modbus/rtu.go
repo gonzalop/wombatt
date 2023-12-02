@@ -6,7 +6,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
-	"log"
 
 	"wombatt/internal/common"
 )
@@ -114,7 +113,7 @@ func (f *RTUFrame) RawData() []byte {
 	return f.rawData
 }
 
-// CRC returns the CRC if the RTUFrame.
+// CRC returns the CRC of the RTUFrame.
 func (f *RTUFrame) CRC() uint16 {
 	return uint16(f.rawData[len(f.rawData)-2]) + (uint16(f.rawData[len(f.rawData)-1]) * uint16(256))
 }
@@ -215,7 +214,6 @@ func NewRTU(port common.Port) RegisterReader {
 // ReadRegisters requests 'count' holding registers from unit 'id' from the 'start' memory address.
 // and reads the response back.
 func (r *RTU) ReadRegisters(id uint8, start uint16, count uint8) ([]byte, error) {
-	log.Printf("RTU ReadRegisters")
 	f := buildReadRequestRTUFrame(id, ReadHoldingRegisters, start, uint16(count))
 	if _, err := r.port.Write(f); err != nil {
 		return nil, err
