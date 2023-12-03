@@ -15,18 +15,16 @@ import (
 
 func TestBatteryInfo(t *testing.T) {
 	tests := []struct {
-		resp        string
+		resp        string // hex-encoded response
 		isExtra     bool
 		protocol    string
 		batteryType string
-		data        string // hex encoded struct data:
 		value       any
 	}{
 		{
 			resp:        "02034e14f600780d190d1b0d1a0d1b0d1a0d1b0d1a0d1b0d1a0d1b0d1a0d1a0d1a0d1b0d1a0d1a0019001b0018006100640064006100010000000000000000000b15752a00181818180000001003e800003dea",
 			protocol:    modbus.RTUProtocol,
 			batteryType: "EG4LLv2",
-			data:        "14f600780d190d1b0d1a0d1b0d1a0d1b0d1a0d1b0d1a0d1b0d1a0d1a0d1a0d1b0d1a0d1a0019001b0018006100640064006100010000000000000000000b000186a0181818180000001003e800000d1b0d190d1a0d1a",
 			value: &EG4BatteryInfo{
 				EG4ModbusBatteryInfo: EG4ModbusBatteryInfo{
 					Voltage:            5366,
@@ -40,20 +38,14 @@ func TestBatteryInfo(t *testing.T) {
 					SOH:                100,
 					SOC:                97,
 					Status:             1,
-					Warning:            0,
-					Protection:         0,
-					ErrorCode:          0,
 					CycleCounts:        11,
 					FullCapacity:       100000,
 					Temp1:              24,
 					Temp2:              24,
 					Temp3:              24,
 					Temp4:              24,
-					Temp5:              0,
-					Temp6:              0,
 					CellNum:            16,
 					DesignedCapacity:   1000,
-					CellBalanceStatus:  0,
 				},
 				MaxVoltage:    3355,
 				MinVoltage:    3353,
@@ -66,11 +58,54 @@ func TestBatteryInfo(t *testing.T) {
 			isExtra:     true,
 			protocol:    modbus.RTUProtocol,
 			batteryType: "EG4LLv2",
-			data:        "4c46502d35312e325631303041682d56312e3000000000005a3032543034323032322d31302d3236000000000000",
 			value: &EG4ModbusExtraBatteryInfo{
+				// "LFP-51.2V100Ah-V1.0"
+				// "Z02T04"
+				// "2022-10-26"
 				Model:           [24]byte{76, 70, 80, 45, 53, 49, 46, 50, 86, 49, 48, 48, 65, 104, 45, 86, 49, 46, 48, 0, 0, 0, 0, 0},
 				FirmwareVersion: [6]byte{90, 48, 50, 84, 48, 52},
 				Serial:          [16]byte{50, 48, 50, 50, 45, 49, 48, 45, 50, 54, 0, 0, 0, 0, 0, 0},
+			},
+		},
+		{
+			resp:        "7e32303031344130304130434130313031313030433534304338313043383130433832304338313043383130433831304338313043383230433832304338323043383230433832304338323043383230433745303430424344304243443042434430424344304244373042443730303030313346443030303032373130303030303046303030303030363430433832304335343030324530424344304243443030303030303135303030303030334330303030303030413030303030303144303030303030303030303030303030303030303230303144443330300d",
+			protocol:    modbus.Lifepower4,
+			batteryType: "lifepower4",
+			value: &LFP4AnalogValueBatteryInfo{
+				DataFlag:          1,
+				NumberOfCells:     16,
+				CellVoltages:      [16]uint16{3156, 3201, 3201, 3202, 3201, 3201, 3201, 3201, 3202, 3202, 3202, 3202, 3202, 3202, 3202, 3198},
+				CellTemps:         [4]uint16{3021, 3021, 3021, 3021},
+				EnvTemp:           3031,
+				MOSFETTemp:        3031,
+				PackVoltage:       5117,
+				FullCapacity:      10000,
+				UserDefined:       15,
+				SOH:               100,
+				MaxCellVoltage:    3202,
+				MinCellVoltage:    3156,
+				CellVoltageDiff:   46,
+				MaxCellTemp:       3021,
+				MinCellTemp:       3021,
+				CumChargingCap:    21,
+				CumDischargeCap:   60,
+				CumChargingPower:  10,
+				CumDischargePower: 29,
+				CumChargingTimes:  2,
+				CumDischargeTimes: 29,
+			},
+		},
+		{
+			resp:        "7e323030313441303037303534303130313130303030303030303030303030303030303030303030303030303030303030303030343030303030303030303030303030303030393030303030303030303030313033303030303030303030303030454443340d",
+			isExtra:     true,
+			protocol:    modbus.Lifepower4,
+			batteryType: "lifepower4",
+			value: &LFP4AlarmInfo{
+				DataFlag:               1,
+				NumberOfCells:          16,
+				UserDefined:            9,
+				RemainingCapacityAlarm: 1,
+				FETStatusCode:          3,
 			},
 		},
 	}
@@ -85,25 +120,31 @@ func TestBatteryInfo(t *testing.T) {
 		if reader == nil {
 			t.Fatalf("no available reader: %v", err)
 		}
-		llv2 := Instance(tt.batteryType)
-		if llv2 == nil {
+		inst := Instance(tt.batteryType)
+		if inst == nil {
 			t.Fatalf("invalid battery type with no instance")
+		}
+		if inst.DefaultProtocol("") != tt.protocol {
+			t.Fatalf("wrong protocol (%d). got %v; want %v", tid, inst.DefaultProtocol(""), tt.protocol)
 		}
 		var bat any
 		if !tt.isExtra {
-			bat, err = llv2.ReadInfo(reader, 2, 1*time.Second)
+			if reflect.TypeOf(inst.InfoInstance()) != reflect.TypeOf(tt.value) {
+				t.Errorf("wrong instance type (%d). want %v; got %v", tid, reflect.TypeOf(bat), reflect.TypeOf(tt.value))
+			}
+			bat, err = inst.ReadInfo(reader, 2, 1*time.Second)
 		} else {
-			bat, err = llv2.ReadExtraInfo(reader, 2, 1*time.Second)
+			bat, err = inst.ReadExtraInfo(reader, 2, 1*time.Second)
 		}
 		if err != nil {
-			t.Fatalf("error reading battery info: %v", err)
+			t.Fatalf("error reading battery info (%d): %v", tid, err)
 		}
 		var b bytes.Buffer
 		if err := binary.Write(&b, binary.BigEndian, bat); err != nil {
 			t.Fatalf("error writing to buffer: %v", err)
 		}
 		if !reflect.DeepEqual(bat, tt.value) {
-			t.Errorf("got %v; want %v", bat, tt.value)
+			t.Errorf("structs not equal (%d). got %v; want %v", tid, bat, tt.value)
 		}
 	}
 }

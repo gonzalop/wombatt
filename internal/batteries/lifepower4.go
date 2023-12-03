@@ -35,7 +35,7 @@ func (*LFP4) ReadInfo(reader modbus.RegisterReader, id uint8, timeout time.Durat
 }
 
 func (*LFP4) ReadExtraInfo(reader modbus.RegisterReader, id uint8, timeout time.Duration) (any, error) {
-	var extra LFP4AlarmInformation
+	var extra LFP4AlarmInfo
 	err := readIntoStruct(&extra, reader, timeout, id, 0 /*ignored*/, cmdGetAlarmInfo)
 	if err != nil {
 		return nil, err
@@ -76,7 +76,7 @@ type LFP4AnalogValueBatteryInfo struct {
 	CumDischargeTimes uint16     `name:"cumulative_discharge_times" unit:"h"`
 }
 
-type LFP4AlarmInformation struct {
+type LFP4AlarmInfo struct {
 	DataFlag               uint8     `name:"alarm_flag" flags:"0x80,0x40,0x20,0x10,0x08,0x04,no unread alarms,unread alarms"`
 	_                      uint8     `name:"pack_group"`
 	NumberOfCells          uint8     `skip:"1"` // 16 or 8, if it's 8, loading data will not work!
