@@ -1,5 +1,5 @@
 NAME:=wombatt
-VERSION:=0.0.3
+VERSION:=0.0.4
 LINUX_ARCH:=amd64 arm arm64
 
 all:
