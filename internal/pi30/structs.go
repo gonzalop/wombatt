@@ -1,5 +1,11 @@
 package pi30
 
+// ResponseChecker is implemented for structs that were successfully read but
+// contain what looks like invalid information.
+type ResponseChecker interface {
+	Valid() bool
+}
+
 type EmptyResponse struct {
 	AckOrNak string `desc:"response"`
 }
@@ -49,6 +55,11 @@ type QPIGSResponse struct {
 	SolarFeedToGrid             int8    `name:"solar_feed_to_grid" desc:"Solar feed to grid" values:"0:normal,1:solar feed the grid"`
 	// CountryRegulations          int8    `name:"country_regulations" desc:"Country regulations" values:"00:India,01:Germany,02:South America"`
 	// SolarFeedToGridPower        int16   `name:"solar_feed_to_grid_power" desc:"Solar feed to grid power" unit:"W"`
+}
+
+func (q *QPIGSResponse) Valid() bool {
+	// Some times one of two inverters has mostly zeroes in its QPIGS response
+	return q.GridVoltage != 0.0 && q.GridFrequency != 0.0
 }
 
 type QPIGS2Response struct {

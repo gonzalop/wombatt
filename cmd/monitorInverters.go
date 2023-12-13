@@ -102,14 +102,8 @@ func runInverterMonitor(cmd *MonitorInvertersCmd, monitors []*inverterMonitor) e
 		}
 		wg.Wait()
 		for i, r := range responses {
-			m := r.monitor
-			m.Publish(cmd.MQTTTopicPrefix, r.Responses, r.Errors)
-			for ic, ir := range r.Responses {
-				if r.Errors[ic] != nil {
-					continue
-				}
-				m.webServer.Publish(fmt.Sprintf("%d/%s", i+1, r.monitor.Commands[ic]), ir)
-			}
+			r.ValidateResponses()
+			r.Publish(cmd.MQTTTopicPrefix, i)
 		}
 		responses = nil
 		time.Sleep(cmd.PollInterval)
@@ -120,6 +114,39 @@ type cmdResponse struct {
 	Responses []any
 	Errors    []error
 	monitor   *inverterMonitor
+}
+
+func (r *cmdResponse) ValidateResponses() {
+	for i, resp := range r.Responses {
+		v, ok := resp.(pi30.ResponseChecker)
+		if !ok || v.Valid() {
+			continue
+		}
+		r.Responses[i] = nil
+		if r.Errors[i] == nil {
+			r.Errors[i] = fmt.Errorf("invalid response for %v", r.monitor.Commands[i])
+		}
+	}
+}
+
+func (r *cmdResponse) Publish(topicPrefix string, cmdIndex int) {
+	m := r.monitor
+	if m.client != nil {
+		m.publishToMQTT(topicPrefix, r.Responses, r.Errors)
+	}
+
+	if m.webServer != nil {
+		for ic, ir := range r.Responses {
+			if r.Errors[ic] != nil {
+				continue
+			}
+			m.webServer.Publish(fmt.Sprintf("%d/%s", cmdIndex+1, m.Commands[ic]), ir)
+		}
+	}
+
+	if m.client == nil && m.webServer == nil {
+		publishToStdout(m, r.Responses, r.Errors)
+	}
 }
 
 func publishToStdout(im *inverterMonitor, results []any, errors []error) {
@@ -136,16 +163,6 @@ func publishToStdout(im *inverterMonitor, results []any, errors []error) {
 		fmt.Printf("%s -> %s\n=======================\n", im.Device, im.Commands[i])
 		pi30.WriteTo(os.Stdout, r)
 		fmt.Println()
-	}
-}
-
-func (im *inverterMonitor) Publish(mqttTopicPrefix string, results []any, errors []error) {
-	if im.client == nil && im.webServer == nil {
-		publishToStdout(im, results, errors)
-		return
-	}
-	if im.client != nil {
-		im.publishToMQTT(mqttTopicPrefix, results, errors)
 	}
 }
 
