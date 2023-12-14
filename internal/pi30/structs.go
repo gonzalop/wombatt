@@ -59,7 +59,8 @@ type QPIGSResponse struct {
 
 func (q *QPIGSResponse) Valid() bool {
 	// Some times one of two inverters has mostly zeroes in its QPIGS response
-	return q.GridVoltage != 0.0 && q.GridFrequency != 0.0
+	return (q.GridVoltage != 0.0 && q.GridFrequency != 0.0) ||
+		(q.ACOutputVoltage != 0.0 && q.ACOutputFrequency != 0.0)
 }
 
 type QPIGS2Response struct {
