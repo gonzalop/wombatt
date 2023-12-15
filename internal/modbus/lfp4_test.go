@@ -64,8 +64,8 @@ func TestLFP4Response(t *testing.T) {
 		if err != nil {
 			t.Fatalf("malformed response string in test %d: %s", tid, tt.resp)
 		}
-		port := common.NewTestPort(bytes.NewReader(resp), io.Discard)
-		reader, _ := ReaderFromProtocol(port, "lifepower4")
+		port := common.NewTestPort(bytes.NewReader(resp), io.Discard, 0)
+		reader, _ := Reader(port, "lifepower4", "")
 		lfp4, ok := reader.(*LFP4)
 		if !ok {
 			t.Fatalf("wrong reader type: got %T want *LFP4", lfp4)
@@ -119,8 +119,8 @@ func TestLFP4ReadRegisters(t *testing.T) {
 		if err != nil {
 			t.Fatalf("malformed raw response string in test %d: %s", tid, tt.rawResp)
 		}
-		port := common.NewTestPort(bytes.NewReader(rawResp), io.Discard)
-		lfp4, _ := ReaderFromProtocol(port, "lifepower4")
+		port := common.NewTestPort(bytes.NewReader(rawResp), io.Discard, 0)
+		lfp4, _ := Reader(port, "lifepower4", "")
 		// dataResp needs double decoding: one from the test data to rawData and one from that to actual binary data
 		// which is what ReadRegisters returns.
 		dataResp, err := hex.DecodeString(tt.dataResp)

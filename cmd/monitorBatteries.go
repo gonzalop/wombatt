@@ -92,7 +92,7 @@ func (cmd *MonitorBatteriesCmd) Run(globals *Globals) error {
 }
 
 func monitorBatteries(ch chan *batteryInfo, port common.Port, cmd *MonitorBatteriesCmd, battery batteries.Battery) {
-	reader, err := modbus.ReaderFromProtocol(port, cmd.Protocol)
+	reader, err := modbus.Reader(port, cmd.Protocol, string(cmd.BatteryType))
 	if err != nil {
 		log.Fatal(err.Error())
 	}

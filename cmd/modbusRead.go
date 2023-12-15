@@ -36,7 +36,7 @@ func (cmd *ModbusReadCmd) Run(globals *Globals) error {
 		Type:    common.DeviceTypeFromString[cmd.DeviceType],
 	}
 	port := common.OpenPortOrFatal(portOptions)
-	reader, err := modbus.ReaderFromProtocol(port, cmd.Protocol)
+	reader, err := modbus.Reader(port, cmd.Protocol, "")
 	if err != nil {
 		log.Fatal(err.Error())
 	}

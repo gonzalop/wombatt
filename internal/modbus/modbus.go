@@ -16,16 +16,19 @@ type RegisterReader interface {
 	ReadRegisters(id uint8, start uint16, count uint8) ([]byte, error)
 }
 
-func ReaderFromProtocol(port common.Port, protocol string) (RegisterReader, error) {
+func Reader(port common.Port, protocol, batteryType string) (RegisterReader, error) {
 	switch protocol {
 	case "auto":
+		if batteryType == "lifepower4" {
+			return NewLFP4(port), nil
+		}
 		switch port.Type() {
 		case common.SerialDevice, common.HidRawDevice:
 			return NewRTU(port), nil
 		case common.TCPDevice:
 			return NewTCP(port), nil
 		default:
-			return nil, fmt.Errorf("unable to guess a protocol")
+			return nil, fmt.Errorf("unable to guess a protocol for %v/%v - %v", protocol, batteryType, port.Type())
 		}
 	case RTUProtocol:
 		return NewRTU(port), nil

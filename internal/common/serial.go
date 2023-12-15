@@ -16,11 +16,12 @@ import (
 type TestPort struct {
 	reader io.Reader
 	writer io.Writer
+	dtype  DeviceType
 }
 
 // NewTestPort implements the Port interface
-func NewTestPort(r io.Reader, w io.Writer) *TestPort {
-	return &TestPort{reader: r, writer: w}
+func NewTestPort(r io.Reader, w io.Writer, dtype DeviceType) *TestPort {
+	return &TestPort{reader: r, writer: w, dtype: dtype}
 }
 
 func (tp *TestPort) Read(b []byte) (n int, err error) {
@@ -35,8 +36,8 @@ func (*TestPort) ReopenWithBackoff() error {
 	return nil
 }
 
-func (*TestPort) Type() DeviceType {
-	return TestByteDevice
+func (p *TestPort) Type() DeviceType {
+	return p.dtype
 
 }
 

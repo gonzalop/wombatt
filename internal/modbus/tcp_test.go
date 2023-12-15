@@ -45,8 +45,8 @@ func TestTCPReadRegisters(t *testing.T) {
 		if err != nil {
 			t.Fatalf("malformed response string in test: %s", tt.resp)
 		}
-		port := common.NewTestPort(bytes.NewReader(resp), io.Discard)
-		tcp, _ := ReaderFromProtocol(port, TCPProtocol)
+		port := common.NewTestPort(bytes.NewReader(resp), io.Discard, 0)
+		tcp, _ := Reader(port, TCPProtocol, "")
 		data, err := tcp.ReadRegisters(1, 16, 1)
 		if err != nil && tt.errstr == "" {
 			t.Errorf("read response failed(%s): got %v; want no error", tt.resp, err)

@@ -10,6 +10,11 @@ import (
 	"wombatt/internal/modbus"
 )
 
+const (
+	EG4LLv2Battery    = "EG4LLv2"
+	Lifepower4Battery = "lifepower4"
+)
+
 type Battery interface {
 	ReadInfo(modbus.RegisterReader, uint8, time.Duration) (any, error)
 	ReadExtraInfo(modbus.RegisterReader, uint8, time.Duration) (any, error)
@@ -19,9 +24,9 @@ type Battery interface {
 
 func Instance(batteryType string) Battery {
 	switch batteryType {
-	case "EG4LLv2":
+	case EG4LLv2Battery:
 		return NewEG4LLv2()
-	case "lifepower4":
+	case Lifepower4Battery:
 		return NewLFP4()
 	default:
 		log.Fatalf("Unsupported battery type: %v", batteryType)

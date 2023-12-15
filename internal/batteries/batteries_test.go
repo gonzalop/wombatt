@@ -115,8 +115,8 @@ func TestBatteryInfo(t *testing.T) {
 		if err != nil {
 			t.Fatalf("malformed raw response string in test %d: %s", tid, tt.resp)
 		}
-		port := common.NewTestPort(bytes.NewReader(rawResp), io.Discard)
-		reader, err := modbus.ReaderFromProtocol(port, tt.protocol)
+		port := common.NewTestPort(bytes.NewReader(rawResp), io.Discard, 0)
+		reader, err := modbus.Reader(port, tt.protocol, "")
 		if reader == nil {
 			t.Fatalf("no available reader: %v", err)
 		}

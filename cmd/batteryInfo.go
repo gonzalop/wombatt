@@ -35,7 +35,7 @@ func (cmd *BatteryInfoCmd) Run(globals *Globals) error {
 		cmd.Protocol = battery.DefaultProtocol(cmd.DeviceType)
 	}
 	port := common.OpenPortOrFatal(portOptions)
-	reader, err := modbus.ReaderFromProtocol(port, cmd.Protocol)
+	reader, err := modbus.Reader(port, cmd.Protocol, string(cmd.BatteryType))
 	if err != nil {
 		log.Fatal(err.Error())
 	}
