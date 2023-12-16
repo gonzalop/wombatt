@@ -62,6 +62,10 @@ func TestReader(t *testing.T) {
 			readerTypeName: "*modbus.LFP4",
 		},
 		{
+			protocol: "auto",
+			mustFail: true,
+		},
+		{
 			protocol: "whatever",
 			mustFail: true,
 		},

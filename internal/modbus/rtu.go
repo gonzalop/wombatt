@@ -123,8 +123,7 @@ func (f *RTUFrame) CRC() uint16 {
 // The frame returned will be nil in case of an error, except for protocol and/or CRC errors.
 func readRTUResponse(port io.Reader) ([]byte, error) {
 	b := make([]byte, MaxRTUFrameLength)
-	n, err := io.ReadFull(port, b[0:3])
-	if err != nil {
+	if n, err := io.ReadFull(port, b[0:3]); err != nil {
 		if err == io.ErrUnexpectedEOF {
 			return nil, fmt.Errorf("short frame: got %d, want at least 3 bytes", n)
 		}
@@ -138,13 +137,17 @@ func readRTUResponse(port io.Reader) ([]byte, error) {
 	if (3 + pending) >= MaxRTUFrameLength {
 		return nil, fmt.Errorf("invalid data reading frame (out of bounds): %s", hex.EncodeToString(b[0:8]))
 	}
-	if _, err = io.ReadFull(port, b[3:3+pending]); err != nil {
+	if n, err := io.ReadFull(port, b[3:3+pending]); err != nil {
+		if err == io.ErrUnexpectedEOF {
+			return nil, fmt.Errorf("short frame data: got %d, want %d bytes", n, 3+pending)
+		}
 		return nil, fmt.Errorf("error reading frame data: %w", err)
 	}
 	checksum := CRC(b[0 : 3+pending-2])
 	frame := NewRTUFrame(b[0 : 3+pending])
+
 	// CRC error or protocol error also return the frame.
-	err = nil
+	var err error
 	if (b[1] & 0x80) == 0x80 {
 		err = protocolError(b[1])
 	}
@@ -179,8 +182,7 @@ func CRC(data []byte) uint16 {
 func readRTURequest(port io.Reader) (*RTUFrame, error) {
 	b := make([]byte, MaxRTUFrameLength)
 	// Reading 8 works for all request types.
-	n, err := io.ReadFull(port, b[0:8])
-	if err != nil {
+	if n, err := io.ReadFull(port, b[0:8]); err != nil {
 		if err == io.ErrUnexpectedEOF {
 			return nil, fmt.Errorf("short frame: got %d, want at least 8 bytes", n)
 		}
@@ -192,7 +194,10 @@ func readRTURequest(port io.Reader) (*RTUFrame, error) {
 	}
 	pending += 2 // Add 2 CRC bytes
 	pending -= 6 // Subtract 6 bytes of the response already read (not including ID and function).
-	if _, err = io.ReadFull(port, b[8:8+pending]); err != nil {
+	if n, err := io.ReadFull(port, b[8:8+pending]); err != nil {
+		if err == io.ErrUnexpectedEOF {
+			return nil, fmt.Errorf("short frame: got %d, want at least 8 bytes", n)
+		}
 		return nil, fmt.Errorf("error reading frame data: %w", err)
 	}
 	checksum := CRC(b[0 : 8+pending-2])

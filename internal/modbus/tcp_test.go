@@ -19,23 +19,31 @@ func TestTCPReadRegisters(t *testing.T) {
 		fcode  RTUFunction
 	}{
 		{
-			resp:  "00010000001001032000670000006314d3ff10001f09c49ab09c400204000000060000000015e00000",
+			resp:  "00010000001001032000670000006314d3ff10001f09",
 			id:    1,
 			fcode: 3,
 		},
 		{
-			resp:   "00010000001001032000670000006314d3ff10001f09c49ab09c400204000000060000000015e00000",
+			resp:   "00010000001001032000670000006314d3ff10001f09",
 			id:     1,
 			fcode:  3,
 			errstr: "unexpected transaction ID: got 0x0001; want 0x0002",
 		},
 		{
-			resp:   "000303040506",
-			errstr: "EOF", // from the io package directly
+			resp:   "000303040506", // no bytes after length
+			errstr: "EOF",
 		},
 		{
 			resp:   "00040304050607",
-			errstr: "unexpected EOF",
+			errstr: "short frame: read 1, want at least 1286 bytes",
+		},
+		{
+			resp:   "0005", // incomplete header
+			errstr: "short frame: read 2, want at least 6 bytes",
+		},
+		{
+			resp:   "",
+			errstr: "EOF",
 		},
 	}
 
@@ -68,6 +76,9 @@ func TestTCPReadRegisters(t *testing.T) {
 		}
 		if frame.Function() != tt.fcode {
 			t.Errorf("wrong function code in response(%s): got %02d; want %02d", tt.resp, frame.Function(), tt.fcode)
+		}
+		if frame.CRC() != 0 {
+			t.Errorf("TCP CRC: got 0x%04x; want  0", frame.CRC())
 		}
 	}
 }

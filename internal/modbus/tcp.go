@@ -52,7 +52,10 @@ func (t *TCP) ReadRegisters(id uint8, start uint16, count uint8) ([]byte, error)
 func (t *TCP) ReadTCPResponse(tid uint16, unitID uint8) ([]byte, error) {
 	mbap := make([]byte, 7)
 	// The UnitID is not read at this moment
-	if _, err := io.ReadFull(t.port, mbap[0:6]); err != nil {
+	if n, err := io.ReadFull(t.port, mbap[0:6]); err != nil {
+		if err == io.ErrUnexpectedEOF {
+			return nil, fmt.Errorf("short frame: read %d, want at least 6 bytes", n)
+		}
 		return nil, err
 	}
 	var header TCPRTUHeader
@@ -63,12 +66,11 @@ func (t *TCP) ReadTCPResponse(tid uint16, unitID uint8) ([]byte, error) {
 		return nil, fmt.Errorf("unexpected transaction ID: got 0x%04x; want 0x%04x", header.TID, tid)
 	}
 	rtu := make([]byte, header.Length+2) // Add 2 more bytes because RTUFrame expects a CRC there.
-	n, err := io.ReadFull(t.port, rtu[0:len(rtu)-2])
-	if err != nil {
+	if n, err := io.ReadFull(t.port, rtu[0:len(rtu)-2]); err != nil {
+		if err == io.ErrUnexpectedEOF {
+			return nil, fmt.Errorf("short frame: read %d, want at least %d bytes", n, header.Length)
+		}
 		return nil, err
-	}
-	if n != int((header.Length)) {
-		return nil, fmt.Errorf("short response. got %d, want %d", n, header.Length)
 	}
 	return rtu, nil
 }

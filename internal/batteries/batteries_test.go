@@ -22,14 +22,14 @@ func TestBatteryInfo(t *testing.T) {
 		value       any
 	}{
 		{
-			resp:        "02034e14f600780d190d1b0d1a0d1b0d1a0d1b0d1a0d1b0d1a0d1b0d1a0d1a0d1a0d1b0d1a0d1a0019001b0018006100640064006100010000000000000000000b15752a00181818180000001003e800003dea",
+			resp:        "02034e14f600780d1a0d190d1b0d1b0d1a0d1b0d1a0d1b0d1a0d1b0d1a0d1a0d1a0d1b0d1a0d1a0019001b0018006100640064006100010000000000000000000b15752a00181818180000001003e800004e71",
 			protocol:    modbus.RTUProtocol,
 			batteryType: "EG4LLv2",
 			value: &EG4BatteryInfo{
 				EG4ModbusBatteryInfo: EG4ModbusBatteryInfo{
 					Voltage:            5366,
 					Current:            120,
-					CellVoltages:       [16]uint16{3353, 3355, 3354, 3355, 3354, 3355, 3354, 3355, 3354, 3355, 3354, 3354, 3354, 3355, 3354, 3354},
+					CellVoltages:       [16]uint16{3354, 3353, 3355, 3355, 3354, 3355, 3354, 3355, 3354, 3355, 3354, 3354, 3354, 3355, 3354, 3354},
 					PCBTemp:            25,
 					MaxTemp:            27,
 					AvgTemp:            24,

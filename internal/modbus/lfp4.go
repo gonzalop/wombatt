@@ -58,12 +58,8 @@ func (t *LFP4) ReadResponse(id uint8) ([]byte, error) {
 	}
 	ascii := make([]byte, 13+length+5) // 13 for the header, 3 for CHKSUM + EOI
 	copy(ascii[0:13], header)
-	n, err := io.ReadFull(t.port, ascii[13:])
-	if err != nil {
+	if _, err := io.ReadFull(t.port, ascii[13:]); err != nil {
 		return nil, err
-	}
-	if n != (len(ascii) - 13) {
-		return nil, fmt.Errorf("short response. got %d, want %d", n, len(ascii))
 	}
 	// Check CHKSUM
 	err = verifyChecksum(ascii) // if there's an error here, it's sent back with the data.
