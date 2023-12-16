@@ -52,28 +52,10 @@ func (t *LFP4) ReadRegisters(id uint8, _ uint16, cid2 uint8) ([]byte, error) {
 }
 
 func (t *LFP4) ReadResponse(id uint8) ([]byte, error) {
-	header := make([]byte, 13) // 1 byte for SOI; 2 for each of VER, ADR, CIR1, and RTN; 4 for LENGTH
-	if _, err := io.ReadFull(t.port, header); err != nil {
-		return nil, err
-	}
-	// Check RTN
-	ret, err := asciiToBin(header[7:9])
+	header, length, err := t.readHeader()
 	if err != nil {
 		return nil, err
 	}
-	if ret != 0 {
-		return nil, fmt.Errorf("%s", lfp4ErrorString(LFP4ReturnCode(ret)))
-	}
-	// Check LCHKSUM
-	bin, err := asciiToBin(header[9:13])
-	if err != nil {
-		return nil, err
-	}
-	length := uint16(bin)
-	if err := checkLengthChecksum(length); err != nil {
-		return nil, err
-	}
-	length &= 0x0fff                   // clear out LCHKSUM and leave just the actual length
 	ascii := make([]byte, 13+length+5) // 13 for the header, 3 for CHKSUM + EOI
 	copy(ascii[0:13], header)
 	n, err := io.ReadFull(t.port, ascii[13:])
@@ -89,6 +71,32 @@ func (t *LFP4) ReadResponse(id uint8) ([]byte, error) {
 		log.Printf("warning: EOI missing in response")
 	}
 	return ascii, err
+}
+
+func (t *LFP4) readHeader() ([]byte, uint16, error) {
+	header := make([]byte, 13) // 1 byte for SOI; 2 for each of VER, ADR, CIR1, and RTN; 4 for LENGTH
+	if _, err := io.ReadFull(t.port, header); err != nil {
+		return nil, 0, err
+	}
+	// Check RTN
+	ret, err := asciiToBin(header[7:9])
+	if err != nil {
+		return nil, 0, err
+	}
+	if ret != 0 {
+		return nil, 0, fmt.Errorf("%s", lfp4ErrorString(LFP4ReturnCode(ret)))
+	}
+	// Check LCHKSUM
+	bin, err := asciiToBin(header[9:13])
+	if err != nil {
+		return nil, 0, err
+	}
+	length := uint16(bin)
+	if err := checkLengthChecksum(length); err != nil {
+		return nil, 0, err
+	}
+	length &= 0x0fff // clear out LCHKSUM and leave just the actual length
+	return header, length, nil
 }
 
 func verifyChecksum(b []byte) error {
