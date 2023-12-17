@@ -47,10 +47,12 @@ func TestBatteryInfo(t *testing.T) {
 					CellNum:            16,
 					DesignedCapacity:   1000,
 				},
-				MaxVoltage:    3355,
-				MinVoltage:    3353,
-				MeanVoltage:   3354,
-				MedianVoltage: 3354,
+				VoltageStats: VoltageStats{
+					MaxVoltage:    3355,
+					MinVoltage:    3353,
+					MeanVoltage:   3354,
+					MedianVoltage: 3354,
+				},
 			},
 		},
 		{

@@ -8,11 +8,14 @@ import (
 	"time"
 
 	"wombatt/internal/modbus"
+
+	"golang.org/x/exp/slices"
 )
 
 const (
 	EG4LLv2Battery    = "EG4LLv2"
 	Lifepower4Battery = "lifepower4"
+	PaceBattery       = "pacemodbus"
 )
 
 type Battery interface {
@@ -28,10 +31,42 @@ func Instance(batteryType string) Battery {
 		return NewEG4LLv2()
 	case Lifepower4Battery:
 		return NewLFP4()
+	case PaceBattery:
+		return NewPace()
 	default:
 		log.Fatalf("Unsupported battery type: %v", batteryType)
 	}
 	return nil
+}
+
+type VoltageStats struct {
+	MaxVoltage    uint16 `name:"max_cell_voltage" dclass:"voltage" unit:"V" multiplier:"0.001"`
+	MinVoltage    uint16 `name:"min_cell_voltage" dclass:"voltage" unit:"V" multiplier:"0.001"`
+	MeanVoltage   uint16 `name:"mean_cell_voltage" dclass:"voltage" unit:"V" multiplier:"0.001"`
+	MedianVoltage uint16 `name:"median_cell_voltage" dclass:"voltage" unit:"V" multiplier:"0.001"`
+}
+
+func updateVoltageStats(cellVoltage [16]uint16, vs *VoltageStats) {
+	var sum uint
+	voltages := make([]uint16, 16)
+	for i := 0; i < 16; i++ {
+		mv := cellVoltage[i]
+		voltages[i] = mv
+		if i == 0 {
+			vs.MinVoltage = mv
+			vs.MaxVoltage = mv
+		}
+		sum += uint(mv)
+		if vs.MinVoltage > mv {
+			vs.MinVoltage = mv
+		}
+		if vs.MaxVoltage < mv {
+			vs.MaxVoltage = mv
+		}
+	}
+	vs.MeanVoltage = uint16(sum / 16)
+	slices.Sort(voltages)
+	vs.MedianVoltage = (voltages[7] + voltages[8]) / 2
 }
 
 func readIntoStruct(result any, reader modbus.RegisterReader, timeout time.Duration, id uint8, address uint16, count uint8) error {

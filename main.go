@@ -22,7 +22,7 @@ func main() {
 		}),
 		kong.Vars{
 			"version":       "0.0.5",
-			"battery_types": "EG4LLv2,lifepower4",
+			"battery_types": "EG4LLv2,lifepower4,pacemodbus",
 			"device_types":  "serial,hidraw,tcp",
 			"protocols":     "auto,ModbusRTU,ModbusTCP,lifepower4",
 		})

@@ -9,8 +9,6 @@ import (
 	"time"
 
 	"wombatt/internal/modbus"
-
-	"golang.org/x/exp/slices"
 )
 
 const (
@@ -48,7 +46,7 @@ func (e *EG4LLv2) ReadInfo(reader modbus.RegisterReader, id uint8, timeout time.
 	}
 	result := EG4BatteryInfo{EG4ModbusBatteryInfo: info}
 	result.FullCapacity /= 3600 // FullCapacity is in mAs -> 3600000 == 100Ah
-	updateDerivedFields(&result)
+	updateVoltageStats(result.CellVoltages, &result.VoltageStats)
 	return &result, nil
 }
 
@@ -78,29 +76,6 @@ func (*EG4LLv2) readIntoStruct(result any, reader modbus.RegisterReader, timeout
 		return err
 	}
 	return nil
-}
-
-func updateDerivedFields(bi *EG4BatteryInfo) {
-	var sum uint
-	voltages := make([]uint16, 16)
-	for i := 0; i < 16; i++ {
-		mv := bi.CellVoltages[i]
-		voltages[i] = mv
-		if i == 0 {
-			bi.MinVoltage = mv
-			bi.MaxVoltage = mv
-		}
-		sum += uint(mv)
-		if bi.MinVoltage > mv {
-			bi.MinVoltage = mv
-		}
-		if bi.MaxVoltage < mv {
-			bi.MaxVoltage = mv
-		}
-	}
-	bi.MeanVoltage = uint16(sum / 16)
-	slices.Sort(voltages)
-	bi.MedianVoltage = (voltages[7] + voltages[8]) / 2
 }
 
 type EG4ModbusBatteryInfo struct {
@@ -137,12 +112,7 @@ type EG4ModbusBatteryInfo struct {
 
 type EG4BatteryInfo struct {
 	EG4ModbusBatteryInfo
-
-	// Derived data
-	MaxVoltage    uint16 `name:"max_cell_voltage" dclass:"voltage" unit:"V" multiplier:"0.001"`
-	MinVoltage    uint16 `name:"min_cell_voltage" dclass:"voltage" unit:"V" multiplier:"0.001"`
-	MeanVoltage   uint16 `name:"mean_cell_voltage" dclass:"voltage" unit:"V" multiplier:"0.001"`
-	MedianVoltage uint16 `name:"median_cell_voltage" dclass:"voltage" unit:"V" multiplier:"0.001"`
+	VoltageStats
 }
 
 type EG4ModbusExtraBatteryInfo struct {
