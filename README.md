@@ -2,7 +2,35 @@
 # wombatt
 
 wombatt is a set of tools to monitor batteries and inverters, and to send commands to inverters.
-At the moment, it supports EG4LLv2 and EG4 Lifepower4 batteries, and any inverter using the PI30 protocol family.
+
+Inverters supported:
+- Any that can handle the PI30 protocol. Known to work:
+    - EG4-6500EX
+    - EG4-3000s (unconfirmed)
+
+Battery/BMS supported:
+- EG4-LL
+- EG4-LL-S (unconfirmed)
+- EG4 Lifepower
+- Pace BMS Modbus (SOK, Jakiper) (unconfirmed)
+
+wombatt can use direct RS232 or RS485 connections, or TCP to communicate using Modbus RTU, Modbus TCP,
+and slight variations of Modbus ASCII.
+
+The data can be exposed via console, web server (txt, json), or MQTT (Homeassistant auto-discovery topics automatically added).
+
+## Releases
+Get binary releases at https://wombatt.cc/releases/
+
+## Docker images
+Docker images are available at https://hub.docker.com/r/gonzalomono/wombatt.
+
+Use any recent release tag or `latest` for docker image tag:
+
+~~~
+$ docker pull docker.io/gonzalomono/wombatt:latest
+$ docker run --device /dev/ttyS1:/dev/ttyS1 -t gonzalomono/wombatt inverter-query --serial-ports /dev/ttyS1 --commands Q1
+~~~
 
 ## Compilation from Source
 
@@ -25,19 +53,6 @@ $ make -f Makefile.release release
 ~~~
 
 And you'll get the different binaries under `build/` and tarfiles under `releases/`.
-
-## Releases
-Get binary releases at https://wombatt.cc/releases/
-
-## Docker images
-Docker images are available at https://hub.docker.com/r/gonzalomono/wombatt.
-
-Use any recent release tag or `latest` for docker image tag:
-
-~~~
-$ docker pull docker.io/gonzalomono/wombatt:latest
-$ docker run --device /dev/ttyS1:/dev/ttyS1 -t gonzalomono/wombatt inverter-query --serial-ports /dev/ttyS1 --commands Q1
-~~~
 
 ## Subcommands and usage
 Run `wombatt <subcommand> -h` for help on any specific command.
