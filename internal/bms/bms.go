@@ -1,4 +1,4 @@
-package batteries
+package bms
 
 import (
 	"bytes"
@@ -18,15 +18,15 @@ const (
 	PaceBattery       = "pacemodbus"
 )
 
-type Battery interface {
+type BMS interface {
 	ReadInfo(modbus.RegisterReader, uint8, time.Duration) (any, error)
 	ReadExtraInfo(modbus.RegisterReader, uint8, time.Duration) (any, error)
 	InfoInstance() any
 	DefaultProtocol(deviceType string) string
 }
 
-func Instance(batteryType string) Battery {
-	switch batteryType {
+func Instance(bmsType string) BMS {
+	switch bmsType {
 	case EG4LLv2Battery:
 		return NewEG4LLv2()
 	case Lifepower4Battery:
@@ -34,7 +34,7 @@ func Instance(batteryType string) Battery {
 	case PaceBattery:
 		return NewPace()
 	default:
-		log.Fatalf("Unsupported battery type: %v", batteryType)
+		log.Fatalf("Unsupported BMS type: %v", bmsType)
 	}
 	return nil
 }

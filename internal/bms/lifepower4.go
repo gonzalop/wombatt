@@ -1,4 +1,4 @@
-package batteries
+package bms
 
 import (
 	"time"
@@ -14,7 +14,7 @@ const (
 type LFP4 struct {
 }
 
-func NewLFP4() Battery {
+func NewLFP4() BMS {
 	return &LFP4{}
 }
 

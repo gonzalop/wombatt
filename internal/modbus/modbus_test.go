@@ -12,7 +12,7 @@ func TestReader(t *testing.T) {
 	tests := []struct {
 		readerTypeName string
 		protocol       string
-		batteryType    string
+		bmsType        string
 		deviceType     common.DeviceType
 		mustFail       bool
 	}{
@@ -45,19 +45,19 @@ func TestReader(t *testing.T) {
 		},
 		{
 			protocol:       "auto",
-			batteryType:    "lifepower4",
+			bmsType:        "lifepower4",
 			deviceType:     common.SerialDevice,
 			readerTypeName: "*modbus.LFP4",
 		},
 		{
 			protocol:       "auto",
-			batteryType:    "lifepower4",
+			bmsType:        "lifepower4",
 			deviceType:     common.TCPDevice,
 			readerTypeName: "*modbus.LFP4",
 		},
 		{
 			protocol:       "auto",
-			batteryType:    "lifepower4",
+			bmsType:        "lifepower4",
 			deviceType:     common.HidRawDevice,
 			readerTypeName: "*modbus.LFP4",
 		},
@@ -72,7 +72,7 @@ func TestReader(t *testing.T) {
 	}
 	for tid, tt := range tests {
 		port := common.NewTestPort(nil, io.Discard, tt.deviceType)
-		r, err := Reader(port, tt.protocol, tt.batteryType)
+		r, err := Reader(port, tt.protocol, tt.bmsType)
 		if err == nil && tt.mustFail {
 			t.Errorf("error (#%d): got no error, expecting an error", tid)
 			continue

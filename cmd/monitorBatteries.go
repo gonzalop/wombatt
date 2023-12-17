@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"wombatt/internal/batteries"
+	"wombatt/internal/bms"
 	"wombatt/internal/common"
 	"wombatt/internal/modbus"
 	"wombatt/internal/mqttha"
@@ -26,8 +26,8 @@ type MonitorBatteriesCmd struct {
 	PollInterval time.Duration `short:"P" default:"10s" help:"Time to wait between polling cycles"`
 	ReadTimeout  time.Duration `short:"t" default:"500ms" help:"Timeout when reading from devices"`
 
-	BatteryType BatteryType `default:"EG4LLv2" help:"One of ${battery_types}" enum:"${battery_types}"`
-	MQTTPrefix  string      `default:"eg4" help:"MQTT prefix for the fields published"`
+	BatteryType string `default:"EG4LLv2" help:"One of ${bms_types}" enum:"${bms_types}"`
+	MQTTPrefix  string `default:"eg4" help:"MQTT prefix for the fields published"`
 
 	WebServerAddress string `short:"w" help:"Address to use for serving HTTP. <IP>:<Port>, i.e., 127.0.0.1:8080"`
 
@@ -53,7 +53,7 @@ func (cmd *MonitorBatteriesCmd) Run(globals *Globals) error {
 			log.Fatalf("%v", err)
 		}
 	}
-	battery := batteries.Instance(string(cmd.BatteryType))
+	battery := bms.Instance(string(cmd.BatteryType))
 	if cmd.Protocol == "auto" {
 		cmd.Protocol = battery.DefaultProtocol(cmd.DeviceType)
 	}
@@ -91,7 +91,7 @@ func (cmd *MonitorBatteriesCmd) Run(globals *Globals) error {
 	return nil
 }
 
-func monitorBatteries(ch chan *batteryInfo, port common.Port, cmd *MonitorBatteriesCmd, battery batteries.Battery) {
+func monitorBatteries(ch chan *batteryInfo, port common.Port, cmd *MonitorBatteriesCmd, battery bms.BMS) {
 	reader, err := modbus.Reader(port, cmd.Protocol, string(cmd.BatteryType))
 	if err != nil {
 		log.Fatal(err.Error())

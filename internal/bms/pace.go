@@ -1,4 +1,4 @@
-package batteries
+package bms
 
 import (
 	"bytes"
@@ -22,7 +22,7 @@ const (
 type Pace struct {
 }
 
-func NewPace() Battery {
+func NewPace() BMS {
 	return &Pace{}
 }
 

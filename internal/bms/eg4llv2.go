@@ -1,4 +1,4 @@
-package batteries
+package bms
 
 import (
 	"bytes"
@@ -22,7 +22,7 @@ const (
 type EG4LLv2 struct {
 }
 
-func NewEG4LLv2() Battery {
+func NewEG4LLv2() BMS {
 	return &EG4LLv2{}
 }
 

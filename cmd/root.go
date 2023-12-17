@@ -54,5 +54,3 @@ func (f *MQTTFlags) Validate() error {
 	}
 	return nil
 }
-
-type BatteryType string
