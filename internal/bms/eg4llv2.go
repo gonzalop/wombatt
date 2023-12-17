@@ -1,8 +1,6 @@
 package bms
 
 import (
-	"bytes"
-	"encoding/binary"
 	"encoding/hex"
 	"fmt"
 	"log"
@@ -41,8 +39,11 @@ func (*EG4LLv2) DefaultProtocol(deviceType string) string {
 
 func (e *EG4LLv2) ReadInfo(reader modbus.RegisterReader, id uint8, timeout time.Duration) (any, error) {
 	var info EG4ModbusBatteryInfo
-	if err := e.readIntoStruct(&info, reader, timeout, id, modbusBasicInfoAddress, modbusBasicInfoRegisterCount); err != nil {
+	if data, err := readIntoStruct(&info, reader, timeout, id, modbusBasicInfoAddress, modbusBasicInfoRegisterCount); err != nil {
 		return nil, err
+	} else if len(data) != (int(modbusBasicInfoRegisterCount) * 2) {
+		log.Printf("%s\n", hex.EncodeToString(data))
+		return nil, fmt.Errorf("unexpected data length: got %d, want %d", len(data), int(modbusBasicInfoRegisterCount)*2)
 	}
 	result := EG4BatteryInfo{EG4ModbusBatteryInfo: info}
 	result.FullCapacity /= 3600 // FullCapacity is in mAs -> 3600000 == 100Ah
@@ -52,30 +53,13 @@ func (e *EG4LLv2) ReadInfo(reader modbus.RegisterReader, id uint8, timeout time.
 
 func (e *EG4LLv2) ReadExtraInfo(reader modbus.RegisterReader, id uint8, timeout time.Duration) (any, error) {
 	var extra EG4ModbusExtraBatteryInfo
-	err := e.readIntoStruct(&extra, reader, timeout, id, modbusExtraInfoAddress, modbusExtraInfoRegisterCount)
-	if err != nil {
+	if data, err := readIntoStruct(&extra, reader, timeout, id, modbusExtraInfoAddress, modbusExtraInfoRegisterCount); err != nil {
 		return nil, err
+	} else if len(data) != (int(modbusExtraInfoRegisterCount) * 2) {
+		log.Printf("%s\n", hex.EncodeToString(data))
+		return nil, fmt.Errorf("unexpected data length: got %d, want %d", len(data), int(modbusExtraInfoRegisterCount)*2)
 	}
 	return &extra, nil
-}
-
-func (*EG4LLv2) readIntoStruct(result any, reader modbus.RegisterReader, timeout time.Duration, id uint8, address uint16, count uint8) error {
-	b, err := readWithTimeout(reader, timeout, id, address, count)
-	if err != nil {
-		return err
-	}
-
-	frame := modbus.NewRTUFrame(b)
-	data := frame.Data()
-	if len(data) != (int(count) * 2) {
-		log.Printf("%s\n", hex.EncodeToString(data))
-		return fmt.Errorf("unexpected data length: got %d, want %d", len(data), int(count)*2)
-	}
-	buf := bytes.NewBuffer(data)
-	if err := binary.Read(buf, binary.BigEndian, result); err != nil {
-		return err
-	}
-	return nil
 }
 
 type EG4ModbusBatteryInfo struct {

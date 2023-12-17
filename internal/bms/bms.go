@@ -13,9 +13,9 @@ import (
 )
 
 const (
-	EG4LLv2Battery    = "EG4LLv2"
-	Lifepower4Battery = "lifepower4"
-	PaceBattery       = "pacemodbus"
+	EG4LLv2BMS    = "EG4LLv2"
+	Lifepower4BMS = "lifepower4"
+	PaceBMS       = "pacemodbus"
 )
 
 type BMS interface {
@@ -27,11 +27,11 @@ type BMS interface {
 
 func Instance(bmsType string) BMS {
 	switch bmsType {
-	case EG4LLv2Battery:
+	case EG4LLv2BMS:
 		return NewEG4LLv2()
-	case Lifepower4Battery:
+	case Lifepower4BMS:
 		return NewLFP4()
-	case PaceBattery:
+	case PaceBMS:
 		return NewPace()
 	default:
 		log.Fatalf("Unsupported BMS type: %v", bmsType)
@@ -69,16 +69,16 @@ func updateVoltageStats(cellVoltage [16]uint16, vs *VoltageStats) {
 	vs.MedianVoltage = (voltages[7] + voltages[8]) / 2
 }
 
-func readIntoStruct(result any, reader modbus.RegisterReader, timeout time.Duration, id uint8, address uint16, count uint8) error {
+func readIntoStruct(result any, reader modbus.RegisterReader, timeout time.Duration, id uint8, address uint16, count uint8) ([]byte, error) {
 	data, err := readWithTimeout(reader, timeout, id, address, count)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	buf := bytes.NewBuffer(data)
 	if err := binary.Read(buf, binary.BigEndian, result); err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	return data, nil
 }
 
 func readWithTimeout(reader modbus.RegisterReader, timeout time.Duration, id uint8, start uint16, count uint8) ([]byte, error) {

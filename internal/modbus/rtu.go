@@ -121,7 +121,7 @@ func (f *RTUFrame) CRC() uint16 {
 // readRTUResponse reads an entire RTUFrame.
 //
 // The frame returned will be nil in case of an error, except for protocol and/or CRC errors.
-func readRTUResponse(port io.Reader) ([]byte, error) {
+func readRTUResponse(port io.Reader) (*RTUFrame, error) {
 	b := make([]byte, MaxRTUFrameLength)
 	if n, err := io.ReadFull(port, b[0:3]); err != nil {
 		if err == io.ErrUnexpectedEOF {
@@ -158,7 +158,7 @@ func readRTUResponse(port io.Reader) ([]byte, error) {
 			err = fmt.Errorf("%w (in addition, invalid crc: got %x, want %x)", err, frame.CRC(), checksum)
 		}
 	}
-	return frame.RawData(), err
+	return frame, err
 }
 
 // CRC returns the CRC16 for the given bytes.
@@ -223,7 +223,11 @@ func (r *RTU) ReadRegisters(id uint8, start uint16, count uint8) ([]byte, error)
 	if _, err := r.port.Write(f); err != nil {
 		return nil, err
 	}
-	return readRTUResponse(r.port)
+	frame, err := readRTUResponse(r.port)
+	if err != nil {
+		return nil, err
+	}
+	return frame.Data(), nil
 }
 
 func expectedResponseLength(functionCode RTUFunction, receivedLength uint8) int {

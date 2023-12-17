@@ -140,7 +140,7 @@ func TestReadRTUResponse(t *testing.T) {
 			t.Fatalf("malformed response string in test: %s", tt.resp)
 		}
 		r := bytes.NewReader(resp)
-		data, err := readRTUResponse(r)
+		frame, err := readRTUResponse(r)
 		if err != nil && tt.errstr == "" {
 			t.Errorf("read response failed(%s): got %v; want no error", tt.resp, err)
 			continue
@@ -155,7 +155,6 @@ func TestReadRTUResponse(t *testing.T) {
 			}
 			continue
 		}
-		frame := NewRTUFrame(data)
 		if frame.ID() != tt.id {
 			t.Errorf("wrong ID in response(%s): got %02d; want %02d", tt.resp, frame.ID(), tt.id)
 		}
@@ -170,11 +169,12 @@ func TestReadRTUResponse(t *testing.T) {
 
 func TestRTUReadRegisters(t *testing.T) {
 	tests := []struct {
-		resp   string
-		errstr string
-		id     uint8
-		fcode  RTUFunction
-		crc    uint16
+		resp       string
+		errstr     string
+		id         uint8
+		fcode      RTUFunction
+		nregisters uint8
+		crc        uint16
 	}{
 		{
 			resp:   "0103",
@@ -185,10 +185,18 @@ func TestRTUReadRegisters(t *testing.T) {
 			errstr: "invalid crc",
 		},
 		{
-			resp:  "01032000670000006314d3ff10001f09c49ab09c400204000000060000000015e0000070c0",
-			id:    1,
-			fcode: 3,
-			crc:   0xc070,
+			resp:       "01032000670000006314d3ff10001f09c49ab09c400204000000060000000015e0000070c0",
+			id:         1,
+			fcode:      3,
+			crc:        0xc070,
+			nregisters: 16,
+		},
+		{
+			resp:       "03032e4c46502d35312e325631303041682d56312e3000000000005a3032543034323032322d31302d323600000000000064f5",
+			id:         3,
+			fcode:      3,
+			crc:        0xf564,
+			nregisters: 23,
 		},
 	}
 
@@ -199,7 +207,7 @@ func TestRTUReadRegisters(t *testing.T) {
 		}
 		port := common.NewTestPort(bytes.NewReader(resp), io.Discard, 0)
 		rtu, _ := Reader(port, RTUProtocol, "")
-		data, err := rtu.ReadRegisters(1, 16, 1)
+		data, err := rtu.ReadRegisters(1, 1, tt.nregisters)
 		if err != nil && tt.errstr == "" {
 			t.Errorf("read response failed(%s): got %v; want no error", tt.resp, err)
 			continue
@@ -214,15 +222,8 @@ func TestRTUReadRegisters(t *testing.T) {
 			}
 			continue
 		}
-		frame := NewRTUFrame(data)
-		if frame.ID() != tt.id {
-			t.Errorf("wrong ID in response(%s): got %02d; want %02d", tt.resp, frame.ID(), tt.id)
-		}
-		if frame.Function() != tt.fcode {
-			t.Errorf("wrong function code in response(%s): got %02d; want %02d", tt.resp, frame.Function(), tt.fcode)
-		}
-		if frame.CRC() != tt.crc {
-			t.Errorf("wrong CRC in response(%s): got %04x; want %04x", tt.resp, frame.CRC(), tt.crc)
+		if len(data) != (int(tt.nregisters) * 2) {
+			t.Errorf("wrong data length: got %d; want %d", len(data), int(tt.nregisters)*2)
 		}
 	}
 }

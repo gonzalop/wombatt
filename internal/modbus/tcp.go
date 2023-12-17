@@ -46,7 +46,11 @@ func (t *TCP) ReadRegisters(id uint8, start uint16, count uint8) ([]byte, error)
 	if _, err := t.port.Write(buf.Bytes()); err != nil {
 		return nil, err
 	}
-	return t.ReadTCPResponse(tf.TID, id)
+	raw, err := t.ReadTCPResponse(tf.TID, id)
+	if err != nil {
+		return nil, err
+	}
+	return NewRTUFrame(raw).Data(), nil
 }
 
 func (t *TCP) ReadTCPResponse(tid uint16, unitID uint8) ([]byte, error) {

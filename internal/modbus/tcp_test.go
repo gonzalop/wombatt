@@ -13,15 +13,17 @@ import (
 
 func TestTCPReadRegisters(t *testing.T) {
 	tests := []struct {
-		resp   string
-		errstr string
-		id     uint8
-		fcode  RTUFunction
+		resp       string
+		nregisters uint8
+		errstr     string
+		id         uint8
+		fcode      RTUFunction
 	}{
 		{
-			resp:  "00010000001001032000670000006314d3ff10001f09",
-			id:    1,
-			fcode: 3,
+			resp:       "00010000002303034e14d800000d060d080d060d080d070d080d070d080d070d080d070d080d060d070d060d070019001b0018006400640064006400000000000000000000000a15752a00181817170000001003e800000000",
+			id:         3,
+			fcode:      3,
+			nregisters: 16,
 		},
 		{
 			resp:   "00010000001001032000670000006314d3ff10001f09",
@@ -45,17 +47,23 @@ func TestTCPReadRegisters(t *testing.T) {
 			resp:   "",
 			errstr: "EOF",
 		},
+		{
+			resp:       "00070000003103032e4c46502d35312e325631303041682d56312e3000000000005a3032543034323032322d31302d3236000000000000",
+			id:         3,
+			fcode:      3,
+			nregisters: 23,
+		},
 	}
 
 	tid.Store(0) // Reset the transaction counter in tcp.go so we get predictable TIDs
-	for _, tt := range tests {
+	for tid, tt := range tests {
 		resp, err := hex.DecodeString(tt.resp)
 		if err != nil {
 			t.Fatalf("malformed response string in test: %s", tt.resp)
 		}
 		port := common.NewTestPort(bytes.NewReader(resp), io.Discard, 0)
 		tcp, _ := Reader(port, TCPProtocol, "")
-		data, err := tcp.ReadRegisters(1, 16, 1)
+		data, err := tcp.ReadRegisters(1, 0, tt.nregisters)
 		if err != nil && tt.errstr == "" {
 			t.Errorf("read response failed(%s): got %v; want no error", tt.resp, err)
 			continue
@@ -70,15 +78,8 @@ func TestTCPReadRegisters(t *testing.T) {
 			}
 			continue
 		}
-		frame := NewRTUFrame(data)
-		if frame.ID() != tt.id {
-			t.Errorf("wrong ID in response(%s): got %02d; want %02d", tt.resp, frame.ID(), tt.id)
-		}
-		if frame.Function() != tt.fcode {
-			t.Errorf("wrong function code in response(%s): got %02d; want %02d", tt.resp, frame.Function(), tt.fcode)
-		}
-		if frame.CRC() != 0 {
-			t.Errorf("TCP CRC: got 0x%04x; want  0", frame.CRC())
+		if len(data) != (int(tt.nregisters) * 2) {
+			t.Errorf("%d wrong data length: got %d; want %d", tid, len(data), int(tt.nregisters)*2)
 		}
 	}
 }
