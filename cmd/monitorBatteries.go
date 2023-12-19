@@ -18,7 +18,7 @@ import (
 type MonitorBatteriesCmd struct {
 	MQTTFlags `embed:""`
 
-	Address  string `short:"p" required:"" help:"Serial port attached to all batteries, except maybe battery ID 1"`
+	Address  string `short:"p" required:"" help:"Serial port attached to the batteries"`
 	BaudRate uint   `short:"B" default:"9600" help:"Baud rate for serial ports"`
 
 	ID []uint `short:"i" required:"" name:"battery-id" help:"IDs of the batteries to monitor"`

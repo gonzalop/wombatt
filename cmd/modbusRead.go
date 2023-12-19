@@ -36,16 +36,14 @@ type ModbusReadCmd struct {
 
 func (cmd *ModbusReadCmd) Help() string {
 	return `The register read are written as a hexadecimal dump. For a custom output, use the '-o' or '--output-format'.
-	The format syntax for one register is as follows.
+	The format syntax is a comma-separated list of:
 
-			<type>:<name>:<unit>:<multiplier>:string
-
-	Multiple formats are separated by commas.
+			<type>[:[<name>][:[<unit>][:[<multiplier>][:[<string>]]]]]
 
 	All but <type> are optional, and all accept an array size prefix. I.e., for an array of 4 16-bits unsigned
 	values, you can use '[4]u16' as the type.
 
-	<type> can be one of byte, i8, u8, i16, u16, i32, u32. 'i' for signed.
+	<type> can be one of byte, i8, u8, i16, u16, i32, u32.
 		'u' is used for unsigned values and 'i' for signed. The number is the number of bits.
 
 	<name> can be any name accepted by Go. The special name denoted by a single underscore (_) will
@@ -57,18 +55,18 @@ func (cmd *ModbusReadCmd) Help() string {
 		For instance, if the register is in 10mV and has a decimal value of 3277, a multiplier of 0.01 and
 		a unit of V would display the value in volts.
 
-	string is literally 'string' and is used to display byte arrays as a string.
+	<string> is literally 'string' and is used to display byte arrays as a string.
 
-	The same comma-separated values for the -o option can be read from a file, one line per register, and allows
-	comments starting with the '#' character. To read the formatting options from a file, use the -O option.
+	The same comma-separated values for the -o option can be read from a file, one line per register, with
+	comments starting with the '#' character. To read the formatting values from a file, use the -O option.
 
 	Example output format values:
-		u16,i8,u32 - 3 fields: unsigned 16-bit, signed 8-bit, and unsigned 32-bit integers.
+		u16,i8,u32 -- 3 fields: unsigned 16-bit, signed 8-bit, and unsigned 32-bit integers.
 
-		u16:Voltage:V:0.01,i8,u32: same as above, bu the first field will be named 'Voltage',
+		u16:Voltage:V:0.01,i8,u32  -- same as above, but the first field will be named 'Voltage',
 			expects the value in 10mV, and converts them to V
 
-		[10]byte:Serial number:::string - it will print 10 bytes as a string with the field name 'Serial_number'.
+		[10]byte:Serial number:::string -- it will print 10 bytes as a string with the field name 'Serial_number'.
 
 	`
 }
