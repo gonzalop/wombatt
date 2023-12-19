@@ -28,7 +28,7 @@ type CLI struct {
 	BatteryInfo      BatteryInfoCmd      `cmd:"" help:"Displays battery information"`
 	Forward          ForwardCmd          `cmd:"" help:"Forwards commands between a two devices"`
 	InverterQuery    InverterQueryCmd    `cmd:"" help:"Sends PI30 protocol commands to inverters"`
-	ModbusRead       ModbusReadCmd       `cmd:"" help:"Reads Modbus holding registers"`
+	ModbusRead       ModbusReadCmd       `cmd:"" help:"Reads Modbus holding registers\n"`
 	MonitorBatteries MonitorBatteriesCmd `cmd:"" help:"Monitors batteries state, MQTT publishing optional"`
 	MonitorInverters MonitorInvertersCmd `cmd:"" help:"Monitors inverters using PI30 protocol, MQTT publishing optional"`
 }
