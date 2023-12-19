@@ -21,4 +21,5 @@ $ ./wombatt modbus-read -T tcp -p 192.168.1.123:502 --id 2 --start 105 --count 2
 2023/12/18 21:58:42.304161 Opening 192.168.1.123:502...
 Model: LFP-51.2V100Ah-V1.0
 Firmware_Version: Z02T04
+Serial: 2022-10-26
 ~~~
