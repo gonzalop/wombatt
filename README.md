@@ -19,6 +19,9 @@ and slight variations of Modbus ASCII.
 
 The data can be exposed via console, web server (txt, json), or MQTT (Homeassistant auto-discovery topics automatically added).
 
+
+See [wombatt command documentation](docs/cmds/wombatt.md) for more details.
+
 ## Releases
 Get binary releases at https://wombatt.cc/releases/
 
