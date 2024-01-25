@@ -57,6 +57,14 @@ $ make -f Makefile.release release
 
 And you'll get the different binaries under `build/` and tarfiles under `releases/`.
 
+## Video showing how to install and run wombatt on a Raspberry Pi
+
+The following video shows how to install from source and run wombatt to monitor 6 lifepower4 batteries.
+Note that the steps to build the binary from source can be skipped if you get the ARM or ARM64 binaries from the
+[releases link](https://github.com/gonzalop/wombatt#releases) above.
+
+[Video from AmateurSolarBuild@dyisolarforums:](https://youtu.be/wwLMO1hMxnY)
+
 ## Reporting bugs and requesting features
 Please use https://github.com/gonzalop/wombatt/issues to report any bug, request new features
 or support for batteries, inverters, etc.
