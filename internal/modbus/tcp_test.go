@@ -11,7 +11,7 @@ import (
 	"wombatt/internal/common"
 )
 
-func TestTCPReadRegisters(t *testing.T) {
+func TestTCPReadHoldingRegisters(t *testing.T) {
 	tests := []struct {
 		resp       string
 		nregisters uint8
@@ -63,7 +63,7 @@ func TestTCPReadRegisters(t *testing.T) {
 		}
 		port := common.NewTestPort(bytes.NewReader(resp), io.Discard, 0)
 		tcp, _ := Reader(port, TCPProtocol, "")
-		data, err := tcp.ReadRegisters(1, 0, tt.nregisters)
+		data, err := tcp.ReadHoldingRegisters(1, 0, tt.nregisters)
 		if err != nil && tt.errstr == "" {
 			t.Errorf("read response failed(%s): got %v; want no error", tt.resp, err)
 			continue

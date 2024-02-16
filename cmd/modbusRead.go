@@ -26,6 +26,7 @@ type ModbusReadCmd struct {
 	ID               uint8         `required:"" help:"Device ID"`
 	Start            uint16        `required:"" help:"Start address of the first register to read"`
 	Count            uint8         `required:"" help:"Number of registers to read"`
+	RegisterType     string        `default:"holding" help:"valid values are 'input' or 'holding'"`
 	BaudRate         uint          `short:"B" default:"9600" help:"Baud rate"`
 	ReadTimeout      time.Duration `short:"t" default:"500ms" help:"Timeout when reading from serial ports"`
 	Protocol         string        `default:"auto" enum:"${protocols}" help:"One of ${protocols}"`
@@ -98,7 +99,11 @@ func (cmd *ModbusReadCmd) Run(globals *Globals) error {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	data, err := reader.ReadRegisters(cmd.ID, cmd.Start, cmd.Count)
+	readFunc := reader.ReadHoldingRegisters
+	if cmd.RegisterType == "input" {
+		readFunc = reader.ReadInputRegisters
+	}
+	data, err := readFunc(cmd.ID, cmd.Start, cmd.Count)
 	if err != nil {
 		log.Printf("Error reading registers %v: %v\n", cmd.Address, err)
 		log.Fatal(err.Error())

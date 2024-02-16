@@ -33,8 +33,20 @@ func buildReadRequestLFP4Frame(id uint8, cid2 uint8) []byte {
 	return b.Bytes()
 }
 
+// ReadHoldingRegisters requests 'count' holding registers from unit 'id' from the 'start' memory address.
+// and reads the response back. For LFP4, this is the same as ReadInputRegisters.
+func (t *LFP4) ReadHoldingRegisters(id uint8, start uint16, count uint8) ([]byte, error) {
+	return t.readRegisters(id, start, count)
+}
+
+// ReadInputRegisters requests 'count' input registers from unit 'id' from the 'start' memory address.
+// and reads the response back. For LFP4, this is the same as ReadHoldingRegisters.
+func (r *LFP4) ReadInputRegisters(id uint8, start uint16, count uint8) ([]byte, error) {
+	return r.readRegisters(id, start, count)
+}
+
 // ReadRegisters sends the cid2 command to unit id and returns the response.
-func (t *LFP4) ReadRegisters(id uint8, _ uint16, cid2 uint8) ([]byte, error) {
+func (t *LFP4) readRegisters(id uint8, _ uint16, cid2 uint8) ([]byte, error) {
 	f := buildReadRequestLFP4Frame(id, cid2)
 	if _, err := t.port.Write(f); err != nil {
 		return nil, err

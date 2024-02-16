@@ -86,7 +86,7 @@ func readWithTimeout(reader modbus.RegisterReader, timeout time.Duration, id uin
 	var err error
 	result := make(chan struct{}, 1)
 	go func() {
-		data, err = reader.ReadRegisters(id, start, count)
+		data, err = reader.ReadHoldingRegisters(id, start, count)
 		result <- struct{}{}
 	}()
 	select {

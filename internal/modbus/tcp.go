@@ -27,10 +27,20 @@ func NewTCP(port common.Port) RegisterReader {
 	return &TCP{port: port}
 }
 
-// ReadRegisters requests 'count' holding registers from unit 'id' from the 'start' memory address.
+// ReadHoldingRegisters requests 'count' holding registers from unit 'id' from the 'start' memory address.
 // and reads the response back.
-func (t *TCP) ReadRegisters(id uint8, start uint16, count uint8) ([]byte, error) {
-	raw := buildReadRequestRTUFrame(id, ReadHoldingRegisters, start, uint16(count))
+func (t *TCP) ReadHoldingRegisters(id uint8, start uint16, count uint8) ([]byte, error) {
+	return t.readRegisters(id, ReadHoldingRegisters, start, count)
+}
+
+// ReadInputRegisters requests 'count' input registers from unit 'id' from the 'start' memory address.
+// and reads the response back.
+func (t *TCP) ReadInputRegisters(id uint8, start uint16, count uint8) ([]byte, error) {
+	return t.readRegisters(id, ReadInputRegisters, start, count)
+}
+
+func (t *TCP) readRegisters(id uint8, functionCode RTUFunction, start uint16, count uint8) ([]byte, error) {
+	raw := buildReadRequestRTUFrame(id, functionCode, start, uint16(count))
 	tf := &TCPRTUHeader{
 		TID:    uint16(tid.Add(1) & 0x0ffff),
 		Length: uint16(len(raw)) - 2, // -2 for CRC

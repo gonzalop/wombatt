@@ -167,7 +167,7 @@ func TestReadRTUResponse(t *testing.T) {
 	}
 }
 
-func TestRTUReadRegisters(t *testing.T) {
+func TestRTUReadHoldingRegisters(t *testing.T) {
 	tests := []struct {
 		resp       string
 		errstr     string
@@ -207,7 +207,7 @@ func TestRTUReadRegisters(t *testing.T) {
 		}
 		port := common.NewTestPort(bytes.NewReader(resp), io.Discard, 0)
 		rtu, _ := Reader(port, RTUProtocol, "")
-		data, err := rtu.ReadRegisters(1, 1, tt.nregisters)
+		data, err := rtu.ReadHoldingRegisters(1, 1, tt.nregisters)
 		if err != nil && tt.errstr == "" {
 			t.Errorf("read response failed(%s): got %v; want no error", tt.resp, err)
 			continue

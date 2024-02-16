@@ -216,10 +216,20 @@ func NewRTU(port common.Port) RegisterReader {
 	return &RTU{port: port}
 }
 
-// ReadRegisters requests 'count' holding registers from unit 'id' from the 'start' memory address.
+// ReadHoldingRegisters requests 'count' holding registers from unit 'id' from the 'start' memory address.
 // and reads the response back.
-func (r *RTU) ReadRegisters(id uint8, start uint16, count uint8) ([]byte, error) {
-	f := buildReadRequestRTUFrame(id, ReadHoldingRegisters, start, uint16(count))
+func (r *RTU) ReadHoldingRegisters(id uint8, start uint16, count uint8) ([]byte, error) {
+	return r.readRegisters(id, ReadHoldingRegisters, start, count)
+}
+
+// ReadInputRegisters requests 'count' input registers from unit 'id' from the 'start' memory address.
+// and reads the response back.
+func (r *RTU) ReadInputRegisters(id uint8, start uint16, count uint8) ([]byte, error) {
+	return r.readRegisters(id, ReadInputRegisters, start, count)
+}
+
+func (r *RTU) readRegisters(id uint8, functionCode RTUFunction, start uint16, count uint8) ([]byte, error) {
+	f := buildReadRequestRTUFrame(id, functionCode, start, uint16(count))
 	if _, err := r.port.Write(f); err != nil {
 		return nil, err
 	}

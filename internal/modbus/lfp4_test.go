@@ -41,7 +41,7 @@ func TestLFP4Request(t *testing.T) {
 }
 
 // test data from examples in https://eg4electronics.com/backend/wp-content/uploads/2023/04/EG4_LifePower4_Communication_Protocol.pdf
-// TestLFP4Response tests the raw response contents before being processed by ReadRegisters.
+// TestLFP4Response tests the raw response contents before being processed by ReadHoldingRegisters.
 func TestLFP4Response(t *testing.T) {
 	tests := []struct {
 		id   uint8
@@ -80,8 +80,8 @@ func TestLFP4Response(t *testing.T) {
 }
 
 // test data from examples in https://eg4electronics.com/backend/wp-content/uploads/2023/04/EG4_LifePower4_Communication_Protocol.pdf
-// TestLFP4Response tests the raw response contents before being processed by ReadRegisters.
-func TestLFP4ReadRegisters(t *testing.T) {
+// TestLFP4Response tests the raw response contents before being processed by ReadHoldingRegisters.
+func TestLFP4ReadHoldingRegisters(t *testing.T) {
 	tests := []struct {
 		id       uint8
 		cid2     uint8
@@ -122,7 +122,7 @@ func TestLFP4ReadRegisters(t *testing.T) {
 		port := common.NewTestPort(bytes.NewReader(rawResp), io.Discard, 0)
 		lfp4, _ := Reader(port, "lifepower4", "")
 		// dataResp needs double decoding: one from the test data to rawData and one from that to actual binary data
-		// which is what ReadRegisters returns.
+		// which is what ReadHoldingRegisters returns.
 		dataResp, err := hex.DecodeString(tt.dataResp)
 		if err != nil {
 			t.Fatalf("malformed data response string in test %d: %s", tid, tt.dataResp)
@@ -131,7 +131,7 @@ func TestLFP4ReadRegisters(t *testing.T) {
 		if err != nil {
 			t.Fatalf("malformed decoded data response string in test %d: %s", tid, tt.dataResp)
 		}
-		data, err := lfp4.ReadRegisters(tt.id, 0, tt.cid2)
+		data, err := lfp4.ReadHoldingRegisters(tt.id, 0, tt.cid2)
 		if err != nil {
 			if tt.errText != err.Error() {
 				t.Errorf("test got error '%v', expected '%v'", err, tt.errText)

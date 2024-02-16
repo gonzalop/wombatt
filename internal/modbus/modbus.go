@@ -13,7 +13,8 @@ const (
 )
 
 type RegisterReader interface {
-	ReadRegisters(id uint8, start uint16, count uint8) ([]byte, error)
+	ReadHoldingRegisters(id uint8, start uint16, count uint8) ([]byte, error)
+	ReadInputRegisters(id uint8, start uint16, count uint8) ([]byte, error)
 }
 
 func Reader(port common.Port, protocol, bmsType string) (RegisterReader, error) {
