@@ -41,11 +41,6 @@ type batteryInfo struct {
 }
 
 func (cmd *MonitorBatteriesCmd) Run(globals *Globals) error {
-	for _, id := range cmd.ID {
-		if id == 0 || id >= 247 {
-			log.Fatalf("id out of range: %d", id)
-		}
-	}
 	var webServer *web.Server
 	if len(cmd.WebServerAddress) > 0 {
 		webServer = web.NewServer(cmd.WebServerAddress, "/battery/")

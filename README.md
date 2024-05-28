@@ -32,7 +32,7 @@ Use any recent release tag or `latest` for docker image tag:
 
 ~~~
 $ docker pull docker.io/gonzalomono/wombatt:latest
-$ docker run --device /dev/ttyS1:/dev/ttyS1 -t gonzalomono/wombatt inverter-query --serial-ports /dev/ttyS1 --commands Q1
+$ docker run --device /dev/ttyS1:/dev/ttyS1 -t gonzalomono/wombatt inverter-query -p /dev/ttyS1 --commands Q1
 ~~~
 
 ## Compilation from Source
