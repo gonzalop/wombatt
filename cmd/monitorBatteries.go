@@ -26,8 +26,8 @@ type MonitorBatteriesCmd struct {
 	PollInterval time.Duration `short:"P" default:"10s" help:"Time to wait between polling cycles"`
 	ReadTimeout  time.Duration `short:"t" default:"500ms" help:"Timeout when reading from devices"`
 
-	BatteryType string `default:"EG4LLv2" help:"One of ${bms_types}" enum:"${bms_types}"`
-	MQTTPrefix  string `default:"eg4" help:"MQTT prefix for the fields published"`
+	BMSType    string `default:"EG4LLv2" help:"One of ${bms_types}" enum:"${bms_types}"`
+	MQTTPrefix string `default:"eg4" help:"MQTT prefix for the fields published"`
 
 	WebServerAddress string `short:"w" help:"Address to use for serving HTTP. <IP>:<Port>, i.e., 127.0.0.1:8080"`
 
@@ -53,7 +53,7 @@ func (cmd *MonitorBatteriesCmd) Run(globals *Globals) error {
 			log.Fatalf("%v", err)
 		}
 	}
-	battery := bms.Instance(string(cmd.BatteryType))
+	battery := bms.Instance(string(cmd.BMSType))
 	if cmd.Protocol == "auto" {
 		cmd.Protocol = battery.DefaultProtocol(cmd.DeviceType)
 	}
@@ -92,7 +92,7 @@ func (cmd *MonitorBatteriesCmd) Run(globals *Globals) error {
 }
 
 func monitorBatteries(ch chan *batteryInfo, port common.Port, cmd *MonitorBatteriesCmd, battery bms.BMS) {
-	reader, err := modbus.Reader(port, cmd.Protocol, string(cmd.BatteryType))
+	reader, err := modbus.Reader(port, cmd.Protocol, string(cmd.BMSType))
 	if err != nil {
 		log.Fatal(err.Error())
 	}

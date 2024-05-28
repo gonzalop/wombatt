@@ -6,9 +6,9 @@ _wombatt_completions() {
 
     common="-h --help -v --version -l --log-level"
 
-    bi="-i --battery-ids"
+    bi="-i --battery-id"
     br="-B --baud-rate"
-    bt="--battery-type"
+    bt="--bms-type"
     dt="-T --device-type"
     mqtt="--mqtt-server --mqtt-password --mqtt-topic-prefix --mqtt-user"
     p="--protocol"

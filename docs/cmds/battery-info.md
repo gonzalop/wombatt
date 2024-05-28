@@ -4,7 +4,7 @@
 ### Examples
 For instance, to query the battery with ID #2:
 ~~~
-$ ./wombatt battery-info --serial-port /dev/ttyUSB0 --battery-ids 2
+$ ./wombatt battery-info --serial-port /dev/ttyUSB0 --battery-id 2
 Battery #2
 ===========
 battery voltage: 52.9V

@@ -16,7 +16,7 @@ import (
 
 type BatteryInfoCmd struct {
 	Address     string        `required:"" short:"p" help:"Serial port or address used for communication"`
-	IDs         []uint        `required:"" short:"i" name:"battery-ids" help:"IDs of the batteries to get info from."`
+	IDs         []uint        `required:"" short:"i" name:"battery-id" help:"IDs of the batteries to get info from."`
 	ReadTimeout time.Duration `short:"t" default:"500ms" help:"Timeout when reading from serial ports"`
 	BaudRate    uint          `short:"B" default:"9600" help:"Baud rate"`
 	BMSType     string        `default:"EG4LLv2" help:"One of ${bms_types}" enum:"${bms_types}"`
