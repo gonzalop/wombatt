@@ -3,6 +3,7 @@ package bms
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/hex"
 	"fmt"
 	"log"
 	"time"
@@ -74,6 +75,7 @@ func readIntoStruct(result any, reader modbus.RegisterReader, timeout time.Durat
 	if err != nil {
 		return nil, err
 	}
+	log.Printf("Reading: %s\n", hex.EncodeToString(data))
 	buf := bytes.NewBuffer(data)
 	if err := binary.Read(buf, binary.BigEndian, result); err != nil {
 		return nil, err

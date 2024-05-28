@@ -48,6 +48,7 @@ func (r *LFP4) ReadInputRegisters(id uint8, start uint16, count uint8) ([]byte, 
 // ReadRegisters sends the cid2 command to unit id and returns the response.
 func (t *LFP4) readRegisters(id uint8, _ uint16, cid2 uint8) ([]byte, error) {
 	f := buildReadRequestLFP4Frame(id, cid2)
+	log.Printf("Writing: %s\n", hex.EncodeToString(f))
 	if _, err := t.port.Write(f); err != nil {
 		return nil, err
 	}
