@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
+	"log/slog"
 	"net"
 	"net/http"
 	"sort"
@@ -53,11 +53,11 @@ func (ls *Server) Start() error {
 	}
 	http.Handle(ls.root, ls)
 	go func() {
-		log.Printf("Listening on %v", ln.Addr())
+		fmt.Printf("Listening on %v\n", ln.Addr())
 		err := ls.server.Serve(ln)
 		ls.err = err
 		if err != nil {
-			log.Printf("Serve()(): %v", err)
+			slog.Error("error calling TCP Serve", "error", err)
 		}
 	}()
 	ls.started = true
@@ -110,7 +110,7 @@ func (ls *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if query.Get("format") == "json" {
 		j, err := json.Marshal(page)
 		if err != nil {
-			log.Printf("error formatting json at %v: %v", path, err)
+			slog.Error("error formatting json", "path", path, "error", err)
 			http.Error(w, "500 server error", http.StatusInternalServerError)
 			return
 		}

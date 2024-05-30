@@ -3,7 +3,7 @@ package bms
 import (
 	"encoding/hex"
 	"fmt"
-	"log"
+	"log/slog"
 	"time"
 
 	"wombatt/internal/modbus"
@@ -42,7 +42,7 @@ func (e *Pace) ReadInfo(reader modbus.RegisterReader, id uint8, timeout time.Dur
 	if data, err := readIntoStruct(&info, reader, timeout, id, paceBasicInfoAddress, paceBasicInfoRegisterCount); err != nil {
 		return nil, err
 	} else if len(data) != (int(paceBasicInfoRegisterCount) * 2) {
-		log.Printf("%s\n", hex.EncodeToString(data))
+		slog.Debug("data received", "data", hex.EncodeToString(data))
 		return nil, fmt.Errorf("unexpected data length: got %d, want %d", len(data), int(paceBasicInfoRegisterCount)*2)
 	}
 	result := PaceBatteryInfo{PaceModbusBatteryInfo: info}
@@ -55,7 +55,7 @@ func (e *Pace) ReadExtraInfo(reader modbus.RegisterReader, id uint8, timeout tim
 	if data, err := readIntoStruct(&extra, reader, timeout, id, paceExtraInfoAddress, paceExtraInfoRegisterCount); err != nil {
 		return nil, err
 	} else if len(data) != (int(paceExtraInfoRegisterCount) * 2) {
-		log.Printf("%s\n", hex.EncodeToString(data))
+		slog.Debug("extra data received", "data", hex.EncodeToString(data))
 		return nil, fmt.Errorf("unexpected data length: got %d, want %d", len(data), int(paceExtraInfoRegisterCount)*2)
 	}
 	return &extra, nil

@@ -2,7 +2,9 @@ package cmd
 
 import (
 	"encoding/hex"
+	"fmt"
 	"log"
+	"log/slog"
 	"path/filepath"
 	"time"
 
@@ -69,9 +71,9 @@ func (f *Forward) RunForever() {
 	}
 
 	reopenOnError := func(err error, p common.Port, d, op string) {
-		log.Printf("error %s %v: %v\n", op, d, err)
+		slog.Error(fmt.Sprintf("error %s", op), "error", err, "file", d)
 		if err := p.ReopenWithBackoff(); err != nil {
-			log.Printf("error reopening: %v\n", err)
+			slog.Error("error reopening", "error", err)
 		}
 		time.Sleep(500 * time.Millisecond)
 	}
@@ -82,7 +84,7 @@ func (f *Forward) RunForever() {
 			reopenOnError(err, from, fname, "reading")
 			return
 		}
-		log.Printf("%v: %d %s\n", fname, len(data), hex.EncodeToString(data))
+		slog.Info("writing data", "file", fname, "data", hex.EncodeToString(data))
 		_, err = to.Write(data)
 		if err != nil {
 			reopenOnError(err, to, tname, "writing")

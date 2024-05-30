@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"log/slog"
 	"net"
 	"os"
 	"sync"
@@ -96,6 +97,7 @@ func openSerial(opts *PortOptions) (Port, error) {
 
 func openHidRaw(opts *PortOptions) (Port, error) {
 	// TODO: maybe try to emulate the baud rate from opts?
+	slog.Debug("opening file", "file", opts.Address)
 	f, err := os.OpenFile(opts.Address, os.O_RDWR, 0755)
 	if err != nil {
 		return nil, err
@@ -105,7 +107,7 @@ func openHidRaw(opts *PortOptions) (Port, error) {
 }
 
 func openTCP(opts *PortOptions) (Port, error) {
-	log.Printf("Opening %s...\n", opts.Address)
+	slog.Debug("dialing TCP server", "address", opts.Address)
 	conn, err := net.Dial("tcp", opts.Address)
 	if err != nil {
 		return nil, err
@@ -149,7 +151,7 @@ func OpenPortWithBackoff(opts *PortOptions, d time.Duration) (Port, error) {
 		return OpenPort(opts)
 	}
 	n := func(err error, d time.Duration) {
-		log.Printf("error opening '%s': %v (%v elapsed)", opts.Address, err, d)
+		slog.Debug("backign off after error", "address", opts.Address, "error", err, "elapsed", d)
 	}
 
 	b := backoff.NewExponentialBackOff()

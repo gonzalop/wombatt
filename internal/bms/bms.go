@@ -6,6 +6,8 @@ import (
 	"encoding/hex"
 	"fmt"
 	"log"
+	"log/slog"
+	"reflect"
 	"time"
 
 	"wombatt/internal/modbus"
@@ -75,7 +77,7 @@ func readIntoStruct(result any, reader modbus.RegisterReader, timeout time.Durat
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("Reading: %s\n", hex.EncodeToString(data))
+	slog.Debug("reading into struct", "data", hex.EncodeToString(data), "struct-type", reflect.TypeOf(result).String())
 	buf := bytes.NewBuffer(data)
 	if err := binary.Read(buf, binary.BigEndian, result); err != nil {
 		return nil, err

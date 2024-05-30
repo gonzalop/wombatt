@@ -3,7 +3,7 @@ package bms
 import (
 	"encoding/hex"
 	"fmt"
-	"log"
+	"log/slog"
 	"time"
 
 	"wombatt/internal/modbus"
@@ -42,7 +42,7 @@ func (e *EG4LLv2) ReadInfo(reader modbus.RegisterReader, id uint8, timeout time.
 	if data, err := readIntoStruct(&info, reader, timeout, id, modbusBasicInfoAddress, modbusBasicInfoRegisterCount); err != nil {
 		return nil, err
 	} else if len(data) != (int(modbusBasicInfoRegisterCount) * 2) {
-		log.Printf("%s\n", hex.EncodeToString(data))
+		slog.Debug("data received", "data", hex.EncodeToString(data))
 		return nil, fmt.Errorf("unexpected data length: got %d, want %d", len(data), int(modbusBasicInfoRegisterCount)*2)
 	}
 	result := EG4BatteryInfo{EG4ModbusBatteryInfo: info}
@@ -56,7 +56,7 @@ func (e *EG4LLv2) ReadExtraInfo(reader modbus.RegisterReader, id uint8, timeout 
 	if data, err := readIntoStruct(&extra, reader, timeout, id, modbusExtraInfoAddress, modbusExtraInfoRegisterCount); err != nil {
 		return nil, err
 	} else if len(data) != (int(modbusExtraInfoRegisterCount) * 2) {
-		log.Printf("%s\n", hex.EncodeToString(data))
+		slog.Debug("extra data received", "data", hex.EncodeToString(data))
 		return nil, fmt.Errorf("unexpected data length: got %d, want %d", len(data), int(modbusExtraInfoRegisterCount)*2)
 	}
 	return &extra, nil

@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"log"
+	"log/slog"
 	"strings"
 	"time"
 
@@ -92,13 +93,13 @@ func monitorBatteries(ch chan *batteryInfo, port common.Port, cmd *MonitorBatter
 		log.Fatal(err.Error())
 	}
 	for {
-		log.Printf("Fetching info from batteries\n")
+		slog.Info("fetching info from batteries", "battery-id", cmd.ID)
 		success := []uint{}
 		for _, id := range cmd.ID {
 			info, err := battery.ReadInfo(reader, uint8(id), cmd.ReadTimeout)
 			if err != nil {
 				if err := port.ReopenWithBackoff(); err != nil {
-					log.Printf("error reopening: %v\n", err)
+					slog.Error("error reopening", "error", err)
 				}
 				continue
 			}
@@ -111,7 +112,7 @@ func monitorBatteries(ch chan *batteryInfo, port common.Port, cmd *MonitorBatter
 			}
 			success = append(success, id)
 		}
-		log.Printf("Published info for %v\n", success)
+		slog.Info("published info for batteries", "battery-id", success)
 		time.Sleep(cmd.PollInterval)
 	}
 }
@@ -126,7 +127,7 @@ func mqttPublish(client mqttha.Client, ch chan *batteryInfo, cmd *MonitorBatteri
 		common.TraverseStruct(bi.Info, f)
 		topic := fmt.Sprintf("%s/sensor/%s_battery%d_info/state", cmd.MQTTTopicPrefix, cmd.MQTTPrefix, bi.ID)
 		if err := client.PublishMap(topic, false, config); err != nil {
-			log.Printf("[mqtt] error publishing to %s: %v\n", cmd.MQTTBroker, err)
+			slog.Error("mqtt error publishing", "server", cmd.MQTTBroker, "error", err)
 		}
 	}
 }
@@ -165,7 +166,7 @@ func addDiscoveryConfig(client mqttha.Client, cmd *MonitorBatteriesCmd, id uint,
 
 		topic := fmt.Sprintf("%s/sensor/%s_battery%d_%s/config", cmd.MQTTTopicPrefix, cmd.MQTTPrefix, id, name)
 		if err := client.PublishMap(topic, true, config); err != nil {
-			log.Printf("[mqtt] error publishing to %s: %v\n", cmd.MQTTBroker, err)
+			slog.Error("mqtt error publishing", "server", cmd.MQTTBroker, "error", err)
 		}
 	}
 	common.TraverseStruct(st, f)

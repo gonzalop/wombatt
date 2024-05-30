@@ -7,7 +7,7 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log"
+	"log/slog"
 	"reflect"
 	"strconv"
 	"strings"
@@ -126,7 +126,7 @@ func readResponse(port io.Reader) ([]string, error) {
 	computed := crc(b[0 : len(b)-3])
 	received := uint16(b[len(b)-3])*256 + uint16(b[len(b)-2])
 	if received != computed {
-		log.Printf("crc error: got %04x, want %04x\n", received, computed)
+		slog.Error("crc error", "got", received, "want", computed)
 		return nil, fmt.Errorf("crc error: got %04x, want %04x\n", received, computed)
 	}
 	s := string(b[1 : len(b)-3])
@@ -135,13 +135,13 @@ func readResponse(port io.Reader) ([]string, error) {
 }
 
 func decodeResponse(parts []string, target any) error {
-	log.Printf("%v\n", parts)
+	slog.Debug("decoding", "parts", parts)
 	lenParts := len(parts)
 	stValue := reflect.ValueOf(target).Elem()
 	stType := stValue.Type()
 	nfields := stType.NumField()
 	if lenParts < nfields {
-		log.Printf("wrong number of fields: got %d, want: %d\b", lenParts, nfields)
+		slog.Warn("wrong number of fields", "got", lenParts, "want", nfields)
 		nfields = lenParts
 	}
 	for i := 0; i < nfields; i++ {

@@ -46,7 +46,6 @@ func (cmd *BatteryInfoCmd) Run(globals *Globals) error {
 			failed = errors.Join(failed, fmt.Errorf("error getting info of ID#%d: %w", id, err))
 			if err := port.ReopenWithBackoff(); err != nil {
 				log.Fatalf("error reopening port: %v", err)
-				return err
 			}
 			continue
 		}
@@ -55,7 +54,6 @@ func (cmd *BatteryInfoCmd) Run(globals *Globals) error {
 			failed = errors.Join(failed, fmt.Errorf("error getting extra info of ID#%d: %w", id, err))
 			if err := port.ReopenWithBackoff(); err != nil {
 				log.Fatalf("error reopening port: %v", err)
-				return err
 			}
 			continue
 		}

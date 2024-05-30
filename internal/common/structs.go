@@ -3,7 +3,7 @@ package common
 
 import (
 	"fmt"
-	"log"
+	"log/slog"
 	"math"
 	"reflect"
 	"strconv"
@@ -55,7 +55,7 @@ func TraverseStruct(data any, cb TraverseStructCallback) {
 			for k := 0; k < aValue.Len(); k++ {
 				newVal, err := handleMultiplier(mult, aValue.Index(k))
 				if err != nil {
-					log.Printf("error converting: %v\n", err)
+					slog.Error("error converting array value", "error", err, "value", aValue.Index(k), "multiplier", mult)
 					continue
 				}
 				info["name"] = fmt.Sprintf(name, k+1)
@@ -74,7 +74,7 @@ func TraverseStruct(data any, cb TraverseStructCallback) {
 		if mult != "" {
 			newVal, err := handleMultiplier(mult, v)
 			if err != nil {
-				log.Printf("error converting: %v\n", err)
+				slog.Error("error converting multiplier", "error", err, "value", v, "mulktiplier", mult)
 				continue
 			}
 			cb(info, newVal)
@@ -105,7 +105,7 @@ func parseValues(values string) map[string]string {
 	for _, kv := range strings.Split(values, ",") {
 		p := strings.SplitN(kv, ":", 2)
 		if len(p) != 2 {
-			log.Printf("error in value tag: %v", values)
+			slog.Error("error in value tag", "values", values)
 			continue
 		}
 		result[strings.TrimSpace(p[0])] = strings.TrimSpace(p[1])
@@ -156,7 +156,7 @@ func handleBitgroupsTag(bgroups string, val string) string {
 	for _, group := range groups {
 		descriptions := strings.Split(group, ",")
 		if (groupIdx + len(descriptions)) > len(val) {
-			log.Printf("error in bitgroup: got %s with descriptions '%s'", val, bgroups)
+			slog.Error("error in bitgroup", "value", val, "bitgroup", bgroups)
 			if result == "" {
 				return val
 			}

@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"log"
+	"log/slog"
 	"math"
 	"os"
 	"reflect"
@@ -105,7 +106,7 @@ func (cmd *ModbusReadCmd) Run(globals *Globals) error {
 	}
 	data, err := readFunc(cmd.ID, cmd.Start, cmd.Count)
 	if err != nil {
-		log.Printf("Error reading registers %v: %v\n", cmd.Address, err)
+		slog.Error("error reading registers", "address", cmd.Address, "error", err)
 		log.Fatal(err.Error())
 	}
 	if cmd.OutputFormat == "" {
