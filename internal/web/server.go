@@ -93,6 +93,7 @@ func (ls *Server) Publish(name string, data any) {
 	ls.pagesLock.Lock()
 	ls.pages[name] = config
 	ls.pagesLock.Unlock()
+	slog.Debug("published to web", "url", name)
 }
 
 func (ls *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -124,6 +125,7 @@ func (ls *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	for _, k := range keys {
 		_, _ = w.Write([]byte(fmt.Sprintf("%s: %v\n", k, page[k])))
 	}
+	slog.Debug("served from web", "url", path)
 }
 
 func filterFields(page map[string]any, fields string) map[string]any {

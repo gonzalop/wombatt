@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"log/slog"
 	"os"
 	"strings"
 	"sync"
@@ -89,7 +90,7 @@ func runInverterMonitor(cmd *MonitorInvertersCmd, monitors []*inverterMonitor) e
 				}
 				port, err := common.OpenPort(portOptions)
 				if err != nil {
-					log.Printf("error opening %s: %v\n", m.Device, err)
+					slog.Error("error opening device", "device", m.Device, "error", err)
 					responses[i] = &cmdResponse{nil, []error{err}, m}
 					return
 				}
@@ -131,31 +132,26 @@ func (r *cmdResponse) ValidateResponses() {
 
 func (r *cmdResponse) Publish(topicPrefix string, cmdIndex int) {
 	m := r.monitor
-	if m.client != nil {
-		m.publishToMQTT(topicPrefix, r.Responses, r.Errors)
-	}
-
-	if m.webServer != nil {
-		for ic, ir := range r.Responses {
-			if r.Errors[ic] != nil {
-				continue
-			}
+	for ic, ir := range r.Responses {
+		if r.Errors[ic] != nil {
+			slog.Error("error running command", "command", m.Commands[ic], "device", m.Device, "error", r.Errors[ic])
+			continue
+		}
+		if m.webServer != nil {
 			m.webServer.Publish(fmt.Sprintf("%d/%s", cmdIndex+1, m.Commands[ic]), ir)
 		}
 	}
 
+	if m.client != nil {
+		m.publishToMQTT(topicPrefix, r.Responses, r.Errors)
+	}
+
 	if m.client == nil && m.webServer == nil {
-		publishToStdout(m, r.Responses, r.Errors)
+		publishToStdout(m, r.Responses)
 	}
 }
 
-func publishToStdout(im *inverterMonitor, results []any, errors []error) {
-	for i, err := range errors {
-		if err == nil {
-			continue
-		}
-		log.Printf("error running %s on %s: %v\n", im.Commands[i], im.Device, err)
-	}
+func publishToStdout(im *inverterMonitor, results []any) {
 	for i, r := range results {
 		if r == nil {
 			continue
@@ -207,7 +203,7 @@ func addStructDiscoveryConfig(client mqttha.Client, st any, topicPrefix, tag str
 
 		topic := fmt.Sprintf("%s/sensor/%s_%s/config", topicPrefix, tag, name)
 		if err := client.PublishMap(topic, true, config); err != nil {
-			log.Printf("[mqtt] error publishing: %v\n", err)
+			slog.Error("mqtt error publishing", "error", err)
 		}
 	}
 	common.TraverseStruct(st, f)
@@ -220,7 +216,7 @@ func (im *inverterMonitor) publishToMQTT(mqttTopicPrefix string, results []any, 
 	}
 	for i, st := range results {
 		if errors[i] != nil {
-			log.Printf("%v\n", errors[i])
+			slog.Error("error running command", "commandIndex", i, "error", errors[i])
 			continue
 		}
 		common.TraverseStruct(st, f)
@@ -230,7 +226,7 @@ func (im *inverterMonitor) publishToMQTT(mqttTopicPrefix string, results []any, 
 	}
 	topic := fmt.Sprintf("%s/sensor/%s_info/state", mqttTopicPrefix, im.MQTTTag)
 	if err := im.client.PublishMap(topic, false, config); err != nil {
-		log.Printf("[mqtt] error publishing: %v\n", err)
+		slog.Error("mqtt error publishing", "error", err)
 	}
 }
 
