@@ -121,7 +121,7 @@ func (ls *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	keys := maps.Keys(page)
 	sort.Strings(keys)
-	w.Header().Set("Content-Type", "text/plain")
+	w.Header().Set("Content-Type", "text/plain; charset=UTF-8")
 	for _, k := range keys {
 		_, _ = w.Write([]byte(fmt.Sprintf("%s: %v\n", k, page[k])))
 	}
