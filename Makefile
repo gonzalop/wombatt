@@ -63,7 +63,7 @@ install-tools:
 	test -x "$(GOCOV)" || go install github.com/axw/gocov/gocov@latest
 	test -x "$(GOCOVXML)" || go install github.com/AlekSi/gocov-xml@latest
 	test -x "$(GOTESTSUM)" || go install gotest.tools/gotestsum@latest
-	test -x "$(GOLANGCILINT)" || go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.53.3
+	test -x "$(GOLANGCILINT)" || go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.59.1
 
 # Generate
 
