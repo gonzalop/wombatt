@@ -97,8 +97,17 @@ func runInverterMonitor(cmd *MonitorInvertersCmd, monitors []*inverterMonitor) e
 				defer port.Close()
 				ctx_to, cancel := context.WithTimeout(ctx, cmd.ReadTimeout)
 				defer cancel()
+				slog.Info("fetching info from inverter", "inverter-name", m.Device, "commands", m.Commands)
 				results, errors := pi30.RunCommands(ctx_to, port, m.Commands)
 				responses[i] = &cmdResponse{results, errors, m}
+				okCommands := []string{}
+				for k := range errors {
+					if errors[k] != nil {
+						continue
+					}
+					okCommands = append(okCommands, m.Commands[k])
+				}
+				slog.Info("publishing info from inverter", "inverter-name", m.Device, "commands", okCommands)
 			}(i, m)
 		}
 		wg.Wait()

@@ -151,7 +151,7 @@ func OpenPortWithBackoff(opts *PortOptions, d time.Duration) (Port, error) {
 		return OpenPort(opts)
 	}
 	n := func(err error, d time.Duration) {
-		slog.Debug("backign off after error", "address", opts.Address, "error", err, "elapsed", d)
+		slog.Debug("backing off after error", "address", opts.Address, "error", err, "elapsed", d)
 	}
 
 	b := backoff.NewExponentialBackOff()
