@@ -5,7 +5,7 @@ go 1.21.3
 require (
 	github.com/alecthomas/kong v0.9.0
 	github.com/cenkalti/backoff/v4 v4.3.0
-	github.com/eclipse/paho.mqtt.golang v1.4.3
+	github.com/eclipse/paho.mqtt.golang v1.5.0
 	github.com/howeyc/crc16 v0.0.0-20171223171357-2b2a61e366a6
 	go.bug.st/serial v1.6.2
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56
