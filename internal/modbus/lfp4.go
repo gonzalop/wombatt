@@ -86,6 +86,7 @@ func (t *LFP4) readHeader() ([]byte, uint16, error) {
 	if _, err := io.ReadFull(t.port, header); err != nil {
 		return nil, 0, err
 	}
+	slog.Debug("lifepower4 header", "data", hex.EncodeToString(header))
 	// Check RTN
 	ret, err := asciiToBin(header[7:9])
 	if err != nil {
