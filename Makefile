@@ -58,12 +58,19 @@ ifeq (, $(GOLANGCILINT))
 	$(error "No golangci-lint $$PATH, please run 'make install-tools')
 endif
 
+update-tools:
+	go install golang.org/x/tools/cmd/goimports@latest
+	go install github.com/axw/gocov/gocov@latest
+	go install github.com/AlekSi/gocov-xml@latest
+	go install gotest.tools/gotestsum@latest
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+
 install-tools:
 	test -x "$(GOIMPORTS)" || go install golang.org/x/tools/cmd/goimports@latest
 	test -x "$(GOCOV)" || go install github.com/axw/gocov/gocov@latest
 	test -x "$(GOCOVXML)" || go install github.com/AlekSi/gocov-xml@latest
 	test -x "$(GOTESTSUM)" || go install gotest.tools/gotestsum@latest
-	test -x "$(GOLANGCILINT)" || go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.59.1
+	test -x "$(GOLANGCILINT)" || go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 
 # Generate
 
