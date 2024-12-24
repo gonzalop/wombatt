@@ -16,7 +16,7 @@ require (
 	github.com/creack/goselect v0.1.2 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/stretchr/testify v1.9.0 // indirect
-	golang.org/x/net v0.29.0 // indirect
+	golang.org/x/net v0.33.0 // indirect
 	golang.org/x/sync v0.10.0 // indirect
-	golang.org/x/sys v0.25.0 // indirect
+	golang.org/x/sys v0.28.0 // indirect
 )
