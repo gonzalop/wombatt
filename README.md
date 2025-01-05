@@ -9,10 +9,11 @@ Inverters supported:
     - EG4-3000s (unconfirmed)
 
 Battery/BMS supported:
-- EG4-LL
-- EG4-LL-S (unconfirmed)
-- EG4 Lifepower
-- Pace BMS Modbus (SOK, Jakiper) (unconfirmed)
+- EG4-LL (--bms-type=EG4LLv2)
+- EG4-LL-S (unconfirmed) (--bms-type=lifepower4)
+- EG4 Lifepower (--bms-type=EG4LLv2)
+- EG4 Lifepower v2 (--bms-type=lifepowerv2) (protocol switches: 1-off, 2 thru 6-on)
+- Pace BMS Modbus (SOK, Jakiper) (unconfirmed) (--bms-type=pacemodbus)
 
 wombatt can use direct RS232 or RS485 connections, or TCP to communicate using Modbus RTU, Modbus TCP,
 and slight variations of Modbus ASCII.
