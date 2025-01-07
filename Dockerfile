@@ -1,5 +1,5 @@
 # docker build -t wombatt --build-arg=ARCH=arm64 --build-arg=OS=linux --build-arg=TARGETPLATFORM=arm64 .
-ARG BUILD_IMAGE=golang:1.21
+ARG BUILD_IMAGE=golang:1.23
 ARG BASE=alpine
 FROM --platform=$BUILDPLATFORM ${BUILD_IMAGE} AS build
 SHELL [ "/bin/bash", "-ec" ]
