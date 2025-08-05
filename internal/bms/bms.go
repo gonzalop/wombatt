@@ -55,7 +55,7 @@ type VoltageStats struct {
 func updateVoltageStats(cellVoltage [16]uint16, vs *VoltageStats) {
 	var sum uint
 	voltages := make([]uint16, 16)
-	for i := 0; i < 16; i++ {
+	for i := range 16 {
 		mv := cellVoltage[i]
 		voltages[i] = mv
 		if i == 0 {

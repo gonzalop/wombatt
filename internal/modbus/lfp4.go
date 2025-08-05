@@ -147,7 +147,7 @@ func asciiToBin(ascii []byte) (int, error) {
 		return 0, fmt.Errorf("error decoding ascii string '%s'", ascii)
 	}
 	var result int
-	for i := 0; i < len(b); i++ {
+	for i := range len(b) {
 		result = (result << 8) + int(b[i])
 	}
 	return result, nil

@@ -120,7 +120,7 @@ func monitorBatteries(ch chan *batteryInfo, port common.Port, cmd *MonitorBatter
 func mqttPublish(client mqttha.Client, ch chan *batteryInfo, cmd *MonitorBatteriesCmd, emptyInfo any) {
 	createDiscoveryConfig(client, cmd, emptyInfo)
 	for bi := range ch {
-		config := make(map[string]interface{})
+		config := make(map[string]any)
 		f := func(info map[string]string, value any) {
 			config[info["name"]] = value
 		}
@@ -141,7 +141,7 @@ func createDiscoveryConfig(client mqttha.Client, cmd *MonitorBatteriesCmd, empty
 func addDiscoveryConfig(client mqttha.Client, cmd *MonitorBatteriesCmd, id uint, st any) {
 	f := func(info map[string]string, value any) {
 		name := info["name"]
-		config := map[string]interface{}{
+		config := map[string]any{
 			// "expire_after":?
 			// "force_update":   true,
 			"state_topic":    fmt.Sprintf("%s/sensor/%s_battery%d_info/state", cmd.MQTTTopicPrefix, cmd.MQTTPrefix, id),

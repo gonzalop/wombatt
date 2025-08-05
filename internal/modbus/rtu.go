@@ -165,9 +165,9 @@ func readRTUResponse(port io.Reader) (*RTUFrame, error) {
 func CRC(data []byte) uint16 {
 	var crc16 uint16 = 0xffff
 	l := len(data)
-	for i := 0; i < l; i++ {
+	for i := range l {
 		crc16 ^= uint16(data[i])
-		for j := 0; j < 8; j++ {
+		for range 8 {
 			if crc16&1 > 0 {
 				crc16 = (crc16 >> 1) ^ 0xa001
 			} else {

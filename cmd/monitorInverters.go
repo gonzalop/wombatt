@@ -187,7 +187,7 @@ func invertersDiscoveryConfig(mqttTopicPrefix string, monitors []*inverterMonito
 func addStructDiscoveryConfig(client mqttha.Client, st any, topicPrefix, tag string) {
 	f := func(info map[string]string, value any) {
 		name := info["name"]
-		config := map[string]interface{}{
+		config := map[string]any{
 			// "expire_after":?
 			// "force_update":   true,
 			"state_topic":    fmt.Sprintf("%s/sensor/%s_info/state", topicPrefix, tag),
@@ -219,7 +219,7 @@ func addStructDiscoveryConfig(client mqttha.Client, st any, topicPrefix, tag str
 }
 
 func (im *inverterMonitor) publishToMQTT(mqttTopicPrefix string, results []any, errors []error) {
-	config := make(map[string]interface{})
+	config := make(map[string]any)
 	f := func(info map[string]string, value any) {
 		config[info["name"]] = value
 	}
@@ -248,7 +248,7 @@ func getMonitors(args []string) ([]*inverterMonitor, error) {
 		}
 		dev := p[0]
 		var cmds []string
-		for _, c := range strings.Split(p[1], ":") {
+		for c := range strings.SplitSeq(p[1], ":") {
 			cmd := strings.TrimSpace(c)
 			if cmd == "" {
 				continue

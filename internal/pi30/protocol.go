@@ -144,7 +144,7 @@ func decodeResponse(parts []string, target any) error {
 		slog.Warn("wrong number of fields", "got", lenParts, "want", nfields)
 		nfields = lenParts
 	}
-	for i := 0; i < nfields; i++ {
+	for i := range nfields {
 		f := stType.Field(i)
 		if f.Name == "_" {
 			continue

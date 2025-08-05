@@ -82,7 +82,7 @@ func (ls *Server) Publish(name string, data any) {
 		ls.pagesLock.Unlock()
 		return
 	}
-	config := make(map[string]interface{})
+	config := make(map[string]any)
 	f := func(info map[string]string, value any) {
 		unit := info["unit"]
 		config[info["name"]] = fmt.Sprintf("%v%s", value, unit)
@@ -123,7 +123,7 @@ func (ls *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	sort.Strings(keys)
 	w.Header().Set("Content-Type", "text/plain; charset=UTF-8")
 	for _, k := range keys {
-		_, _ = w.Write([]byte(fmt.Sprintf("%s: %v\n", k, page[k])))
+		_, _ = w.Write(fmt.Appendf(nil, "%s: %v\n", k, page[k]))
 	}
 	slog.Debug("served from web", "url", path)
 }
@@ -133,7 +133,7 @@ func filterFields(page map[string]any, fields string) map[string]any {
 		return page
 	}
 	newPage := make(map[string]any)
-	for _, k := range strings.Split(fields, ",") {
+	for k := range strings.SplitSeq(fields, ",") {
 		if v, ok := page[k]; ok {
 			newPage[k] = v
 		}

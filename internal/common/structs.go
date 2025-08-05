@@ -22,7 +22,7 @@ func TraverseStruct(data any, cb TraverseStructCallback) {
 	}
 	stType := stValue.Type()
 	nfields := stType.NumField()
-	for i := 0; i < nfields; i++ {
+	for i := range nfields {
 		f := stType.Field(i)
 		if f.Type.Kind() == reflect.Struct {
 			TraverseStruct(stValue.Field(i).Interface(), cb)
@@ -52,7 +52,7 @@ func TraverseStruct(data any, cb TraverseStructCallback) {
 				continue
 			}
 			aValue := reflect.ValueOf(val)
-			for k := 0; k < aValue.Len(); k++ {
+			for k := range aValue.Len() {
 				newVal, err := handleMultiplier(mult, aValue.Index(k))
 				if err != nil {
 					slog.Error("error converting array value", "error", err, "value", aValue.Index(k), "multiplier", mult)
@@ -102,7 +102,7 @@ func TraverseStruct(data any, cb TraverseStructCallback) {
 
 func parseValues(values string) map[string]string {
 	result := make(map[string]string)
-	for _, kv := range strings.Split(values, ",") {
+	for kv := range strings.SplitSeq(values, ",") {
 		p := strings.SplitN(kv, ":", 2)
 		if len(p) != 2 {
 			slog.Error("error in value tag", "values", values)
@@ -114,7 +114,7 @@ func parseValues(values string) map[string]string {
 
 }
 
-func handleMultiplier(multiplier string, field reflect.Value) (interface{}, error) {
+func handleMultiplier(multiplier string, field reflect.Value) (any, error) {
 	if multiplier == "" {
 		return field.Interface(), nil
 	}

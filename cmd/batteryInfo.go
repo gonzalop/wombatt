@@ -71,7 +71,7 @@ func (cmd *BatteryInfoCmd) Run(globals *Globals) error {
 }
 
 func writeBatteryInfo(bi any) {
-	f := func(info map[string]string, value interface{}) {
+	f := func(info map[string]string, value any) {
 		name := info["name"]
 		unit := info["unit"]
 		name = strings.ReplaceAll(name, "_", " ")
