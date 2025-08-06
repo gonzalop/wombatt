@@ -44,7 +44,7 @@ func main() {
 			//			Compact: true,
 		}),
 		kong.Vars{
-			"version":      "0.0.10",
+			"version":      "0.0.11",
 			"bms_types":    "EG4LLv2,lifepower4,lifepowerv2,pacemodbus",
 			"device_types": "serial,hidraw,tcp",
 			"protocols":    "auto,ModbusRTU,ModbusTCP,lifepower4",
