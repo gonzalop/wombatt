@@ -45,6 +45,7 @@ func TraverseStruct(data any, cb TraverseStructCallback) {
 		info["desc"] = desc
 		info["icon"] = f.Tag.Get("icon")
 		info["dclass"] = f.Tag.Get("dclass")
+		info["precision"] = f.Tag.Get("precision")
 		val := v.Interface()
 		if f.Type.Kind() == reflect.Array {
 			if f.Tag.Get("type") == "string" {

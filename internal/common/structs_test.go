@@ -81,8 +81,8 @@ func TestTraverseStruct(t *testing.T) {
 		values  []any
 	}{
 		{st: &emptyStruct{}},
-		{st: &oneFieldNoTags{}, nfields: 1, ntags: 5, tags: []string{"name", "unit", "desc", "dclass", "icon"}},
-		{st: &oneField{Fld: 5}, nfields: 1, ntags: 5, values: []any{50.0}},
+		{st: &oneFieldNoTags{}, nfields: 1, ntags: 6, tags: []string{"name", "unit", "desc", "dclass", "icon", "precision"}},
+		{st: &oneField{Fld: 5}, nfields: 1, ntags: 6, values: []any{50.0}},
 		{st: &oneFieldString{Fld: "5"}},
 		{st: &oneFieldValues{Fld: "00"}, values: []any{"2zeros"}},
 		{st: &oneFieldValues{Fld: "01"}, values: []any{"zeroone"}},

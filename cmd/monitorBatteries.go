@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"log/slog"
+	"strconv"
 	"strings"
 	"time"
 
@@ -151,17 +152,24 @@ func addDiscoveryConfig(client mqttha.Client, cmd *MonitorBatteriesCmd, id uint,
 		}
 		config["unique_id"] = config["object_id"]
 		dclass := info["dclass"]
-		unit := info["unit"]
-		icon := info["icon"]
 		if dclass != "" {
 			config["device_class"] = dclass
 		}
+		unit := info["unit"]
 		if unit != "" {
 			config["unit_of_measurement"] = unit
 			config["state_class"] = "measurement"
 		}
+		icon := info["icon"]
 		if icon != "" {
 			config["icon"] = icon
+		}
+		precision := info["precision"]
+		if precision != "" {
+			num, err := strconv.Atoi(precision)
+			if err == nil {
+				config["suggested_display_precision"] = num
+			}
 		}
 
 		topic := fmt.Sprintf("%s/sensor/%s_battery%d_%s/config", cmd.MQTTTopicPrefix, cmd.MQTTPrefix, id, name)

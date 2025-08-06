@@ -66,12 +66,12 @@ type EG4ModbusBatteryInfo struct {
 	// The following fields must be in the same order as the Modbus registers available
 	// starting at address 0 and reading 39 registers.
 	// Reference at https://eg4electronics.com/backend/wp-content/uploads/2023/06/EG4-LL-MODBUS-Communication-Protocol.pdf
-	Voltage            uint16     `name:"battery_voltage" dclass:"voltage" unit:"V" multiplier:"0.01"`
-	Current            int16      `name:"current" dclass:"current" unit:"A" multiplier:"0.01"`
-	CellVoltages       [16]uint16 `name:"cell_%d_voltage" dclass:"voltage" unit:"V" multiplier:"0.001"`
+	Voltage            uint16     `name:"battery_voltage" dclass:"voltage" unit:"V" multiplier:"0.01" precision:"2"`
+	Current            int16      `name:"current" dclass:"current" unit:"A" multiplier:"0.01" precision:"1"`
+	CellVoltages       [16]uint16 `name:"cell_%d_voltage" dclass:"voltage" unit:"V" multiplier:"0.001" precision:"3"`
 	PCBTemp            int16      `name:"pcb_temp" dclass:"temperature" unit:"°C"`
 	MaxTemp            int16      `name:"max_temp" dclass:"temperature" unit:"°C"` // MaxTemp and AvgTemp seem to be swapped in the PDF doc.
-	AvgTemp            int16      `name:"avg_temp" dclass:"temperature" unit:"°C"`
+	AvgTemp            int16      `name:"avg_temp" dclass:"temperature" unit:"°C" precision:"1"`
 	CapRemaining       uint16     `name:"cap_remaining" unit:"%"`
 	MaxChargingCurrent uint16     `name:"max_charging_current" dclass:"current" unit:"A"`
 	SOH                uint16     `name:"soh" unit:"%"`
@@ -82,10 +82,10 @@ type EG4ModbusBatteryInfo struct {
 	ErrorCode          uint16     `name:"error_code" flags:"0x8000,0x4000,0x2000,0x1000,0x0800,0x0400,0x0200,0x0100,0x0080,0x0040,0x0020,cell unbalance,0x0008,current flow error,temperature error,voltage error"`
 	CycleCounts        uint32     `name:"cycle_counts" icon:"mdi:battery-sync"`
 	FullCapacity       uint32     `name:"full_capacity" unit:"mAh"`
-	Temp1              int8       `name:"temp1" dclass:"temperature" unit:"°C"`
-	Temp2              int8       `name:"temp2" dclass:"temperature" unit:"°C"`
-	Temp3              int8       `name:"temp3" dclass:"temperature" unit:"°C"`
-	Temp4              int8       `name:"temp4" dclass:"temperature" unit:"°C"`
+	Temp1              int8       `name:"temp1" dclass:"temperature" unit:"°C" precision:"1"`
+	Temp2              int8       `name:"temp2" dclass:"temperature" unit:"°C" precision:"1"`
+	Temp3              int8       `name:"temp3" dclass:"temperature" unit:"°C" precision:"1"`
+	Temp4              int8       `name:"temp4" dclass:"temperature" unit:"°C" precision:"1"`
 	Temp5              int8       `name:"temp5"` // Always 0
 	Temp6              int8       `name:"temp6"` // Always 0
 	CellNum            uint16     `name:"cell_num"`
