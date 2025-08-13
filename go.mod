@@ -9,7 +9,7 @@ require (
 	github.com/howeyc/crc16 v0.0.0-20171223171357-2b2a61e366a6
 	go.bug.st/serial v1.6.4
 	golang.org/x/exp v0.0.0-20250103183323-7d7fa50e5329
-	golang.org/x/text v0.27.0
+	golang.org/x/text v0.28.0
 )
 
 require (
