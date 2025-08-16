@@ -11,11 +11,11 @@ import (
 	"time"
 
 	"wombatt/internal/common"
+	"wombatt/internal/modbus"
 	"wombatt/internal/mqttha"
 	"wombatt/internal/pi30"
+	"wombatt/internal/solark"
 	"wombatt/internal/web"
-
-	"go.bug.st/serial"
 )
 
 type MonitorInvertersCmd struct {
@@ -25,11 +25,13 @@ type MonitorInvertersCmd struct {
 	PollInterval time.Duration `short:"P" default:"10s" help:"Time to wait between polling cycles"`
 	ReadTimeout  time.Duration `short:"t" default:"5s" help:"Timeout when reading from devices"`
 
-	Monitors []string `arg:"" required:"" help:"<device>,<command1[:command2:command3...]>[,<mqtt_prefix>]. E.g. /dev/ttyS0,QPIRI:QPGS1,eg4_1"`
+	Monitors []string `arg:"" required:"" help:"<device>,<command1[:command2:command3...]>,<mqtt_prefix>[,<inverter_type>]. E.g. /dev/ttyS0,QPIRI:QPGS1,eg4_1,pi30 or /dev/ttyUSB0,solark,solark_1,solark"`
 
 	WebServerAddress string `short:"w" help:"Address to use for serving HTTP. <IP>:<Port>, i.e., 127.0.0.1:8080"`
 
 	DeviceType string `short:"T" default:"serial" enum:"${device_types}" help:"One of ${device_types}"`
+	Protocol   string `short:"R" default:"auto" enum:"ModbusRTU,ModbusTCP,auto" help:"Modbus protocol (auto, ModbusRTU, ModbusTCP)"`
+	ModbusID   int    `short:"i" default:"1" help:"Modbus slave ID"`
 }
 
 func (cmd *MonitorInvertersCmd) Run(globals *Globals) error {
@@ -63,9 +65,10 @@ func (cmd *MonitorInvertersCmd) Run(globals *Globals) error {
 }
 
 type inverterMonitor struct {
-	Device   string
-	Commands []string
-	MQTTTag  string
+	Device       string
+	Commands     []string
+	MQTTTag      string
+	InverterType string // New field to differentiate inverter types
 
 	client    mqttha.Client
 	webServer *web.Server
@@ -83,12 +86,7 @@ func runInverterMonitor(cmd *MonitorInvertersCmd, monitors []*inverterMonitor) e
 		for i, m := range monitors {
 			go func(i int, m *inverterMonitor) {
 				defer wg.Done()
-				portOptions := &common.PortOptions{
-					Address: m.Device,
-					Mode:    &serial.Mode{BaudRate: int(cmd.BaudRate)},
-					Type:    common.DeviceTypeFromString[cmd.DeviceType],
-				}
-				port, err := common.OpenPort(portOptions)
+				port, err := common.NewPort(m.Device, int(cmd.BaudRate), 8, 1, "N", int(cmd.ReadTimeout.Seconds()))
 				if err != nil {
 					slog.Error("error opening device", "device", m.Device, "error", err)
 					responses[i] = &cmdResponse{nil, []error{err}, m}
@@ -97,8 +95,33 @@ func runInverterMonitor(cmd *MonitorInvertersCmd, monitors []*inverterMonitor) e
 				defer port.Close()
 				ctx_to, cancel := context.WithTimeout(ctx, cmd.ReadTimeout)
 				defer cancel()
-				slog.Info("fetching info from inverter", "inverter-name", m.Device, "commands", m.Commands)
-				results, errors := pi30.RunCommands(ctx_to, port, m.Commands)
+
+				var results []any
+				var errors []error
+
+				slog.Info("fetching info from inverter", "inverter-name", m.Device, "inverter-type", m.InverterType, "commands", m.Commands)
+
+				switch m.InverterType {
+				case "pi30":
+					results, errors = pi30.RunCommands(ctx_to, port, m.Commands)
+				case "solark":
+					// For Solark, we read all data at once, commands are ignored for now.
+					rtd, err := solark.ReadRealtimeData(modbus.NewRTU(port), uint8(cmd.ModbusID))
+					if err != nil {
+						errors = append(errors, fmt.Errorf("failed to read Solark RealtimeData: %w", err))
+					} else {
+						results = append(results, rtd)
+					}
+					ia, err := solark.ReadIntrinsicAttributes(modbus.NewRTU(port), uint8(cmd.ModbusID))
+					if err != nil {
+						errors = append(errors, fmt.Errorf("failed to read Solark IntrinsicAttributes: %w", err))
+					} else {
+						results = append(results, ia)
+					}
+				default:
+					errors = append(errors, fmt.Errorf("unknown inverter type: %s", m.InverterType))
+				}
+
 				responses[i] = &cmdResponse{results, errors, m}
 				okCommands := []string{}
 				for k := range errors {
@@ -174,7 +197,24 @@ func publishToStdout(im *inverterMonitor, results []any) {
 func invertersDiscoveryConfig(mqttTopicPrefix string, monitors []*inverterMonitor) {
 	for _, m := range monitors {
 		for _, c := range m.Commands {
-			st := pi30.StructForCommand(c)
+			var st any
+			switch m.InverterType {
+			case "pi30":
+				st = pi30.StructForCommand(c)
+			case "solark":
+				// For Solark, we publish the entire RealtimeData and IntrinsicAttributes structs.
+				// We don't have individual commands like PI30, so we'll use placeholder names.
+				if c == "RealtimeData" {
+					st = &solark.RealtimeData{}
+				} else if c == "IntrinsicAttributes" {
+					st = &solark.IntrinsicAttributes{}
+				} else {
+					continue // Skip unknown commands for Solark
+				}
+			default:
+				continue // Skip unknown inverter types
+			}
+
 			switch st.(type) {
 			case *pi30.EmptyResponse:
 				continue
@@ -242,9 +282,9 @@ func (im *inverterMonitor) publishToMQTT(mqttTopicPrefix string, results []any, 
 func getMonitors(args []string) ([]*inverterMonitor, error) {
 	var monitors []*inverterMonitor
 	for _, arg := range args {
-		p := strings.SplitN(arg, ",", 3)
-		if len(p) < 2 {
-			return nil, fmt.Errorf("invalid inverter argument: '%s'", arg)
+		p := strings.SplitN(arg, ",", 4) // Increased split limit to 4 for inverter type
+		if len(p) < 3 {
+			return nil, fmt.Errorf("invalid inverter argument: '%s'. Expected <device>,<commands>,<mqtt_prefix>[,<inverter_type>]", arg)
 		}
 		dev := p[0]
 		var cmds []string
@@ -258,11 +298,12 @@ func getMonitors(args []string) ([]*inverterMonitor, error) {
 		if len(cmds) == 0 {
 			return nil, fmt.Errorf("no inverter commands in '%s'", arg)
 		}
-		prefix := ""
-		if len(p) > 2 {
-			prefix = p[2]
+		prefix := p[2]
+		inverterType := "pi30" // Default to pi30
+		if len(p) > 3 {
+			inverterType = p[3]
 		}
-		monitors = append(monitors, &inverterMonitor{dev, cmds, prefix, nil, nil})
+		monitors = append(monitors, &inverterMonitor{dev, cmds, prefix, inverterType, nil, nil})
 	}
 	return monitors, nil
 }
