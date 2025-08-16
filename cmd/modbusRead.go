@@ -12,7 +12,6 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
-	"time"
 
 	"wombatt/internal/common"
 	"wombatt/internal/modbus"
@@ -23,17 +22,16 @@ import (
 )
 
 type ModbusReadCmd struct {
-	Address          string        `short:"p" required:"" help:"Port or TCP address used for communication"`
-	ID               uint8         `required:"" help:"Device ID"`
-	Start            uint16        `required:"" help:"Start address of the first register to read"`
-	Count            uint8         `required:"" help:"Number of registers to read"`
-	RegisterType     string        `default:"holding" help:"valid values are 'input' or 'holding'"`
-	BaudRate         uint          `short:"B" default:"9600" help:"Baud rate"`
-	ReadTimeout      time.Duration `short:"t" default:"500ms" help:"Timeout when reading from serial ports"`
-	Protocol         string        `default:"auto" enum:"${protocols}" help:"One of ${protocols}"`
-	DeviceType       string        `short:"T" default:"serial" enum:"${device_types}" help:"One of ${device_types}"`
-	OutputFormat     string        `short:"o" help:"Output format for the registers read"`
-	OutputFormatFile string        `short:"O" help:"Output format file for the registers read"`
+	Address          string `short:"p" required:"" help:"Port or TCP address used for communication"`
+	ID               uint8  `required:"" help:"Device ID"`
+	Start            uint16 `required:"" help:"Start address of the first register to read"`
+	Count            uint8  `required:"" help:"Number of registers to read"`
+	RegisterType     string `default:"holding" help:"valid values are 'input' or 'holding'"`
+	BaudRate         uint   `short:"B" default:"9600" help:"Baud rate"`
+	Protocol         string `default:"auto" enum:"${protocols}" help:"One of ${protocols}"`
+	DeviceType       string `short:"T" default:"serial" enum:"${device_types}" help:"One of ${device_types}"`
+	OutputFormat     string `short:"o" help:"Output format for the registers read"`
+	OutputFormatFile string `short:"O" help:"Output format file for the registers read"`
 }
 
 func (cmd *ModbusReadCmd) Help() string {

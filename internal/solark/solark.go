@@ -15,11 +15,11 @@ type RealtimeData struct {
 	GridFrequency          uint16 `modbus:"79" name:"Grid Frequency" unit:"Hz" multiplier:"0.01"`
 	DCDCTemp               int16  `modbus:"90" name:"DC/DC Transformer Temperature" unit:"°C" multiplier:"0.1"`
 	IGBTHSCTemp            int16  `modbus:"91" name:"IGBT Heat Sink Temperature" unit:"°C" multiplier:"0.1"`
-	FaultInfoWord1         uint16 `modbus:"103" name:"Fault Information Word 1" flags:"GFDI_Relay_Failure,Grid_Mode_changed,DC_OverCurr_Fault,SW_AC_OverCurr_Fault,GFCI_Failure,HW_Ac_OverCurr_Fault,Tz_Dc_OverCurr_Fault,Tz_EmergStop_Fault,Tz_GFCI_OC_Fault,DC_Insulation_ISO_Fault,BusUnbalance_Fault,Parallel_Fault,AC_Overload_Fault,AC_WU_OverVolt_Fault,AC_VW_OverVolt_Fault,AC_UV_OverVolt_Fault,Parallel_Aux_Fault,AC_OverFreq_Fault,AC_UnderFreq_Fault,DC_VoltHigh_Fault,DC_VoltLow_Fault,AC_U_GridCurr_High_Fault,Button_Manual_OFF,AC_B_InductCurr_High_Fault,Arc_Fault,Heatsink_HighTemp_Fault"`
-	FaultInfoWord2         uint16 `modbus:"104" name:"Fault Information Word 2"`
-	FaultInfoWord3         uint16 `modbus:"105" name:"Fault Information Word 3"`
-	FaultInfoWord4         uint16 `modbus:"106" name:"Fault Information Word 4"`
-	CorrectedBattCapacity  uint16 `modbus:"107" name:"Corrected Battery Capacity" unit:"AH"`
+	FaultInfoWord1         uint16 `modbus:"103" name:"Fault Information Word 1" flags:"unknown0,unknown1,unknown2,unknown3,unknown4,unknown5,unknown6,GFDI_Relay_Failure,unknown8,unknown9,unknown10,unknown11,Grid_Mode_changed,DC_OverCurr_Fault,SW_AC_OverCurr_Fault,GFCI_Failure"`
+	FaultInfoWord2         uint16 `modbus:"104" name:"Fault Information Word 2" flags:"unknown16,HW_Ac_OverCurr_Fault,unknown18,Tz_Dc_OverCurr_Fault,unknown20,Tz_EmergStop_Fault,Tz_GFCI_OC_Fault,DC_Insulation_ISO_Fault,uknown24,BusUnbalance_Fault,unknown26,unknown27,Parallel_Fault1,Parallel_Fault2,Parallel_Fault3,Parallel_Fault4"`
+	FaultInfoWord3         uint16 `modbus:"105" name:"Fault Information Word 3" flags:"AC_OverCurr_Fault,AC_Overload_Fault,unknown34,unknown35,unknown36,unknown37,unknown38,unknown39,AC_WU_OverVolt_Fault,unknown41,AC_VW_OverVolt_Fault,unknown43,AC_UV_OverVolt_Fault,Parallel_Aux_Fault,AC_OverFreq_Fault,AC_UnderFreq_Fault"`
+	FaultInfoWord4         uint16 `modbus:"106" name:"Fault Information Word 4" flags:"unknown48,unknown49,unknown50,unknown51,unknown52,unknown53,DC_VoltHigh_Fault,DC_VoltLow_Fault,unknown56,AC_U_GridCurr_High_Fault,unknown58,unknown59,Button_Manual_OFF,AC_B_InductCurr_High_Fault,Arc_Fault,Heatsink_HighTemp_Fault"`
+	CorrectedBattCapacity  uint16 `modbus:"107" name:"Corrected Battery Capacity" unit:"Ah"`
 	DailyPVPow             uint16 `modbus:"108" name:"Daily PV Power" unit:"kWh" multiplier:"0.1"`
 	DCVoltage1             uint16 `modbus:"109" name:"DC Voltage 1" unit:"V" multiplier:"0.1"`
 	DCCurrent1             uint16 `modbus:"110" name:"DC Current 1" unit:"A" multiplier:"0.1"`

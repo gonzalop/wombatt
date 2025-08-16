@@ -22,6 +22,9 @@ type MonitorInvertersCmd struct {
 	MQTTFlags `embed:""`
 
 	BaudRate     uint          `short:"B" default:"2400" help:"Baud rate for serial ports"`
+	DataBits     int           `help:"Number of data bits for serial port" default:"8"`
+	StopBits     int           `help:"Number of stop bits for serial port" default:"1"`
+	Parity       string        `help:"Parity for serial port (N, E, O)" default:"N"`
 	PollInterval time.Duration `short:"P" default:"10s" help:"Time to wait between polling cycles"`
 	ReadTimeout  time.Duration `short:"t" default:"5s" help:"Timeout when reading from devices"`
 
@@ -38,6 +41,10 @@ func (cmd *MonitorInvertersCmd) Run(globals *Globals) error {
 	if len(cmd.Monitors) == 0 {
 		return fmt.Errorf("missing inverter ports")
 	}
+	if cmd.ModbusID < 0 || cmd.ModbusID > 255 {
+		return fmt.Errorf("invalid modbus ID: %d", cmd.ModbusID)
+	}
+
 	monitors, err := getMonitors(cmd.Monitors)
 	if err != nil {
 		log.Fatal(err)
@@ -86,7 +93,7 @@ func runInverterMonitor(cmd *MonitorInvertersCmd, monitors []*inverterMonitor) e
 		for i, m := range monitors {
 			go func(i int, m *inverterMonitor) {
 				defer wg.Done()
-				port, err := common.NewPort(m.Device, int(cmd.BaudRate), 8, 1, "N", int(cmd.ReadTimeout.Seconds()))
+				port, err := common.NewPort(m.Device, int(cmd.BaudRate), cmd.DataBits, cmd.StopBits, cmd.Parity)
 				if err != nil {
 					slog.Error("error opening device", "device", m.Device, "error", err)
 					responses[i] = &cmdResponse{nil, []error{err}, m}
