@@ -67,6 +67,9 @@ Note that the steps to build the binary from source can be skipped if you get th
 
 [Video from AmateurSolarBuild@dyisolarforums:](https://youtu.be/wwLMO1hMxnY)
 
+## Home Assistant Add-on
+For instructions on how to install and configure the Home Assistant add-on, see the [Home Assistant Add-on README](homeassistant-addon/README.md).
+
 ## Reporting bugs and requesting features
 Please use https://github.com/gonzalop/wombatt/issues to report any bug, request new features
 or support for batteries, inverters, etc.
