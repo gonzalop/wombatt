@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"wombatt/internal/common"
-	"wombatt/internal/modbus"
 	"wombatt/internal/mqttha"
 	"wombatt/internal/pi30"
 	"wombatt/internal/solark"
@@ -28,7 +27,7 @@ type MonitorInvertersCmd struct {
 	PollInterval time.Duration `short:"P" default:"10s" help:"Time to wait between polling cycles"`
 	ReadTimeout  time.Duration `short:"t" default:"5s" help:"Timeout when reading from devices"`
 
-	Monitors []string `arg:"" required:"" help:"<device>,<command1[:command2:command3...]>,<mqtt_prefix>[,<inverter_type>]. E.g. /dev/ttyS0,QPIRI:QPGS1,eg4_1,pi30 or /dev/ttyUSB0,solark,solark_1,solark"`
+	Monitors []string `arg:"" required:"" help:"<device>,<command1[:command2:command3...]>,<mqtt_prefix>[,<inverter_type>]. E.g. /dev/ttyS0,QPIRI:QPGS1,eg4_1,pi30 or /dev/ttyUSB0,RealtimeData:IntrinsicAttributes,solark_1,solark. Valid solark commands are RealtimeData and IntrinsicAttributes."`
 
 	WebServerAddress string `short:"w" help:"Address to use for serving HTTP. <IP>:<Port>, i.e., 127.0.0.1:8080"`
 
@@ -112,19 +111,8 @@ func runInverterMonitor(cmd *MonitorInvertersCmd, monitors []*inverterMonitor) e
 				case "pi30":
 					results, errors = pi30.RunCommands(ctx_to, port, m.Commands)
 				case "solark":
-					// For Solark, we read all data at once, commands are ignored for now.
-					rtd, err := solark.ReadRealtimeData(modbus.NewRTU(port), uint8(cmd.ModbusID))
-					if err != nil {
-						errors = append(errors, fmt.Errorf("failed to read Solark RealtimeData: %w", err))
-					} else {
-						results = append(results, rtd)
-					}
-					ia, err := solark.ReadIntrinsicAttributes(modbus.NewRTU(port), uint8(cmd.ModbusID))
-					if err != nil {
-						errors = append(errors, fmt.Errorf("failed to read Solark IntrinsicAttributes: %w", err))
-					} else {
-						results = append(results, ia)
-					}
+					// For Solark, the supported commands are "RealtimeData" and "IntrinsicAttributes".
+					results, errors = solark.RunCommands(ctx_to, port, cmd.Protocol, uint8(cmd.ModbusID), m.Commands)
 				default:
 					errors = append(errors, fmt.Errorf("unknown inverter type: %s", m.InverterType))
 				}
@@ -309,6 +297,9 @@ func getMonitors(args []string) ([]*inverterMonitor, error) {
 		inverterType := "pi30" // Default to pi30
 		if len(p) > 3 {
 			inverterType = p[3]
+		}
+		if inverterType != "pi30" && inverterType != "solark" {
+			return nil, fmt.Errorf("invalid inverter type: '%s'. Must be 'pi30' or 'solark'", inverterType)
 		}
 		monitors = append(monitors, &inverterMonitor{dev, cmds, prefix, inverterType, nil, nil})
 	}

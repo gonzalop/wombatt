@@ -22,9 +22,9 @@ $ ./wombatt monitor-inverters -w :9000 --mqtt-broker tcp://127.0.0.1:1883 --mqtt
 `<device>,<command1[:command2:command3...]>,<mqtt_prefix>[,<inverter_type>]`
 
 *   `<device>`: The serial port or TCP address of the inverter.
-*   `<command1[:command2:command3...]>`: For PI30 inverters, a colon-separated list of commands (e.g., `QPIRI:QPIGS`). For Solark inverters, use `RealtimeData` and `IntrinsicAttributes` to fetch all available data.
+*   `<command1[:command2:command3...]>`: A colon-separated list of commands to run on the inverter. For PI30 inverters, valid commands include `QPIRI`, `QPIGS`, etc. For Solark inverters, the supported commands are `RealtimeData` and `IntrinsicAttributes`.
 *   `<mqtt_prefix>`: A prefix for MQTT topics (e.g., `eg4_1`).
-*   `<inverter_type>`: (Optional) The type of inverter protocol. Can be `pi30` (default) or `solark`.
+*   `<inverter_type>`: The type of inverter protocol. Must be `pi30` (default) or `solark`.
 
 ### Options
 
