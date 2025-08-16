@@ -23,6 +23,8 @@ _wombatt_completions() {
     command="-c --command"
 
     # Flags for ModbusReadCmd
+    mr_p="-R --protocol"
+    mr_id="-i --id"
     id="--id"
     start="--start"
     count="--count"
@@ -37,6 +39,13 @@ _wombatt_completions() {
     mqtt_prefix="--mqtt-prefix"
 
     # Flags for MonitorInvertersCmd (inherits some from above)
+    mi_br="-B --baud-rate"
+    mi_db="--data-bits"
+    mi_sb="--stop-bits"
+    mi_par="--parity"
+    mi_p="-R --protocol"
+    mi_id="-i --id"
+
     # Flags for SolarkQueryCmd
     db="-D --data-bits"
     sb="-S --stop-bits"
@@ -62,13 +71,13 @@ _wombatt_completions() {
                 COMPREPLY=($(compgen -W "$common $br $dt $rto $sp $command" -- ${cur}))
                 ;;
             "modbus-read")
-                COMPREPLY=($(compgen -W "$common $br $dt $p $rto $sp $id $start $count $regtype $of $off" -- ${cur}))
+                COMPREPLY=($(compgen -W "$common $br $dt $mr_p $rto $sp $mr_id $start $count $regtype $of $off" -- ${cur}))
                 ;;
             "monitor-batteries")
                 COMPREPLY=($(compgen -W "$common $bi $br $bt $dt $mqtt $p $pi $rto $sp $webs $mqtt_prefix" -- ${cur}))
                 ;;
             "monitor-inverters")
-                COMPREPLY=($(compgen -W "$common $dt $mqtt $pi $rto $webs $p $id" -- ${cur}))
+                COMPREPLY=($(compgen -W "$common $mi_br $mi_db $mi_sb $mi_par $dt $mqtt $pi $rto $webs $mi_p $mi_id" -- ${cur}))
                 ;;
             "solark-query")
                 COMPREPLY=($(compgen -W "$common $sp $br $db $sb $par $tout $p $id" -- ${cur}))
