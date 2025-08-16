@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"net"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -176,4 +177,49 @@ func (p *internalPort) ReopenWithBackoff() error {
 	port, err := OpenPortWithBackoff(p.PortOptions, 0)
 	p.ReadWriteCloser = port
 	return err
+}
+
+// NewPort creates a new Port based on the provided parameters.
+func NewPort(portName string, baudRate, dataBits, stopBits int, parity string, timeout int) (Port, error) {
+	var serialParity serial.Parity
+	switch strings.ToUpper(parity) {
+	case "N":
+		serialParity = serial.NoParity
+	case "E":
+		serialParity = serial.EvenParity
+	case "O":
+		serialParity = serial.OddParity
+	default:
+		return nil, fmt.Errorf("invalid parity: %s", parity)
+	}
+
+	mode := &serial.Mode{
+		BaudRate: baudRate,
+		DataBits: dataBits,
+		StopBits: serial.StopBits(stopBits),
+		Parity:   serialParity,
+	}
+
+	var portType DeviceType
+	var address string
+
+	if strings.Contains(portName, ":") {
+		// Assume TCP if portName contains a colon
+		portType = TCPDevice
+		address = portName
+	} else if strings.HasPrefix(portName, "/dev/hidraw") {
+		portType = HidRawDevice
+		address = portName
+	} else {
+		portType = SerialDevice
+		address = portName
+	}
+
+	opts := &PortOptions{
+		Mode:    mode,
+		Type:    portType,
+		Address: address,
+	}
+
+	return OpenPort(opts)
 }
