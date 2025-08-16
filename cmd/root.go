@@ -5,6 +5,7 @@ import (
 	"log/slog"
 
 	"github.com/alecthomas/kong"
+
 	"wombatt/internal/common"
 	"wombatt/internal/modbus"
 	"wombatt/internal/solark"
