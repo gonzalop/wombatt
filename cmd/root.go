@@ -31,7 +31,6 @@ type CLI struct {
 	ModbusRead       ModbusReadCmd       `cmd:"" help:"Reads Modbus holding registers\n"`
 	MonitorBatteries MonitorBatteriesCmd `cmd:"" help:"Monitors batteries state, MQTT publishing optional"`
 	MonitorInverters MonitorInvertersCmd `cmd:"" help:"Monitors inverters using PI30 protocol, MQTT publishing optional"`
-	SolarkQuery      SolarkQueryCmd      `cmd:"" help:"Query Solark inverter via Modbus RTU/TCP"`
 }
 
 // MQTTFlags are embedded in multiple commands.

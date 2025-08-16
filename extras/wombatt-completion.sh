@@ -6,6 +6,12 @@ _wombatt_completions() {
 
     common="-h --help -v --version -l --log-level"
 
+    # Common flags for serial ports
+    db="-D --data-bits"
+    sb="-S --stop-bits"
+    par="-P --parity"
+    tout="-t --timeout"
+
     # Flags for BatteryInfoCmd
     bi="-i --battery-id"
     br="-B --baud-rate"
@@ -38,26 +44,16 @@ _wombatt_completions() {
     webs="-w --web-server-address"
     mqtt_prefix="--mqtt-prefix"
 
-    # Flags for MonitorInvertersCmd (inherits some from above)
-    mi_br="-B --baud-rate"
-    mi_db="--data-bits"
-    mi_sb="--stop-bits"
-    mi_par="--parity"
-    mi_p="-R --protocol"
-    mi_id="-i --id"
+    
 
-    # Flags for SolarkQueryCmd
-    db="-D --data-bits"
-    sb="-S --stop-bits"
-    par="-P --parity"
-    tout="-t --timeout"
+    
 
     cur=${COMP_WORDS[COMP_CWORD]}
     prev=${COMP_WORDS[COMP_CWORD-1]}
 
     case ${COMP_CWORD} in
         1)
-            COMPREPLY=($(compgen -W "battery-info forward inverter-query modbus-read monitor-batteries monitor-inverters solark-query" -- "${COMP_WORDS[1]}"))
+            COMPREPLY=($(compgen -W "battery-info forward inverter-query modbus-read monitor-batteries monitor-inverters" -- "${COMP_WORDS[1]}"))
             ;;
         *)
             case ${prev} in
@@ -68,7 +64,7 @@ _wombatt_completions() {
                 COMPREPLY=($(compgen -W "$common $br $dt $controller_port $subordinate_port" -- ${cur}))
                 ;;
             "inverter-query")
-                COMPREPLY=($(compgen -W "$common $br $dt $rto $sp $command" -- ${cur}))
+                COMPREPLY=($(compgen -W "$common $br $dt $rto $sp $command $db $sb $par $mr_p $mr_id" -- ${cur}))
                 ;;
             "modbus-read")
                 COMPREPLY=($(compgen -W "$common $br $dt $mr_p $rto $sp $mr_id $start $count $regtype $of $off" -- ${cur}))
@@ -77,11 +73,9 @@ _wombatt_completions() {
                 COMPREPLY=($(compgen -W "$common $bi $br $bt $dt $mqtt $p $pi $rto $sp $webs $mqtt_prefix" -- ${cur}))
                 ;;
             "monitor-inverters")
-                COMPREPLY=($(compgen -W "$common $mi_br $mi_db $mi_sb $mi_par $dt $mqtt $pi $rto $webs $mi_p $mi_id" -- ${cur}))
+                COMPREPLY=($(compgen -W "$common $br $db $sb $par $dt $mqtt $pi $rto $webs $p $id" -- ${cur}))
                 ;;
-            "solark-query")
-                COMPREPLY=($(compgen -W "$common $sp $br $db $sb $par $tout $p $id" -- ${cur}))
-                ;;
+            
         esac
     esac
 

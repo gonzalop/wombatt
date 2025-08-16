@@ -1,26 +1,36 @@
 ## inverter-query
-`inverter-query` sends PI30 protocol commands to inverters.
+`inverter-query` sends commands to various inverter types, including PI30, Solark, and EG4 18kPV protocols.
+
+### Flags
+
+*   `-p`, `--address` (required): Ports or addresses used for communication with the inverters (e.g., `/dev/ttyUSB0`, `COM1`, `tcp://localhost:502`).
+*   `-c`, `--command` (required): Commands to send to the inverters. For PI30, examples are `Q1`, `QPIRI`, `QPIGS`. For Solark, `RealtimeData` and `IntrinsicAttributes`. For EG4 18kPV, `RealtimeData`.
+*   `-B`, `--baud-rate` (default: `2400`): Baud rate for serial ports.
+*   `--data-bits` (default: `8`): Number of data bits for serial port.
+*   `--stop-bits` (default: `1`): Number of stop bits for serial port.
+*   `--parity` (default: `N`): Parity for serial port (`N`, `E`, `O`).
+*   `-t`, `--read-timeout` (default: `5s`): Per inverter timeout for processing all the commands being sent.
+*   `-T`, `--device-type` (default: `serial`): One of `serial`, `hidraw`, `tcp`.
+*   `-I`, `--inverter-type` (default: `pi30`): Type of inverter protocol (`pi30`, `solark`, `eg4_18kpv`).
+*   `-R`, `--protocol` (default: `auto`): Modbus protocol (`auto`, `ModbusRTU`, `ModbusTCP`).
+*   `-i`, `--modbus-id` (default: `1`): Modbus slave ID.
 
 ### Examples
-Below, an example of running a single command:
-~~~
-$ ./wombatt inverter-query -p /dev/ttyS1 --commands Q1
-2023/09/17 11:35:13.619499 [00001 00006 00 00 07 037 039 043 038 02 00 000 0036 0000 0000 60.00 11 0 060 030 120 030 58.40 000 120 0 0000]
-Device: /dev/ttyS1, Command: Q1
-========================================
-Time until the end of absorb charging: 1s
-Time until the end of float charging: 6s
-SCC flags: Not communicating
-SCC PWM temperature: 37°C
-Inverter temperature: 39°C
-Battery temperature: 43°C
-Transformer temperature: 38°C
-GPIO13: 2
-Fan lock status: not locked
-Fan PWM speed: 36%
-SCC charge power: 0W
-Parallel warning: 0
-Sync frequency: 60Hz
-Inverter charger status: bulk stage
-~~~
 
+**Querying a PI30 inverter (e.g., EG4-6500EX):**
+
+```bash
+./wombatt inverter-query -p /dev/ttyS1 -c Q1 -I pi30
+```
+
+**Querying a Solark inverter:**
+
+```bash
+./wombatt inverter-query -p /dev/ttyUSB0 -c RealtimeData -I solark -R ModbusRTU -i 1
+```
+
+**Querying an EG4 18kPV inverter:**
+
+```bash
+./wombatt inverter-query -p /dev/ttyUSB0 -c RealtimeData -I eg4_18kpv -R ModbusRTU -i 0
+```

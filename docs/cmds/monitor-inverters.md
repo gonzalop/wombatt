@@ -1,5 +1,5 @@
 ## monitor-inverters
-`monitor-inverters` monitors inverters using PI30 or Solark Modbus protocol, MQTT publishing optional.
+`monitor-inverters` monitors inverters using PI30, Solark, or EG4 18kPV Modbus protocol, with optional MQTT publishing.
 
 ### Examples
 The command below will monitor the inverters connected to /dev/ttyS0 and
@@ -16,6 +16,12 @@ To monitor a Solark inverter via Modbus RTU:
 $ ./wombatt monitor-inverters -w :9000 --mqtt-broker tcp://127.0.0.1:1883 --mqtt-user youruser --mqtt-password yourpassword -R ModbusRTU -i 1 /dev/ttyUSB0,RealtimeData:IntrinsicAttributes,solark_1,solark
 ~~~
 
+To monitor an EG4 18kPV inverter via Modbus RTU:
+
+~~~
+$ ./wombatt monitor-inverters -w :9000 --mqtt-broker tcp://127.0.0.1:1883 --mqtt-user youruser --mqtt-password yourpassword -R ModbusRTU -i 0 /dev/ttyUSB0,RealtimeData,eg4_18kpv_1,eg4_18kpv
+~~~
+
 
 ### Arguments
 
@@ -24,10 +30,14 @@ $ ./wombatt monitor-inverters -w :9000 --mqtt-broker tcp://127.0.0.1:1883 --mqtt
 *   `<device>`: The serial port or TCP address of the inverter.
 *   `<command1[:command2:command3...]>`: A colon-separated list of commands to run on the inverter. For PI30 inverters, valid commands include `QPIRI`, `QPIGS`, etc. For Solark inverters, the supported commands are `RealtimeData` and `IntrinsicAttributes`.
 *   `<mqtt_prefix>`: A prefix for MQTT topics (e.g., `eg4_1`).
-*   `<inverter_type>`: The type of inverter protocol. Must be `pi30` (default) or `solark`.
+*   `<inverter_type>`: The type of inverter protocol. Must be `pi30` (default), `solark`, or `eg4_18kpv`.
 
 ### Options
 
+*   `-B, --baud-rate uint`: Baud rate for serial ports (default 2400)
+*   `--data-bits int`: Number of data bits for serial port (default 8)
+*   `--stop-bits int`: Number of stop bits for serial port (default 1)
+*   `--parity string`: Parity for serial port (N, E, O) (default "N")
 *   `-R, --protocol string`: Modbus protocol (auto, ModbusRTU, ModbusTCP) (default "auto")
 *   `-i, --id int`: Modbus slave ID (default 1)
 

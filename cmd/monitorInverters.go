@@ -54,6 +54,7 @@ func (cmd *MonitorInvertersCmd) Run(globals *Globals) error {
 		client, err = mqttha.Connect(cmd.MQTTBroker, cmd.MQTTUser, cmd.MQTTPassword)
 		if err != nil {
 			log.Fatalf("error connecting to MQTT broker at %s: %v\n", cmd.MQTTBroker, err)
+
 		}
 	}
 	var webServer *web.Server

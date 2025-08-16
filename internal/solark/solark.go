@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
+	"io"
 
 	"wombatt/internal/common"
 	"wombatt/internal/modbus"
@@ -281,4 +282,12 @@ func (ia *IntrinsicAttributes) SerialNumber() string {
 	snBytes = append(snBytes, byte(ia.SNByte05>>8), byte(ia.SNByte05&0xFF))
 
 	return string(snBytes)
+}
+
+// WriteTo writes the data to the given writer.
+func WriteTo(writer io.Writer, data any) {
+	cb := func(info map[string]string, val any) {
+		fmt.Fprintf(writer, "%s: %v%s\n", info["desc"], val, info["unit"])
+	}
+	common.TraverseStruct(data, cb)
 }

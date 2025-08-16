@@ -80,7 +80,11 @@ case "${ADDON_CONFIG_MODE}" in
     for id in ${ADDON_CONFIG_BATTERY_IDS}; do
       WOMBATT_ARGS="${WOMBATT_ARGS} --battery-id ${id}"
     done
-    ;;n  *)    echo "Invalid mode: ${ADDON_CONFIG_MODE}. Must be 'inverters' or 'batteries'."    exit 1    ;;
+    ;;
+  *)
+    echo "Invalid mode: ${ADDON_CONFIG_MODE}. Must be 'inverters' or 'batteries'."
+    exit 1
+    ;;
 esac
 
 exec /usr/bin/wombatt ${WOMBATT_CMD} ${WOMBATT_ARGS}

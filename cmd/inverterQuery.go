@@ -10,35 +10,64 @@ import (
 	"time"
 
 	"wombatt/internal/common"
+	"wombatt/internal/eg4_18kpv"
 	"wombatt/internal/pi30"
+	"wombatt/internal/solark"
+)
 
-	"go.bug.st/serial"
+// InverterType represents the type of inverter protocol to use.
+type InverterType string
+
+const (
+	InverterTypePI30     InverterType = "pi30"
+	InverterTypeSolark   InverterType = "solark"
+	InverterTypeEG418KPV InverterType = "eg4_18kpv"
 )
 
 type InverterQueryCmd struct {
-	Address     []string      `short:"p" required:"" help:"Ports or addresses used for communication with the inverters"`
-	Command     []string      `short:"c" required:"" help:"Commands to send to the inverters"`
-	BaudRate    uint          `short:"B" default:"2400" help:"Baud rate"`
-	ReadTimeout time.Duration `short:"t" default:"5s" help:"Per inverter timeout for processing all the commands being sent"`
-	DeviceType  string        `short:"T" default:"serial" enum:"${device_types}" help:"One of ${device_types}"`
+	Address      []string      `short:"p" required:"" help:"Ports or addresses used for communication with the inverters"`
+	Command      []string      `short:"c" required:"" help:"Commands to send to the inverters"`
+	BaudRate     uint          `short:"B" default:"2400" help:"Baud rate"`
+	DataBits     int           `help:"Number of data bits for serial port" default:"8"`
+	StopBits     int           `help:"Number of stop bits for serial port" default:"1"`
+	Parity       string        `help:"Parity for serial port (N, E, O)" default:"N"`
+	ReadTimeout  time.Duration `short:"t" default:"5s" help:"Per inverter timeout for processing all the commands being sent"`
+	DeviceType   string        `short:"T" default:"serial" enum:"${device_types}" help:"One of ${device_types}"`
+	InverterType InverterType  `short:"I" default:"pi30" enum:"pi30,solark,eg4_18kpv" help:"Type of inverter protocol (pi30, solark, eg4_18kpv)"`
+	Protocol     string        `short:"R" default:"auto" enum:"ModbusRTU,ModbusTCP,auto" help:"Modbus protocol (auto, ModbusRTU, ModbusTCP)"`
+	ModbusID     int           `short:"i" default:"1" help:"Modbus slave ID"`
 }
 
 func (cmd *InverterQueryCmd) Run(globals *Globals) error {
 	ctx := context.Background()
 	var failed error
 	for _, dev := range cmd.Address {
-		portOptions := &common.PortOptions{
-			Address: dev,
-			Mode:    &serial.Mode{BaudRate: int(cmd.BaudRate)},
-			Type:    common.DeviceTypeFromString[cmd.DeviceType],
-		}
-		port, err := common.OpenPort(portOptions)
+		port, err := common.NewPort(dev, int(cmd.BaudRate), cmd.DataBits, cmd.StopBits, cmd.Parity)
 		if err != nil {
 			failed = errors.Join(failed, err)
 			continue
 		}
+		defer port.Close()
+
 		tctx, cancel := context.WithTimeout(ctx, cmd.ReadTimeout)
-		results, errs := pi30.RunCommands(tctx, port, cmd.Command)
+
+		var results []any
+		var errs []error
+
+		switch cmd.InverterType {
+		case InverterTypePI30:
+			results, errs = pi30.RunCommands(tctx, port, cmd.Command)
+		case InverterTypeSolark:
+			results, errs = solark.RunCommands(tctx, port, cmd.Protocol, uint8(cmd.ModbusID), cmd.Command)
+		case InverterTypeEG418KPV:
+			results, errs = eg4_18kpv.RunCommands(tctx, port, cmd.Protocol, uint8(cmd.ModbusID), cmd.Command)
+		default:
+			cancel()
+			port.Close()
+			failed = errors.Join(failed, fmt.Errorf("unsupported inverter type: %s", cmd.InverterType))
+			continue
+		}
+
 		cancel()
 		if results == nil && len(errs) == 1 {
 			port.Close()
@@ -46,14 +75,21 @@ func (cmd *InverterQueryCmd) Run(globals *Globals) error {
 			continue
 		}
 		for i, res := range results {
-			cmd := cmd.Command[i]
+			command := cmd.Command[i]
 			if errs[i] != nil {
 				port.Close()
-				failed = errors.Join(failed, fmt.Errorf("error running %s on port %s: %w", cmd, dev, errs[i]))
+				failed = errors.Join(failed, fmt.Errorf("error running %s on port %s: %w", command, dev, errs[i]))
 				continue
 			}
-			fmt.Printf("Device: %s, Command: %s\n%s\n", dev, cmd, strings.Repeat("=", 40))
-			pi30.WriteTo(os.Stdout, res)
+			fmt.Printf("Device: %s, Command: %s\n%s\n", dev, command, strings.Repeat("=", 40))
+			switch cmd.InverterType {
+			case InverterTypePI30:
+				pi30.WriteTo(os.Stdout, res)
+			case InverterTypeSolark:
+				solark.WriteTo(os.Stdout, res)
+			case InverterTypeEG418KPV:
+				eg4_18kpv.WriteTo(os.Stdout, res)
+			}
 		}
 		port.Close()
 	}

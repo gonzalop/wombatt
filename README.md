@@ -8,6 +8,7 @@ Inverters supported:
     - EG4-6500EX
     - EG4-3000s (unconfirmed)
 - Solark inverters (12k and 15k models confirmed)
+- EG4 18kPV inverters
 
 Battery/BMS supported:
 - EG4-LL (--bms-type=EG4LLv2)
@@ -34,7 +35,10 @@ Use any recent release tag or `latest` for docker image tag:
 
 ~~~
 $ docker pull docker.io/gonzalomono/wombatt:latest
-$ docker run --device /dev/ttyS1:/dev/ttyS1 -t gonzalomono/wombatt inverter-query -p /dev/ttyS1 --commands Q1
+$ docker run --device /dev/ttyS1:/dev/ttyS1 -t gonzalomono/wombatt inverter-query -p /dev/ttyS1 -c RealtimeData -I eg4_18kpv
+...or...
+$ docker pull docker.io/gonzalomono/wombatt:latest
+$ docker run --device /dev/ttyS1:/dev/ttyS1 -t gonzalomono/wombatt inverter-query -p /dev/ttyS1 -c Q1  # PI30 inverter.
 ~~~
 
 ## Compilation from Source
