@@ -52,7 +52,7 @@ type QPIGSResponse struct {
 	BatteryVoltageOffset        float32 `name:"battery_voltage_offset" desc:"Battery voltage offset for fans on" unit:"mV"` // TODO: 10mV
 	PV1ChargingPower            int16   `name:"pv1_charging_power" desc:"PV1 charging power" unit:"W"`
 	DeviceStatusFlags           int8    `name:"device_status_flags" desc:"Additional device status flags"`
-	SolarFeedToGrid             int8    `name:"solar_feed_to_grid" desc:"Solar feed to grid" values:"0:normal,1:solar feed the grid"`
+	SolarFeedToGrid             int8    `name:"solar_feed_to_grid" desc:"Solar feed to grid" values:"0:normal,1:solar feeds the grid"`
 	// CountryRegulations          int8    `name:"country_regulations" desc:"Country regulations" values:"00:India,01:Germany,02:South America"`
 	// SolarFeedToGridPower        int16   `name:"solar_feed_to_grid_power" desc:"Solar feed to grid power" unit:"W"`
 }
@@ -72,8 +72,8 @@ type QPIGS2Response struct {
 type QPIRIResponse struct {
 	GridRatingVoltage           float32 `name:"grid_rating_voltage" desc:"Grid rating voltage" unit:"V"`
 	GridRatingCurrent           float32 `name:"grid_rating_current" desc:"Grid rating current" unit:"A" icon:"mdi:current-ac"`
-	ACOutputRatingVoltage       float32 `name:"grid_rating_voltage" desc:"AC output rating voltage" unit:"V"`
-	ACOutputRatingFrequency     float32 `name:"grid_rating_frequency" desc:"AC output rating frequency" unit:"Hz"`
+	ACOutputRatingVoltage       float32 `name:"ac_output_grid_rating_voltage" desc:"AC output rating voltage" unit:"V"`
+	ACOutputRatingFrequency     float32 `name:"ac_output_grid_rating_frequency" desc:"AC output rating frequency" unit:"Hz"`
 	ACOutputRatingCurrent       float32 `name:"ac_output_rating_current" desc:"AC output rating current" unit:"A" icon:"mdi:current-ac"`
 	AcOutputRatingApparentPower int16   `name:"ac_output_rating_apparent_power" desc:"AC output rating apparent power" unit:"VA"`
 	AcOutputRatingActivePower   int16   `name:"ac_output_rating_active_power" desc:"AC output rating active power" unit:"W"`
@@ -88,8 +88,8 @@ type QPIRIResponse struct {
 	InputVoltageRange           int8    `name:"input_voltage_range" desc:"Input voltage range" values:"0:Appliance,1:UPS"`
 	OutputSourcePriority        int8    `name:"output_source_priority" desc:"Output source priority" values:"0:USB,1:SUB,2:SBU"`
 	ChargerSourcePriority       int8    `name:"charger_source_priority" desc:"Charger source priority" values:"1:Solar first,2:Solar + utility,3:Only solar"`
-	ParalellMaxNum              int8    `name:"parallel_max_num" desc:"Parallel max num"`
-	MachineType                 int8    `name:"machine_type" desc:"Machine type" values:"00:grid tie,01:off-grid,02:hybrid"`
+	ParallelMaxNum              int8    `name:"parallel_max_num" desc:"Parallel max num"`
+	MachineType                 int8    `name:"machine_type" desc:"Machine type" values:"00:grid-tie,01:off-grid,02:hybrid"`
 	Topology                    int8    `name:"topology" desc:"Topology" values:"0:transformerless,1:transformer"`
 	OutputMode                  int8    `name:"output_mode" desc:"Output mode" values:"0:Single machine,1:Parallel output,2:Phase 1 of 3 phase output,3:Phase 2 of 3 phase output,4:Phase 3 of 3 phase output,5:Phase 1 of 2 phase output,6:Phase 2 of 2 phase output (120°),7:Phase 2 of 2 phase output (180°)"`
 	BatteryRedischargeVoltage   float32 `name:"battery_redischarge_voltage" desc:"Battery redischarge voltage" unit:"V"`

@@ -35,14 +35,14 @@ type ModbusReadCmd struct {
 }
 
 func (cmd *ModbusReadCmd) Help() string {
-	return `The register read are written as a hexadecimal dump. For a custom
+	return `The registers read are written as a hexadecimal dump. For a custom
 	output, use the '-o' or '--output-format. The format syntax is a
-	comma-separated list of:
+	comma-separated list:
 
 			<type>[:[<name>][:[<unit>][:[<multiplier>][:[<string>]]]]]
 
 	All but <type> are optional, and all accept an array size prefix.
-	I.e., for an array of 4 16-bits unsigned values, you can
+	For example, for an array of 4 16-bits unsigned values, you can
 	use '[4]u16' as the type.
 
 	<type> can be one of byte, i8, u8, i16, u16, i32, u32.
@@ -65,14 +65,14 @@ func (cmd *ModbusReadCmd) Help() string {
 
 	The same comma-separated values for the -o option can be read from a file,
 	one line per register, with comments starting with the '#' character.
-	To read the formatting values from a file, use the -O option.
+	To read formatting values from a file, use the -O option.
 
 	Example output format values:
 		u16,i8,u32 -- 3 fields: unsigned 16-bit, signed 8-bit, and
 					  unsigned 32-bit integers.
 
 		u16:Voltage:V:0.01,i8,u32  -- same as above, but the first field will be
-			named 'Voltage', expects the value in 10mV, and converts them to V
+			named 'Voltage', expects the value in 10mV, and converts it to V
 
 		[10]byte:Serial number:::string -- it will print 10 bytes as a string
 			with the field name 'Serial_number'.
@@ -85,7 +85,7 @@ func (cmd *ModbusReadCmd) Run(globals *Globals) error {
 		log.Fatal("id must be between 1 and 247")
 	}
 	if cmd.Count > 125 {
-		log.Fatal("count must be between <= 125")
+		log.Fatal("count must be <= 125")
 	}
 	if cmd.OutputFormat != "" && cmd.OutputFormatFile != "" {
 		log.Fatal("only one of -o and -O can be used")

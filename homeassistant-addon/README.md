@@ -39,7 +39,7 @@ The `mode` option determines whether the add-on will monitor inverters or batter
 
 These options apply to both `inverters` and `batteries` modes:
 
-*   `log_level`: Set the logging level (debug, info, warning, error, critical).
+*   `log_level`: Set the logging level (debug, info, warn, error).
 *   `mqtt_broker`: MQTT broker address (e.g., `core-mqtt`).
 *   `mqtt_user`: MQTT username.
 *   `mqtt_password`: MQTT password.

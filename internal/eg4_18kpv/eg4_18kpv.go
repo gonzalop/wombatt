@@ -55,10 +55,10 @@ func RunCommands(ctx context.Context, port common.Port, protocol string, id uint
 // RealtimeData holds the values from the "Register Mapping Table" (Input Registers) from EG4-18KPV-12LV-Modbus-Protocol-input-registers.csv.
 type RealtimeData struct {
 	State                 uint16 `modbus:"0" name:"State" values:"0x00:Standby;0x01:Fault;0x02:Programming;0x04:PV on-grid mode;0x08:PV Charge mode;0x0C:PV Charge+on-grid mode;0x10:Battery on-grid mode;0x14:PV+Battery on-grid mode;0x20:AC Charge mode;0x28:PV+AC charge mode;0x40:Battery off-grid mode;0x80:PV off-grid mode;0xC0:PV+battery off-grid mode;0x88:PV charge +off-grid mode"`
-	Vpv1                  uint16 `modbus:"1" name:"PV1 Voltage" unit:"V" multiplier:"0.1"`
-	Vpv2                  uint16 `modbus:"2" name:"PV2 Voltage" unit:"V" multiplier:"0.1"`
-	Vpv3                  uint16 `modbus:"3" name:"PV3 Voltage" unit:"V" multiplier:"0.1"`
-	Vbat                  uint16 `modbus:"4" name:"Battery Voltage" unit:"V" multiplier:"0.1"`
+	Vpv1                  uint16 `modbus:"1" name:"PV1 Voltage" unit:"V" multiplier:"0.1" precision:"1"`
+	Vpv2                  uint16 `modbus:"2" name:"PV2 Voltage" unit:"V" multiplier:"0.1" precision:"1"`
+	Vpv3                  uint16 `modbus:"3" name:"PV3 Voltage" unit:"V" multiplier:"0.1" precision:"1"`
+	Vbat                  uint16 `modbus:"4" name:"Battery Voltage" unit:"V" multiplier:"0.1" precision:"1"`
 	SOC                   uint16 `modbus:"5" name:"Battery Capacity" unit:"%"`
 	SOH                   uint16 `modbus:"6" name:"State of Health" unit:"%"`
 	InternalFault         uint16 `modbus:"7" name:"Internal Fault"`
@@ -66,61 +66,61 @@ type RealtimeData struct {
 	Ppv2                  uint16 `modbus:"9" name:"PV2 Power" unit:"W"`
 	Pcharge               uint16 `modbus:"10" name:"Charging Power" unit:"W"`
 	Pdischarge            uint16 `modbus:"11" name:"Discharge Power" unit:"W"`
-	VacR                  uint16 `modbus:"12" name:"R-phase Mains Voltage" unit:"V" multiplier:"0.1"`
-	VacS                  uint16 `modbus:"13" name:"S-phase Mains Voltage" unit:"V" multiplier:"0.1"`
-	VacT                  uint16 `modbus:"14" name:"T-phase Mains Voltage" unit:"V" multiplier:"0.1"`
-	Fac                   uint16 `modbus:"15" name:"Mains Frequency" unit:"Hz" multiplier:"0.01"`
+	VacR                  uint16 `modbus:"12" name:"R-phase Mains Voltage" unit:"V" multiplier:"0.1" precision:"1"`
+	VacS                  uint16 `modbus:"13" name:"S-phase Mains Voltage" unit:"V" multiplier:"0.1" precision:"1"`
+	VacT                  uint16 `modbus:"14" name:"T-phase Mains Voltage" unit:"V" multiplier:"0.1" precision:"1"`
+	Fac                   uint16 `modbus:"15" name:"Mains Frequency" unit:"Hz" multiplier:"0.01" precision:"2"`
 	Pinv                  uint16 `modbus:"16" name:"Inverter Output Power (Grid Port)" unit:"W"`
 	Prec                  uint16 `modbus:"17" name:"AC Charging Rectified Power" unit:"W"`
-	LinvRMS               uint16 `modbus:"18" name:"Inverter Current RMS" unit:"A" multiplier:"0.01"`
-	PF                    uint16 `modbus:"19" name:"Power Factor" multiplier:"0.001"` // Special calculation needed for display
-	VepsR                 uint16 `modbus:"20" name:"R-phase Off-grid Output Voltage" unit:"V" multiplier:"0.1"`
-	VepsS                 uint16 `modbus:"21" name:"S-phase Off-grid Output Voltage" unit:"V" multiplier:"0.1"`
-	VepsT                 uint16 `modbus:"22" name:"T-phase Off-grid Output Voltage" unit:"V" multiplier:"0.1"`
-	Feps                  uint16 `modbus:"23" name:"Off-grid Output Frequency" unit:"Hz" multiplier:"0.01"`
+	LinvRMS               uint16 `modbus:"18" name:"Inverter Current RMS" unit:"A" multiplier:"0.01" precision:"2"`
+	PF                    uint16 `modbus:"19" name:"Power Factor" multiplier:"0.001" precision:"3"` // Special calculation needed for display
+	VepsR                 uint16 `modbus:"20" name:"R-phase Off-grid Output Voltage" unit:"V" multiplier:"0.1" precision:"1"`
+	VepsS                 uint16 `modbus:"21" name:"S-phase Off-grid Output Voltage" unit:"V" multiplier:"0.1" precision:"1"`
+	VepsT                 uint16 `modbus:"22" name:"T-phase Off-grid Output Voltage" unit:"V" multiplier:"0.1" precision:"1"`
+	Feps                  uint16 `modbus:"23" name:"Off-grid Output Frequency" unit:"Hz" multiplier:"0.01" precision:"2"`
 	Peps                  uint16 `modbus:"24" name:"Off-grid Inverter Power" unit:"W"`
 	Seps                  uint16 `modbus:"25" name:"Off-grid Apparent Power" unit:"VA"`
 	Ptogrid               uint16 `modbus:"26" name:"Export Power to Grid" unit:"W"`
 	Ptouser               uint16 `modbus:"27" name:"Import Power from Grid" unit:"W"`
-	Epv1Day               uint16 `modbus:"28" name:"PV1 Power Generation Today" unit:"kWh" multiplier:"0.1"`
-	Epv2Day               uint16 `modbus:"29" name:"PV2 Power Generation Today" unit:"kWh" multiplier:"0.1"`
-	Epv3Day               uint16 `modbus:"30" name:"PV3 Power Generation Today" unit:"kWh" multiplier:"0.1"`
-	EinvDay               uint16 `modbus:"31" name:"Today's Grid-connected Inverter Output Energy" unit:"kWh" multiplier:"0.1"`
-	ErecDay               uint16 `modbus:"32" name:"Today's AC Charging Rectified Energy" unit:"kWh" multiplier:"0.1"`
-	EchgDay               uint16 `modbus:"33" name:"Charged Energy Today" unit:"kWh" multiplier:"0.1"`
-	EdischgDay            uint16 `modbus:"34" name:"Discharged Energy Today" unit:"kWh" multiplier:"0.1"`
-	EepsDay               uint16 `modbus:"35" name:"Off-grid Output Energy Today" unit:"kWh" multiplier:"0.1"`
-	EtogridDay            uint16 `modbus:"36" name:"Today's Export Energy to Grid" unit:"kWh" multiplier:"0.1"`
-	EtouserDay            uint16 `modbus:"37" name:"Today's Import Energy from Grid" unit:"kWh" multiplier:"0.1"`
-	Vbus1                 uint16 `modbus:"38" name:"Bus 1 Voltage" unit:"V" multiplier:"0.1"`
-	Vbus2                 uint16 `modbus:"39" name:"Bus 2 Voltage" unit:"V" multiplier:"0.1"`
-	Epv1All               uint32 `modbus:"40" name:"PV1 Cumulative Power Generation" unit:"kWh" multiplier:"0.1"`           // L and H words
-	Epv2All               uint32 `modbus:"42" name:"PV2 Cumulative Power Generation" unit:"kWh" multiplier:"0.1"`           // L and H words
-	Epv3All               uint32 `modbus:"44" name:"PV3 Cumulative Power Generation" unit:"kWh" multiplier:"0.1"`           // L and H words
-	EinvAll               uint32 `modbus:"46" name:"Inverter Accumulative Output Energy" unit:"kWh" multiplier:"0.1"`       // L and H words
-	ErecAll               uint32 `modbus:"48" name:"AC Charging Accumulative Rectified Energy" unit:"kWh" multiplier:"0.1"` // L and H words
-	EchgAll               uint32 `modbus:"50" name:"Cumulative Charge Energy Level" unit:"kWh" multiplier:"0.1"`            // L and H words
-	EdischgAll            uint32 `modbus:"52" name:"Cumulative Discharge Energy" unit:"kWh" multiplier:"0.1"`               // L and H words
-	EepsAll               uint32 `modbus:"54" name:"Cumulative Off-grid Inverter Power" unit:"kWh" multiplier:"0.1"`        // L and H words
-	EtogridAll            uint32 `modbus:"56" name:"Cumulative Export Energy to Grid" unit:"kWh" multiplier:"0.1"`          // L and H words
-	EtouserAll            uint32 `modbus:"58" name:"Cumulative Import Energy from Grid" unit:"kWh" multiplier:"0.1"`        // L and H words
-	FaultCode             uint32 `modbus:"60" name:"Fault Code"`                                                            // L and H words
-	WarningCode           uint32 `modbus:"62" name:"Warning Code"`                                                          // L and H words
+	Epv1Day               uint16 `modbus:"28" name:"PV1 Power Generation Today" unit:"kWh" multiplier:"0.1" precision:"1"`
+	Epv2Day               uint16 `modbus:"29" name:"PV2 Power Generation Today" unit:"kWh" multiplier:"0.1" precision:"1"`
+	Epv3Day               uint16 `modbus:"30" name:"PV3 Power Generation Today" unit:"kWh" multiplier:"0.1" precision:"1"`
+	EinvDay               uint16 `modbus:"31" name:"Today's Grid-connected Inverter Output Energy" unit:"kWh" multiplier:"0.1" precision:"1"`
+	ErecDay               uint16 `modbus:"32" name:"Today's AC Charging Rectified Energy" unit:"kWh" multiplier:"0.1" precision:"1"`
+	EchgDay               uint16 `modbus:"33" name:"Charged Energy Today" unit:"kWh" multiplier:"0.1" precision:"1"`
+	EdischgDay            uint16 `modbus:"34" name:"Discharged Energy Today" unit:"kWh" multiplier:"0.1" precision:"1"`
+	EepsDay               uint16 `modbus:"35" name:"Off-grid Output Energy Today" unit:"kWh" multiplier:"0.1" precision:"1"`
+	EtogridDay            uint16 `modbus:"36" name:"Today's Export Energy to Grid" unit:"kWh" multiplier:"0.1" precision:"1"`
+	EtouserDay            uint16 `modbus:"37" name:"Today's Import Energy from Grid" unit:"kWh" multiplier:"0.1" precision:"1"`
+	Vbus1                 uint16 `modbus:"38" name:"Bus 1 Voltage" unit:"V" multiplier:"0.1" precision:"1"`
+	Vbus2                 uint16 `modbus:"39" name:"Bus 2 Voltage" unit:"V" multiplier:"0.1" precision:"1"`
+	Epv1All               uint32 `modbus:"40" name:"PV1 Cumulative Power Generation" unit:"kWh" multiplier:"0.1" precision:"1"`           // L and H words
+	Epv2All               uint32 `modbus:"42" name:"PV2 Cumulative Power Generation" unit:"kWh" multiplier:"0.1" precision:"1"`           // L and H words
+	Epv3All               uint32 `modbus:"44" name:"PV3 Cumulative Power Generation" unit:"kWh" multiplier:"0.1" precision:"1"`           // L and H words
+	EinvAll               uint32 `modbus:"46" name:"Inverter Accumulative Output Energy" unit:"kWh" multiplier:"0.1" precision:"1"`       // L and H words
+	ErecAll               uint32 `modbus:"48" name:"AC Charging Accumulative Rectified Energy" unit:"kWh" multiplier:"0.1" precision:"1"` // L and H words
+	EchgAll               uint32 `modbus:"50" name:"Cumulative Charge Energy Level" unit:"kWh" multiplier:"0.1" precision:"1"`            // L and H words
+	EdischgAll            uint32 `modbus:"52" name:"Cumulative Discharge Energy" unit:"kWh" multiplier:"0.1" precision:"1"`               // L and H words
+	EepsAll               uint32 `modbus:"54" name:"Cumulative Off-grid Inverter Power" unit:"kWh" multiplier:"0.1" precision:"1"`        // L and H words
+	EtogridAll            uint32 `modbus:"56" name:"Cumulative Export Energy to Grid" unit:"kWh" multiplier:"0.1" precision:"1"`          // L and H words
+	EtouserAll            uint32 `modbus:"58" name:"Cumulative Import Energy from Grid" unit:"kWh" multiplier:"0.1" precision:"1"`        // L and H words
+	FaultCode             uint32 `modbus:"60" name:"Fault Code"`                                                                          // L and H words
+	WarningCode           uint32 `modbus:"62" name:"Warning Code"`                                                                        // L and H words
 	Tinner                uint16 `modbus:"64" name:"Internal Ring Temperature" unit:"°C"`
 	Tradiator1            uint16 `modbus:"65" name:"Radiator Temperature 1" unit:"°C"`
 	Tradiator2            uint16 `modbus:"66" name:"Radiator Temperature 2" unit:"°C"`
 	Tbat                  uint16 `modbus:"67" name:"Battery Temperature" unit:"°C"`
-	RunningTime           uint32 `modbus:"69" name:"Running Time" unit:"Second"` // L and H words
-	AutoTest              uint16 `modbus:"71" name:"Auto Test"`                  // Bitfield: AutoTestStart (Bit0-3), ubAutoTestStatus (Bit4-7), ubAutoTestStep (Bit8-11)
-	WAutoTestLimit        uint16 `modbus:"72" name:"Auto Test Limit" unit:"V/Hz" multiplier:"0.1"`
+	RunningTime           uint32 `modbus:"69" name:"Running Time" unit:"s"` // L and H words
+	AutoTest              uint16 `modbus:"71" name:"Auto Test"`             // Bitfield: AutoTestStart (Bit0-3), ubAutoTestStatus (Bit4-7), ubAutoTestStep (Bit8-11)
+	WAutoTestLimit        uint16 `modbus:"72" name:"Auto Test Limit" unit:"V/Hz" multiplier:"0.1" precision:"1"`
 	UwAutoTestDefaultTime uint16 `modbus:"73" name:"Auto Test Default Time" unit:"ms"`
-	UwAutoTestTripValue   uint16 `modbus:"74" name:"Auto Test Trip Value" unit:"V/Hz" multiplier:"0.1"`
+	UwAutoTestTripValue   uint16 `modbus:"74" name:"Auto Test Trip Value" unit:"V/Hz" multiplier:"0.1" precision:"1"`
 	UwAutoTestTripTime    uint16 `modbus:"75" name:"Auto Test Trip Time" unit:"ms"`
 	ACInputType           uint16 `modbus:"77" name:"AC Input Type"`
-	MaxChgCurr            uint16 `modbus:"81" name:"BMS Limited Maximum Charging Current" unit:"A" multiplier:"0.01"`
-	MaxDischgCurr         uint16 `modbus:"82" name:"BMS Limited Maximum Discharge Current" unit:"A" multiplier:"0.01"`
-	ChargeVoltRef         uint16 `modbus:"83" name:"BMS Recommended Charging Voltage" unit:"V" multiplier:"0.1"`
-	DischgCutVolt         uint16 `modbus:"84" name:"BMS Recommends Discharge Cut-off Voltage" unit:"V" multiplier:"0.1"`
+	MaxChgCurr            uint16 `modbus:"81" name:"BMS Limited Maximum Charging Current" unit:"A" multiplier:"0.01" precision:"2"`
+	MaxDischgCurr         uint16 `modbus:"82" name:"BMS Limited Maximum Discharge Current" unit:"A" multiplier:"0.01" precision:"2"`
+	ChargeVoltRef         uint16 `modbus:"83" name:"BMS Recommended Charging Voltage" unit:"V" multiplier:"0.1" precision:"1"`
+	DischgCutVolt         uint16 `modbus:"84" name:"BMS Recommends Discharge Cut-off Voltage" unit:"V" multiplier:"0.1" precision:"1"`
 	BatStatus0BMS         uint16 `modbus:"85" name:"BMS Status Information 0"`
 	BatStatus1BMS         uint16 `modbus:"86" name:"BMS Status Information 1"`
 	BatStatus2BMS         uint16 `modbus:"87" name:"BMS Status Information 2"`
@@ -134,42 +134,42 @@ type RealtimeData struct {
 	BatStatusINV          uint16 `modbus:"95" name:"Inverter Summarizes Lithium Battery Status Information"`
 	BatParallelNum        uint16 `modbus:"96" name:"Number of Batteries in Parallel"`
 	BatCapacity           uint16 `modbus:"97" name:"Battery Capacity" unit:"Ah"`
-	BatCurrentBMS         int16  `modbus:"98" name:"Battery Current (BMS)" unit:"A" multiplier:"0.01"`
+	BatCurrentBMS         int16  `modbus:"98" name:"Battery Current (BMS)" unit:"A" multiplier:"0.01" precision:"2"`
 	FaultCodeBMS          uint16 `modbus:"99" name:"Fault Code (BMS)"`
 	WarningCodeBMS        uint16 `modbus:"100" name:"Warning Code (BMS)"`
-	MaxCellVoltBMS        uint16 `modbus:"101" name:"Maximum Cell Voltage (BMS)" unit:"V" multiplier:"0.001"`
-	MinCellVoltBMS        uint16 `modbus:"102" name:"Minimum Cell Voltage (BMS)" unit:"V" multiplier:"0.001"`
-	MaxCellTempBMS        int16  `modbus:"103" name:"Maximum Monomer Temperature (BMS)" unit:"°C" multiplier:"0.1"`
-	MinCellTempBMS        int16  `modbus:"104" name:"Minimum Monomer Temperature (BMS)" unit:"°C" multiplier:"0.1"`
+	MaxCellVoltBMS        uint16 `modbus:"101" name:"Maximum Cell Voltage (BMS)" unit:"V" multiplier:"0.001" precision:"3"`
+	MinCellVoltBMS        uint16 `modbus:"102" name:"Minimum Cell Voltage (BMS)" unit:"V" multiplier:"0.001" precision:"3"`
+	MaxCellTempBMS        int16  `modbus:"103" name:"Maximum Monomer Temperature (BMS)" unit:"°C" multiplier:"0.1" precision:"1"`
+	MinCellTempBMS        int16  `modbus:"104" name:"Minimum Monomer Temperature (BMS)" unit:"°C" multiplier:"0.1" precision:"1"`
 	BMSFWUpdateState      uint16 `modbus:"105" name:"BMS Firmware Update State"`
 	CycleCntBMS           uint16 `modbus:"106" name:"Number of Charge and Discharge Cycles (BMS)"`
-	BatVoltSampleINV      uint16 `modbus:"107" name:"Inverter Battery Voltage Sampling" unit:"V" multiplier:"0.1"`
-	T1                    uint16 `modbus:"108" name:"12K BT Temperature" unit:"°C" multiplier:"0.1"`
-	T2                    uint16 `modbus:"109" name:"Reserved Temperature 2" unit:"°C" multiplier:"0.1"`
-	T3                    uint16 `modbus:"110" name:"Reserved Temperature 3" unit:"°C" multiplier:"0.1"`
-	T4                    uint16 `modbus:"111" name:"Reserved Temperature 4" unit:"°C" multiplier:"0.1"`
-	T5                    uint16 `modbus:"112" name:"Reserved Temperature 5" unit:"°C" multiplier:"0.1"`
+	BatVoltSampleINV      uint16 `modbus:"107" name:"Inverter Battery Voltage Sampling" unit:"V" multiplier:"0.1" precision:"1"`
+	T1                    uint16 `modbus:"108" name:"12K BT Temperature" unit:"°C" multiplier:"0.1" precision:"1"`
+	T2                    uint16 `modbus:"109" name:"Reserved Temperature 2" unit:"°C" multiplier:"0.1" precision:"1"`
+	T3                    uint16 `modbus:"110" name:"Reserved Temperature 3" unit:"°C" multiplier:"0.1" precision:"1"`
+	T4                    uint16 `modbus:"111" name:"Reserved Temperature 4" unit:"°C" multiplier:"0.1" precision:"1"`
+	T5                    uint16 `modbus:"112" name:"Reserved Temperature 5" unit:"°C" multiplier:"0.1" precision:"1"`
 	ParallelInfo          uint16 `modbus:"113" name:"Parallel Information"` // Bitfield: MasterOrSlave (Bit0-1), SingleOrThree Phase (Bit2-3), Resvd (Bit4-7), Parallel Num (Bit8-16)
-	VBusP                 uint16 `modbus:"120" name:"Half Bus Voltage" unit:"V" multiplier:"0.1"`
-	GenVolt               uint16 `modbus:"121" name:"Generator Voltage" unit:"V" multiplier:"0.1"`
-	GenFreq               uint16 `modbus:"122" name:"Generator Frequency" unit:"Hz" multiplier:"0.01"`
+	VBusP                 uint16 `modbus:"120" name:"Half Bus Voltage" unit:"V" multiplier:"0.1" precision:"1"`
+	GenVolt               uint16 `modbus:"121" name:"Generator Voltage" unit:"V" multiplier:"0.1" precision:"1"`
+	GenFreq               uint16 `modbus:"122" name:"Generator Frequency" unit:"Hz" multiplier:"0.01" precision:"2"`
 	GenPower              uint16 `modbus:"123" name:"Generator Power" unit:"W"`
-	EgenDay               uint16 `modbus:"124" name:"Daily Energy of Generator" unit:"kWh" multiplier:"0.1"`
-	EgenAll               uint32 `modbus:"125" name:"Total Generator Energy" unit:"kWh" multiplier:"0.1"` // L and H words
-	EPSVoltL1N            uint16 `modbus:"127" name:"Voltage of EPS L1N" unit:"V" multiplier:"0.1"`
-	EPSVoltL2N            uint16 `modbus:"128" name:"Voltage of EPS L2N" unit:"V" multiplier:"0.1"`
+	EgenDay               uint16 `modbus:"124" name:"Daily Energy of Generator" unit:"kWh" multiplier:"0.1" precision:"1"`
+	EgenAll               uint32 `modbus:"125" name:"Total Generator Energy" unit:"kWh" multiplier:"0.1" precision:"1"` // L and H words
+	EPSVoltL1N            uint16 `modbus:"127" name:"Voltage of EPS L1N" unit:"V" multiplier:"0.1" precision:"1"`
+	EPSVoltL2N            uint16 `modbus:"128" name:"Voltage of EPS L2N" unit:"V" multiplier:"0.1" precision:"1"`
 	PepsL1N               uint16 `modbus:"129" name:"Active Power of EPS L1N" unit:"W"`
 	PepsL2N               uint16 `modbus:"130" name:"Active Power of EPS L2N" unit:"W"`
 	SepsL1N               uint16 `modbus:"131" name:"Apparent Power of EPS L1N" unit:"VA"`
 	SepsL2N               uint16 `modbus:"132" name:"Apparent Power of EPS L2N" unit:"VA"`
-	EepsL1NDay            uint16 `modbus:"133" name:"Daily Energy of EPSL1N" unit:"kWh" multiplier:"0.1"`
-	EepsL2NDay            uint16 `modbus:"134" name:"Daily Energy of EPSL2N" unit:"kWh" multiplier:"0.1"`
-	EepsL1NAll            uint32 `modbus:"135" name:"Total EPSL1N Energy" unit:"kWh" multiplier:"0.1"` // L and H words
-	EepsL2NAll            uint32 `modbus:"137" name:"Total EPSL2N Energy" unit:"kWh" multiplier:"0.1"` // L and H words
+	EepsL1NDay            uint16 `modbus:"133" name:"Daily Energy of EPSL1N" unit:"kWh" multiplier:"0.1" precision:"1"`
+	EepsL2NDay            uint16 `modbus:"134" name:"Daily Energy of EPSL2N" unit:"kWh" multiplier:"0.1" precision:"1"`
+	EepsL1NAll            uint32 `modbus:"135" name:"Total EPSL1N Energy" unit:"kWh" multiplier:"0.1" precision:"1"` // L and H words
+	EepsL2NAll            uint32 `modbus:"137" name:"Total EPSL2N Energy" unit:"kWh" multiplier:"0.1" precision:"1"` // L and H words
 	AFCICurrCH1           uint16 `modbus:"140" name:"AFCI Current CH1" unit:"mA"`
 	AFCICurrCH2           uint16 `modbus:"141" name:"AFCI Current CH2" unit:"mA"`
 	AFCICurrCH3           uint16 `modbus:"142" name:"AFCI Current CH3" unit:"mA"`
-	AFCICurrCH4           uint16 `modbus:"143" name:"AFCI Current CH4" unit:"mA"`
+	AFCICurrCH4           uint16 `modbus:"143" name:"AFCI Current CH4" unit:"mA" icon:"mdi:current-dc"`
 	AFCIFlag              uint16 `modbus:"144" name:"AFCI Flag"` // Bitfield: ArcAlarmCH1 (Bit0), ArcAlarmCH2 (Bit1), ArcAlarmCH3 (Bit2), ArcAlarmCH4 (Bit3), SelfTestResultCH1 (Bit4), SelfTestResultCH2 (Bit5), SelfTestResultCH3 (Bit6), SelfTestResultCH4 (Bit7), rsvd (Bit8-15)
 	AFCIArcCH1            uint16 `modbus:"145" name:"AFCI Real Time Arc CH1"`
 	AFCIArcCH2            uint16 `modbus:"146" name:"AFCI Real Time Arc CH2"`

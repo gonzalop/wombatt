@@ -67,13 +67,13 @@ type EG4ModbusBatteryInfo struct {
 	// starting at address 0 and reading 39 registers.
 	// Reference at https://eg4electronics.com/backend/wp-content/uploads/2023/06/EG4-LL-MODBUS-Communication-Protocol.pdf
 	Voltage            uint16     `name:"battery_voltage" dclass:"voltage" unit:"V" multiplier:"0.01" precision:"2"`
-	Current            int16      `name:"current" dclass:"current" unit:"A" multiplier:"0.01" precision:"1"`
+	Current            int16      `name:"current" dclass:"current" unit:"A" multiplier:"0.01" precision:"2"`
 	CellVoltages       [16]uint16 `name:"cell_%d_voltage" dclass:"voltage" unit:"V" multiplier:"0.001" precision:"3"`
 	PCBTemp            int16      `name:"pcb_temp" dclass:"temperature" unit:"°C"`
 	MaxTemp            int16      `name:"max_temp" dclass:"temperature" unit:"°C"` // MaxTemp and AvgTemp seem to be swapped in the PDF doc.
 	AvgTemp            int16      `name:"avg_temp" dclass:"temperature" unit:"°C" precision:"1"`
 	CapRemaining       uint16     `name:"cap_remaining" unit:"%"`
-	MaxChargingCurrent uint16     `name:"max_charging_current" dclass:"current" unit:"A"`
+	MaxChargingCurrent uint16     `name:"max_charging_current" dclass:"current" unit:"A" icon:"mdi:current-dc"`
 	SOH                uint16     `name:"soh" unit:"%"`
 	SOC                uint16     `name:"soc" dclass:"battery" unit:"%"`
 	Status             uint16     `name:"status" values:"0:inactive/stand by,1:inactive/charging,2:inactive/discharging,4:inactive/protect,8:inactive/charging limit,32768:active/stand by,32769:active/charging,32770:active/discharging,32772:active/protect,32776:active/charging limit"`
@@ -89,7 +89,7 @@ type EG4ModbusBatteryInfo struct {
 	Temp5              int8       `name:"temp5"` // Always 0
 	Temp6              int8       `name:"temp6"` // Always 0
 	CellNum            uint16     `name:"cell_num"`
-	DesignedCapacity   uint16     `name:"designed_capacity" unit:"Ah" multiplier:"0.1"`
+	DesignedCapacity   uint16     `name:"designed_capacity" unit:"Ah" multiplier:"0.1" precision:"1"`
 	CellBalanceStatus  uint16     `name:"cell_balance_status" flags:"cell 16 unbalanced,cell 15 unbalanced,cell 14 unbalanced,cell 13 unbalanced,cell 12 unbalanced,cell 11 unbalanced,cell 10 unbalanced,cell 9 unbalanced,cell 8 unbalanced,cell 7 unbalanced,cell 6 unbalanced,cell 5 unbalanced,cell 4 unbalanced,cell 3 unbalanced,cell 2 unbalanced,cell 1 unbalanced"`
 	// end of Modbus fields.
 }

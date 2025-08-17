@@ -65,13 +65,13 @@ type PaceModbusBatteryInfo struct {
 	// The following fields must be in the same order as the Modbus registers available
 	// starting at address 0 and reading 39 registers.
 	// Reference at https://github.com/gonzalop/wombatt/blob/main/docs/ref/PACE-BMS-Modbus-Protocol-for-RS485-V1.3-20170627.pdf
-	Current           int16      `name:"current" dclass:"current" unit:"A" multiplier:"0.01" precision:"1"`
-	Voltage           uint16     `name:"battery_voltage" dclass:"voltage" unit:"V" multiplier:"0.01" precision:"1"`
+	Current           int16      `name:"current" dclass:"current" unit:"A" multiplier:"0.01" precision:"2" icon:"mdi:current-dc"`
+	Voltage           uint16     `name:"battery_voltage" dclass:"voltage" unit:"V" multiplier:"0.01" precision:"2"`
 	SOC               uint16     `name:"soc" dclass:"battery" unit:"%"`
 	SOH               uint16     `name:"soh" unit:"%"`
-	RemainingCapacity uint16     `name:"remaining_capacity" unit:"Ah" multiplier:"0.01" precision:"1"`
-	FullCapacity      uint16     `name:"full_capacity" unit:"Ah" multiplier:"0.01" precision:"1"`
-	DesignCapacity    uint16     `name:"design_capacity" unit:"Ah" multiplier:"0.01" precision:"1"`
+	RemainingCapacity uint16     `name:"remaining_capacity" unit:"Ah" multiplier:"0.01" precision:"2"`
+	FullCapacity      uint16     `name:"full_capacity" unit:"Ah" multiplier:"0.01" precision:"2"`
+	DesignCapacity    uint16     `name:"design_capacity" unit:"Ah" multiplier:"0.01" precision:"2"`
 	CycleCounts       uint32     `name:"cycle_counts" icon:"mdi:battery-sync"`
 	_                 int16      // Reserved
 	WarningFlag       uint16     `name:"warning_flag" flags:"SOC low,MOSFET high temp,environment low temp,discharging low temp,charging low temp,discharging high temp,discharging low temp,0x80,0x40,discharging overcurrent,charging overcurrent,pack low voltage,pack overvoltage,cell low voltage,cell overvoltage"`
@@ -81,9 +81,9 @@ type PaceModbusBatteryInfo struct {
 	_                 int16      // Reserved
 	_                 int16      // Reserved
 	CellVoltages      [16]uint16 `name:"cell_%d_voltage" dclass:"voltage" unit:"V" multiplier:"0.001" precision:"3"`
-	CellTemps         [4]int16   `name:"cell_temp_%d" dclass:"temperature" unit:"°C" mutiplier:"0.1" precision:"1"`
-	MOSFETTemp        int16      `name:"mosfet_temp" dclass:"temperature" unit:"°C" mutiplier:"0.1" precision:"1"`      // Might be 0°C always
-	EnvTemp           int16      `name:"environment_temp" dclass:"temperature" unit:"°C" mutiplier:"0.1" precision:"1"` // Might be 0°C always
+	CellTemps         [4]int16   `name:"cell_temp_%d" dclass:"temperature" unit:"°C" multiplier:"0.1" precision:"1"`
+	MOSFETTemp        int16      `name:"mosfet_temp" dclass:"temperature" unit:"°C" multiplier:"0.1" precision:"1"`      // Might be 0°C always
+	EnvTemp           int16      `name:"environment_temp" dclass:"temperature" unit:"°C" multiplier:"0.1" precision:"1"` // Might be 0°C always
 	// Note: there are more documented R/W registers starting at address 60. See the doc.
 }
 

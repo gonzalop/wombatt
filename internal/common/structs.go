@@ -1,4 +1,4 @@
-// Package common has utility functions used by differnt commands.
+// Package common has utility functions used by different commands.
 package common
 
 import (
@@ -76,7 +76,7 @@ func TraverseStruct(data any, cb TraverseStructCallback) {
 		if mult != "" {
 			newVal, err := handleMultiplier(mult, v)
 			if err != nil {
-				slog.Error("error converting multiplier", "error", err, "value", v, "mulktiplier", mult)
+				slog.Error("error converting multiplier", "error", err, "value", v, "multiplier", mult)
 				continue
 			}
 			cb(info, newVal)

@@ -56,38 +56,38 @@ func RunCommands(ctx context.Context, port common.Port, protocol string, id uint
 
 // RealtimeData holds the values from the "Real-time Running Data" table.
 type RealtimeData struct {
-	DayActivePowerWh       int16  `modbus:"60" name:"Day Active Power" unit:"kWh" multiplier:"0.1"`
-	TotalActivePowerWhLow  uint16 `modbus:"63" name:"Total Active Power Low" unit:"kWh" multiplier:"0.1"`
-	TotalActivePowerWhHigh uint16 `modbus:"64" name:"Total Active Power High" unit:"kWh" multiplier:"0.1"`
-	GridFrequency          uint16 `modbus:"79" name:"Grid Frequency" unit:"Hz" multiplier:"0.01"`
-	DCDCTemp               int16  `modbus:"90" name:"DC/DC Transformer Temperature" unit:"°C" multiplier:"0.1"`
-	IGBTHSCTemp            int16  `modbus:"91" name:"IGBT Heat Sink Temperature" unit:"°C" multiplier:"0.1"`
+	DayActivePowerWh       int16  `modbus:"60" name:"Day Active Power" unit:"kWh" multiplier:"0.1" precision:"1"`
+	TotalActivePowerWhLow  uint16 `modbus:"63" name:"Total Active Power Low" unit:"kWh" multiplier:"0.1" precision:"1"`
+	TotalActivePowerWhHigh uint16 `modbus:"64" name:"Total Active Power High" unit:"kWh" multiplier:"0.1" precision:"1"`
+	GridFrequency          uint16 `modbus:"79" name:"Grid Frequency" unit:"Hz" multiplier:"0.01" precision:"2"`
+	DCDCTemp               int16  `modbus:"90" name:"DC/DC Transformer Temperature" unit:"°C" multiplier:"0.1" precision:"1"`
+	IGBTHSCTemp            int16  `modbus:"91" name:"IGBT Heat Sink Temperature" unit:"°C" multiplier:"0.1" precision:"1"`
 	FaultInfoWord1         uint16 `modbus:"103" name:"Fault Information Word 1" flags:"unknown0,unknown1,unknown2,unknown3,unknown4,unknown5,unknown6,GFDI_Relay_Failure,unknown8,unknown9,unknown10,unknown11,Grid_Mode_changed,DC_OverCurr_Fault,SW_AC_OverCurr_Fault,GFCI_Failure"`
-	FaultInfoWord2         uint16 `modbus:"104" name:"Fault Information Word 2" flags:"unknown16,HW_Ac_OverCurr_Fault,unknown18,Tz_Dc_OverCurr_Fault,unknown20,Tz_EmergStop_Fault,Tz_GFCI_OC_Fault,DC_Insulation_ISO_Fault,uknown24,BusUnbalance_Fault,unknown26,unknown27,Parallel_Fault1,Parallel_Fault2,Parallel_Fault3,Parallel_Fault4"`
+	FaultInfoWord2         uint16 `modbus:"104" name:"Fault Information Word 2" flags:"unknown16,HW_Ac_OverCurr_Fault,unknown18,Tz_Dc_OverCurr_Fault,unknown20,Tz_EmergStop_Fault,Tz_GFCI_OC_Fault,DC_Insulation_ISO_Fault,unknown24,BusUnbalance_Fault,unknown26,unknown27,Parallel_Fault1,Parallel_Fault2,Parallel_Fault3,Parallel_Fault4"`
 	FaultInfoWord3         uint16 `modbus:"105" name:"Fault Information Word 3" flags:"AC_OverCurr_Fault,AC_Overload_Fault,unknown34,unknown35,unknown36,unknown37,unknown38,unknown39,AC_WU_OverVolt_Fault,unknown41,AC_VW_OverVolt_Fault,unknown43,AC_UV_OverVolt_Fault,Parallel_Aux_Fault,AC_OverFreq_Fault,AC_UnderFreq_Fault"`
 	FaultInfoWord4         uint16 `modbus:"106" name:"Fault Information Word 4" flags:"unknown48,unknown49,unknown50,unknown51,unknown52,unknown53,DC_VoltHigh_Fault,DC_VoltLow_Fault,unknown56,AC_U_GridCurr_High_Fault,unknown58,unknown59,Button_Manual_OFF,AC_B_InductCurr_High_Fault,Arc_Fault,Heatsink_HighTemp_Fault"`
 	CorrectedBattCapacity  uint16 `modbus:"107" name:"Corrected Battery Capacity" unit:"Ah"`
-	DailyPVPow             uint16 `modbus:"108" name:"Daily PV Power" unit:"kWh" multiplier:"0.1"`
-	DCVoltage1             uint16 `modbus:"109" name:"DC Voltage 1" unit:"V" multiplier:"0.1"`
-	DCCurrent1             uint16 `modbus:"110" name:"DC Current 1" unit:"A" multiplier:"0.1"`
-	DCVoltage2             uint16 `modbus:"111" name:"DC Voltage 2" unit:"V" multiplier:"0.1"`
-	DCCurrent2             uint16 `modbus:"112" name:"DC Current 2" unit:"A" multiplier:"0.1"`
+	DailyPVPow             uint16 `modbus:"108" name:"Daily PV Power" unit:"kWh" multiplier:"0.1" precision:"1"`
+	DCVoltage1             uint16 `modbus:"109" name:"DC Voltage 1" unit:"V" multiplier:"0.1" precision:"1"`
+	DCCurrent1             uint16 `modbus:"110" name:"DC Current 1" unit:"A" multiplier:"0.1" precision:"1"`
+	DCVoltage2             uint16 `modbus:"111" name:"DC Voltage 2" unit:"V" multiplier:"0.1" precision:"1"`
+	DCCurrent2             uint16 `modbus:"112" name:"DC Current 2" unit:"A" multiplier:"0.1" precision:"1"`
 
-	GridSideVoltageL1N           uint16 `modbus:"150" name:"Grid Side Voltage L1-N" unit:"V" multiplier:"0.1"`
-	GridSideVoltageL2N           uint16 `modbus:"151" name:"Grid Side Voltage L2-N" unit:"V" multiplier:"0.1"`
-	GridSideVoltageL1L2          uint16 `modbus:"152" name:"Grid Side Voltage L1-L2" unit:"V" multiplier:"0.1"`
-	VoltageMiddleRelayL1L2       uint16 `modbus:"153" name:"Voltage at Middle Side of Relay L1-L2" unit:"V" multiplier:"0.1"`
-	InverterOutputVoltageL1N     uint16 `modbus:"154" name:"Inverter Output Voltage L1-N" unit:"V" multiplier:"0.1"`
-	InverterOutputVoltageL2N     uint16 `modbus:"155" name:"Inverter Output Voltage L2-N" unit:"V" multiplier:"0.1"`
-	InverterOutputVoltageL1L2    uint16 `modbus:"156" name:"Inverter Output Voltage L1-L2" unit:"V" multiplier:"0.1"`
-	LoadVoltageL1                uint16 `modbus:"157" name:"Load Voltage L1" unit:"V" multiplier:"0.1"`
-	LoadVoltageL2                uint16 `modbus:"158" name:"Load Voltage L2" unit:"V" multiplier:"0.1"`
-	GridSideCurrentL1            int16  `modbus:"160" name:"Grid Side Current L1" unit:"A" multiplier:"0.01"`
-	GridSideCurrentL2            int16  `modbus:"161" name:"Grid Side Current L2" unit:"A" multiplier:"0.01"`
-	GridExternalLimiterCurrentL1 int16  `modbus:"162" name:"Grid External Limiter Current L1" unit:"A" multiplier:"0.01"`
-	GridExternalLimiterCurrentL2 int16  `modbus:"163" name:"Grid External Limiter Current L2" unit:"A" multiplier:"0.01"`
-	InverterOutputCurrentL1      int16  `modbus:"164" name:"Inverter Output Current L1" unit:"A" multiplier:"0.01"`
-	InverterOutputCurrentL2      int16  `modbus:"165" name:"Inverter Output Current L2" unit:"A" multiplier:"0.01"`
+	GridSideVoltageL1N           uint16 `modbus:"150" name:"Grid Side Voltage L1-N" unit:"V" multiplier:"0.1" precision:"1"`
+	GridSideVoltageL2N           uint16 `modbus:"151" name:"Grid Side Voltage L2-N" unit:"V" multiplier:"0.1" precision:"1"`
+	GridSideVoltageL1L2          uint16 `modbus:"152" name:"Grid Side Voltage L1-L2" unit:"V" multiplier:"0.1" precision:"1"`
+	VoltageMiddleRelayL1L2       uint16 `modbus:"153" name:"Voltage at Middle Side of Relay L1-L2" unit:"V" multiplier:"0.1" precision:"1"`
+	InverterOutputVoltageL1N     uint16 `modbus:"154" name:"Inverter Output Voltage L1-N" unit:"V" multiplier:"0.1" precision:"1"`
+	InverterOutputVoltageL2N     uint16 `modbus:"155" name:"Inverter Output Voltage L2-N" unit:"V" multiplier:"0.1" precision:"1"`
+	InverterOutputVoltageL1L2    uint16 `modbus:"156" name:"Inverter Output Voltage L1-L2" unit:"V" multiplier:"0.1" precision:"1"`
+	LoadVoltageL1                uint16 `modbus:"157" name:"Load Voltage L1" unit:"V" multiplier:"0.1" precision:"1"`
+	LoadVoltageL2                uint16 `modbus:"158" name:"Load Voltage L2" unit:"V" multiplier:"0.1" precision:"1"`
+	GridSideCurrentL1            int16  `modbus:"160" name:"Grid Side Current L1" unit:"A" multiplier:"0.01" precision:"2"`
+	GridSideCurrentL2            int16  `modbus:"161" name:"Grid Side Current L2" unit:"A" multiplier:"0.01" precision:"2"`
+	GridExternalLimiterCurrentL1 int16  `modbus:"162" name:"Grid External Limiter Current L1" unit:"A" multiplier:"0.01" precision:"2"`
+	GridExternalLimiterCurrentL2 int16  `modbus:"163" name:"Grid External Limiter Current L2" unit:"A" multiplier:"0.01" precision:"2"`
+	InverterOutputCurrentL1      int16  `modbus:"164" name:"Inverter Output Current L1" unit:"A" multiplier:"0.01" precision:"2"`
+	InverterOutputCurrentL2      int16  `modbus:"165" name:"Inverter Output Current L2" unit:"A" multiplier:"0.01" precision:"2"`
 	GenACOutputPowerInput        int16  `modbus:"166" name:"Gen or AC Coupled Power Input" unit:"W"`
 	GridSideL1Power              int16  `modbus:"167" name:"Grid Side L1 Power" unit:"W"`
 	GridSideL2Power              int16  `modbus:"168" name:"Grid Side L2 Power" unit:"W"`
@@ -101,21 +101,21 @@ type RealtimeData struct {
 	LoadSideL1Power              int16  `modbus:"176" name:"Load Side L1 Power" unit:"W"`
 	LoadSideL2Power              int16  `modbus:"177" name:"Load Side L2 Power" unit:"W"`
 	LoadSideTotalPower           int16  `modbus:"178" name:"Load Side Total Power" unit:"W"`
-	LoadCurrentL1                uint16 `modbus:"179" name:"Load Current L1" unit:"A" multiplier:"0.01"`
-	LoadCurrentL2                uint16 `modbus:"180" name:"Load Current L2" unit:"A" multiplier:"0.01"`
+	LoadCurrentL1                uint16 `modbus:"179" name:"Load Current L1" unit:"A" multiplier:"0.01" precision:"2"`
+	LoadCurrentL2                uint16 `modbus:"180" name:"Load Current L2" unit:"A" multiplier:"0.01" precision:"2"`
 	GenPortVoltageL1L2           uint16 `modbus:"181" name:"Gen Port Voltage L1-L2" unit:"V"`
-	BatteryTemperature           int16  `modbus:"182" name:"Battery Temperature" unit:"°C" multiplier:"0.1"`
-	BatteryVoltage               uint16 `modbus:"183" name:"Battery Voltage" unit:"V" multiplier:"0.01"`
+	BatteryTemperature           int16  `modbus:"182" name:"Battery Temperature" unit:"°C" multiplier:"0.1" precision:"1"`
+	BatteryVoltage               uint16 `modbus:"183" name:"Battery Voltage" unit:"V" multiplier:"0.01" precision:"2"`
 	BatteryCapacitySOC           uint16 `modbus:"184" name:"Battery Capacity SOC" unit:"%"`
 	PV1InputPower                uint16 `modbus:"186" name:"PV1 Input Power" unit:"W"`
 	PV2InputPower                uint16 `modbus:"187" name:"PV2 Input Power" unit:"W"`
 	BatteryOutputPower           int16  `modbus:"190" name:"Battery Output Power" unit:"W"`
-	BatteryOutputCurrent         int16  `modbus:"191" name:"Battery Output Current" unit:"A" multiplier:"0.01"`
-	LoadFrequency                uint16 `modbus:"192" name:"Load Frequency" unit:"Hz" multiplier:"0.01"`
-	InverterOutputFrequency      uint16 `modbus:"193" name:"Inverter Output Frequency" unit:"Hz" multiplier:"0.01"`
+	BatteryOutputCurrent         int16  `modbus:"191" name:"Battery Output Current" unit:"A" multiplier:"0.01" precision:"2" icon:"mdi:current-dc"`
+	LoadFrequency                uint16 `modbus:"192" name:"Load Frequency" unit:"Hz" multiplier:"0.01" precision:"2"`
+	InverterOutputFrequency      uint16 `modbus:"193" name:"Inverter Output Frequency" unit:"Hz" multiplier:"0.01" precision:"2"`
 	GridSideRelayStatus          uint16 `modbus:"194" name:"Grid Side Relay Status" values:"1:Open (Disconnect),2:Closed"`
 	GeneratorSideRelayStatus     uint16 `modbus:"195" name:"Generator Side Relay Status" values:"0:Open,1:Closed,2:No Connection,3:Closed when Generator is on"`
-	GeneratorRelayFrequency      uint16 `modbus:"196" name:"Generator Relay Frequency" unit:"Hz" multiplier:"0.01"`
+	GeneratorRelayFrequency      uint16 `modbus:"196" name:"Generator Relay Frequency" unit:"Hz" multiplier:"0.01" precision:"2"`
 }
 
 // ReadRealtimeData reads the real-time running data from the Solark inverter.

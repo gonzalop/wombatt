@@ -18,7 +18,7 @@ import (
 const (
 	EG4LLv2BMS     = "EG4LLv2"
 	Lifepower4BMS  = "lifepower4"
-	Lifepowerv2BMS = "lifepowerv2" // Protocol switches: 1-off, 2 thru 6-on
+	Lifepowerv2BMS = "lifepowerv2" // Protocol switches: 1-off, 2 through 6-on
 	PaceBMS        = "pacemodbus"
 )
 

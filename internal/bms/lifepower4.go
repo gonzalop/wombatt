@@ -52,10 +52,10 @@ type LFP4AnalogValueBatteryInfo struct {
 	CellTemps         [4]uint16  `name:"cell_temp_%d" dclass:"temperature" unit:"K" multiplier:"0.1" precision:"1"`
 	EnvTemp           uint16     `name:"environment_temp" dclass:"temperature" unit:"K" multiplier:"0.1" precision:"1"`
 	MOSFETTemp        uint16     `name:"mosfet_temp" dclass:"temperature" unit:"K" multiplier:"0.1" precision:"1"`
-	PackCurrent       int16      `name:"pack_current" dclass:"current" unit:"A" multiplier:"0.01" precision:"1"`
+	PackCurrent       int16      `name:"pack_current" dclass:"current" unit:"A" multiplier:"0.01" precision:"2"`
 	PackVoltage       int16      `name:"pack_voltage" dclass:"voltage" unit:"V" multiplier:"0.01" precision:"2"`
-	CapRemaining      uint16     `name:"remaining_capacity" unit:"Ah" multiplier:"0.01" precision:"1"`
-	FullCapacity      uint16     `name:"full_capacity" unit:"Ah" multiplier:"0.01" precision:"1"`
+	CapRemaining      uint16     `name:"remaining_capacity" unit:"Ah" multiplier:"0.01" precision:"2"`
+	FullCapacity      uint16     `name:"full_capacity" unit:"Ah" multiplier:"0.01" precision:"2"`
 	CycleCounts       uint16     `name:"cycle_counts" icon:"mdi:battery-sync"`
 	UserDefined       uint8      `name:"user_defined"`
 	SOC               uint16     `name:"soc" dclass:"battery" unit:"%"`
@@ -66,9 +66,9 @@ type LFP4AnalogValueBatteryInfo struct {
 	MaxCellTemp       uint16     `name:"max_cell_temp" dclass:"temperature" unit:"K" multiplier:"0.1" precision:"1"`
 	MinCellTemp       uint16     `name:"min_cell_temp" dclass:"temperature" unit:"K" multiplier:"0.1" precision:"1"`
 	CumChargingCap    uint32     `name:"cumulative_charging_capacity" dclass:"current" unit:"A" multiplier:"0.01" precision:"2"`
-	CumDischargeCap   uint32     `name:"cumulative_discharge_capacity" dclass:"current" unit:"A" multiplier:"0.01" precision:"2"`
-	CumChargingPower  uint32     `name:"cumulative_charging_power" dclass:"power" unit:"kW" multiplier:"0.001" precision:"1"`
-	CumDischargePower uint32     `name:"cumulative_discharge_power" dclass:"power" unit:"kW" multiplier:"0.001" precision:"1"`
+	CumDischargeCap   uint32     `name:"cumulative_discharge_capacity" dclass:"current" unit:"A" multiplier:"0.01" precision:"2" icon:"mdi:current-dc"`
+	CumChargingPower  uint32     `name:"cumulative_charging_power" dclass:"power" unit:"kW" multiplier:"0.001" precision:"3"`
+	CumDischargePower uint32     `name:"cumulative_discharge_power" dclass:"power" unit:"kW" multiplier:"0.001" precision:"3"`
 	CumChargingTime   uint32     `name:"cumulative_charging_time" unit:"h"`
 	CumDischargeTime  uint32     `name:"cumulative_discharge_time" unit:"h"`
 	CumChargingTimes  uint16     `name:"cumulative_charging_times" unit:"h"`

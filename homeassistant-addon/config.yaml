@@ -33,7 +33,7 @@ options:
   bms_type: EG4LLv2
   mqtt_prefix: eg4
 schema:
-  log_level: "list(debug|info|warning|error|critical)?"
+  log_level: "list(debug|info|warn|error)?"
   mode: "list(inverters|batteries)"
   mqtt_broker: "str?"
   mqtt_user: "str?"
