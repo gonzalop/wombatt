@@ -11,6 +11,8 @@ import (
 	"time"
 
 	"wombatt/internal/common"
+	"wombatt/internal/eg4_18kpv"
+	"wombatt/internal/eg4_6000xp"
 	"wombatt/internal/mqttha"
 	"wombatt/internal/pi30"
 	"wombatt/internal/solark"
@@ -27,7 +29,7 @@ type MonitorInvertersCmd struct {
 	PollInterval time.Duration `short:"P" default:"10s" help:"Time to wait between polling cycles"`
 	ReadTimeout  time.Duration `short:"t" default:"5s" help:"Timeout when reading from devices"`
 
-	Monitors []string `arg:"" required:"" help:"<device>,<command1[:command2:command3...]>,<mqtt_prefix>[,<inverter_type>]. E.g. /dev/ttyS0,QPIRI:QPGS1,eg4_1,pi30 or /dev/ttyUSB0,RealtimeData:IntrinsicAttributes,solark_1,solark. Valid solark commands are RealtimeData and IntrinsicAttributes."`
+	Monitors []string `arg:"" required:"" help:"<device>,<command1[:command2:command3...]>,<mqtt_prefix>[,<inverter_type>]. E.g. /dev/ttyS0,QPIRI:QPGS1,eg4_1,pi30 or /dev/ttyUSB0,RealtimeData:IntrinsicAttributes,solark_1,solark or /dev/ttyUSB0,RealtimeData,eg4_18kpv_1,eg4_18kpv or /dev/ttyUSB0,RealtimeData,eg4_6000xp_1,eg4_6000xp. Valid solark commands are RealtimeData and IntrinsicAttributes. Valid eg4_18kpv/eg4_6000xp commands are RealtimeData."`
 
 	WebServerAddress string `short:"w" help:"Address to use for serving HTTP. <IP>:<Port>, i.e., 127.0.0.1:8080"`
 
@@ -114,6 +116,10 @@ func runInverterMonitor(cmd *MonitorInvertersCmd, monitors []*inverterMonitor) e
 				case "solark":
 					// For Solark, the supported commands are "RealtimeData" and "IntrinsicAttributes".
 					results, errors = solark.RunCommands(ctx_to, port, cmd.Protocol, uint8(cmd.ModbusID), m.Commands)
+				case "eg4_18kpv":
+					results, errors = eg4_18kpv.RunCommands(ctx_to, port, cmd.Protocol, uint8(cmd.ModbusID), m.Commands)
+				case "eg4_6000xp":
+					results, errors = eg4_6000xp.RunCommands(ctx_to, port, cmd.Protocol, uint8(cmd.ModbusID), m.Commands)
 				default:
 					errors = append(errors, fmt.Errorf("unknown inverter type: %s", m.InverterType))
 				}
@@ -185,7 +191,7 @@ func publishToStdout(im *inverterMonitor, results []any) {
 			continue
 		}
 		fmt.Printf("%s -> %s\n=======================\n", im.Device, im.Commands[i])
-		pi30.WriteTo(os.Stdout, r)
+		common.WriteTo(os.Stdout, r)
 		fmt.Println()
 	}
 }
@@ -206,6 +212,18 @@ func invertersDiscoveryConfig(mqttTopicPrefix string, monitors []*inverterMonito
 					st = &solark.IntrinsicAttributes{}
 				} else {
 					continue // Skip unknown commands for Solark
+				}
+			case "eg4_18kpv":
+				if c == "RealtimeData" {
+					st = &eg4_18kpv.RealtimeData{}
+				} else {
+					continue // Skip unknown commands
+				}
+			case "eg4_6000xp":
+				if c == "RealtimeData" {
+					st = &eg4_6000xp.RealtimeData{}
+				} else {
+					continue // Skip unknown commands
 				}
 			default:
 				continue // Skip unknown inverter types
@@ -299,8 +317,8 @@ func getMonitors(args []string) ([]*inverterMonitor, error) {
 		if len(p) > 3 {
 			inverterType = p[3]
 		}
-		if inverterType != "pi30" && inverterType != "solark" {
-			return nil, fmt.Errorf("invalid inverter type: '%s'. Must be 'pi30' or 'solark'", inverterType)
+		if inverterType != "pi30" && inverterType != "solark" && inverterType != "eg4_18kpv" && inverterType != "eg4_6000xp" {
+			return nil, fmt.Errorf("invalid inverter type: '%s'. Must be 'pi30', 'solark', 'eg4_18kpv' or 'eg4_6000xp'", inverterType)
 		}
 		monitors = append(monitors, &inverterMonitor{dev, cmds, prefix, inverterType, nil, nil})
 	}

@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io"
+	"os"
 	"strings"
 	"testing"
 
@@ -123,7 +123,7 @@ func TestRunCommands(t *testing.T) {
 			}
 		}
 		if tt.nfields != 0 && results[0] != nil {
-			WriteTo(io.Discard, results[0])
+			common.WriteTo(os.Stdout, results[0])
 			counter := 0
 			fu := func(map[string]string, any) {
 				counter++

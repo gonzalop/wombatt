@@ -12,8 +12,6 @@ import (
 	"strconv"
 	"strings"
 
-	"wombatt/internal/common"
-
 	"github.com/howeyc/crc16"
 )
 
@@ -205,13 +203,6 @@ func decodeResponse(parts []string, target any) error {
 		}
 	}
 	return nil
-}
-
-func WriteTo(writer io.Writer, data any) {
-	cb := func(info map[string]string, val any) {
-		fmt.Fprintf(writer, "%s: %v%s\n", info["desc"], val, info["unit"])
-	}
-	common.TraverseStruct(data, cb)
 }
 
 func crc(data []byte) uint16 {

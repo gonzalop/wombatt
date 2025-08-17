@@ -11,6 +11,7 @@ import (
 
 	"wombatt/internal/common"
 	"wombatt/internal/eg4_18kpv"
+	"wombatt/internal/eg4_6000xp"
 	"wombatt/internal/pi30"
 	"wombatt/internal/solark"
 )
@@ -19,9 +20,10 @@ import (
 type InverterType string
 
 const (
-	InverterTypePI30     InverterType = "pi30"
-	InverterTypeSolark   InverterType = "solark"
-	InverterTypeEG418KPV InverterType = "eg4_18kpv"
+	InverterTypePI30      InverterType = "pi30"
+	InverterTypeSolark    InverterType = "solark"
+	InverterTypeEG418KPV  InverterType = "eg4_18kpv"
+	InverterTypeEG46000XP InverterType = "eg4_6000xp"
 )
 
 type InverterQueryCmd struct {
@@ -33,7 +35,7 @@ type InverterQueryCmd struct {
 	Parity       string        `help:"Parity for serial port (N, E, O)" default:"N"`
 	ReadTimeout  time.Duration `short:"t" default:"5s" help:"Per inverter timeout for processing all the commands being sent"`
 	DeviceType   string        `short:"T" default:"serial" enum:"${device_types}" help:"One of ${device_types}"`
-	InverterType InverterType  `short:"I" default:"pi30" enum:"pi30,solark,eg4_18kpv" help:"Type of inverter protocol (pi30, solark, eg4_18kpv)"`
+	InverterType InverterType  `short:"I" default:"pi30" enum:"pi30,solark,eg4_18kpv,eg4_6000xp" help:"Type of inverter protocol (pi30, solark, eg4_18kpv, eg4_6000xp)"`
 	Protocol     string        `short:"R" default:"auto" enum:"ModbusRTU,ModbusTCP,auto" help:"Modbus protocol (auto, ModbusRTU, ModbusTCP)"`
 	ModbusID     int           `short:"i" default:"1" help:"Modbus slave ID"`
 }
@@ -61,6 +63,8 @@ func (cmd *InverterQueryCmd) Run(globals *Globals) error {
 			results, errs = solark.RunCommands(tctx, port, cmd.Protocol, uint8(cmd.ModbusID), cmd.Command)
 		case InverterTypeEG418KPV:
 			results, errs = eg4_18kpv.RunCommands(tctx, port, cmd.Protocol, uint8(cmd.ModbusID), cmd.Command)
+		case InverterTypeEG46000XP:
+			results, errs = eg4_6000xp.RunCommands(tctx, port, cmd.Protocol, uint8(cmd.ModbusID), cmd.Command)
 		default:
 			cancel()
 			port.Close()
@@ -82,14 +86,7 @@ func (cmd *InverterQueryCmd) Run(globals *Globals) error {
 				continue
 			}
 			fmt.Printf("Device: %s, Command: %s\n%s\n", dev, command, strings.Repeat("=", 40))
-			switch cmd.InverterType {
-			case InverterTypePI30:
-				pi30.WriteTo(os.Stdout, res)
-			case InverterTypeSolark:
-				solark.WriteTo(os.Stdout, res)
-			case InverterTypeEG418KPV:
-				eg4_18kpv.WriteTo(os.Stdout, res)
-			}
+			common.WriteTo(os.Stdout, res)
 		}
 		port.Close()
 	}

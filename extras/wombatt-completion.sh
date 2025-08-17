@@ -73,7 +73,7 @@ _wombatt_completions() {
                 COMPREPLY=($(compgen -W "$common $bi $br $bt $dt $mqtt $p $pi $rto $sp $webs $mqtt_prefix" -- ${cur}))
                 ;;
             "monitor-inverters")
-                COMPREPLY=($(compgen -W "$common $br $db $sb $par $dt $mqtt $pi $rto $webs $p $id" -- ${cur}))
+                COMPREPLY=($(compgen -W "$common $br $db $sb $par $dt $mqtt $pi $rto $webs $p $id -I" -- ${cur}))
                 ;;
             
         esac

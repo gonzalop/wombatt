@@ -1,5 +1,5 @@
 ## monitor-inverters
-`monitor-inverters` monitors inverters using PI30, Solark, or EG4 18kPV Modbus protocol, with optional MQTT publishing.
+`monitor-inverters` monitors inverters using PI30, Solark, EG4 18kPV, or EG4 6000XP Modbus protocol, with optional MQTT publishing.
 
 ### Examples
 The command below will monitor the inverters connected to /dev/ttyS0 and
@@ -22,31 +22,49 @@ To monitor an EG4 18kPV inverter via Modbus RTU:
 $ ./wombatt monitor-inverters -w :9000 --mqtt-broker tcp://127.0.0.1:1883 --mqtt-user youruser --mqtt-password yourpassword -R ModbusRTU -i 0 /dev/ttyUSB0,RealtimeData,eg4_18kpv_1,eg4_18kpv
 ~~~
 
+To monitor an EG4 6000XP inverter via Modbus RTU:
 
-### Arguments
-
-`<device>,<command1[:command2:command3...]>,<mqtt_prefix>[,<inverter_type>]`
-
-*   `<device>`: The serial port or TCP address of the inverter.
-*   `<command1[:command2:command3...]>`: A colon-separated list of commands to run on the inverter. For PI30 inverters, valid commands include `QPIRI`, `QPIGS`, etc. For Solark inverters, the supported commands are `RealtimeData` and `IntrinsicAttributes`.
-*   `<mqtt_prefix>`: A prefix for MQTT topics (e.g., `eg4_1`).
-*   `<inverter_type>`: The type of inverter protocol. Must be `pi30` (default), `solark`, or `eg4_18kpv`.
-
-### Options
-
-*   `-B, --baud-rate uint`: Baud rate for serial ports (default 2400)
-*   `--data-bits int`: Number of data bits for serial port (default 8)
-*   `--stop-bits int`: Number of stop bits for serial port (default 1)
-*   `--parity string`: Parity for serial port (N, E, O) (default "N")
-*   `-R, --protocol string`: Modbus protocol (auto, ModbusRTU, ModbusTCP) (default "auto")
-*   `-i, --id int`: Modbus slave ID (default 1)
-
-The information will be published to the specified MQTT server, with prefixes `eg4_1`
-and `eg4_2` depending on the inverter, along with HomeAssistant autodiscovery configuration.
-
-The same infomation is made available via web on port 9000
-(http://127.0.0.1:9000/inverters/1/Q1 and so on) as text or JSON (add
-`?format=json` to the URL), with the ability to request specific
-fields (`?fields=<name>`).
+~~~
+$ ./wombatt monitor-inverters -w :9000 --mqtt-broker tcp://127.0.0.1:1883 --mqtt-user youruser --mqtt-password yourpassword -R ModbusRTU -i 1 /dev/ttyUSB0,RealtimeData,eg4_6000xp_1,eg4_6000xp
+~~~
 
 
+### Arguments and Flags
+
+Usage: wombatt monitor-inverters <monitors> ... [flags]
+
+Arguments:
+  <monitors> ...    <device>,<command1[:command2:command3...]>,<mqtt_prefix>[,<inverter_type>].
+                    E.g. /dev/ttyS0,QPIRI:QPGS1,eg4_1,pi30 or
+                    /dev/ttyUSB0,RealtimeData:IntrinsicAttributes,solark_1,solark
+                    or /dev/ttyUSB0,RealtimeData,eg4_18kpv_1,eg4_18kpv or
+                    /dev/ttyUSB0,RealtimeData,eg4_6000xp_1,eg4_6000xp. Valid
+                    solark commands are RealtimeData and IntrinsicAttributes.
+                    Valid eg4_18kpv/eg4_6000xp commands are RealtimeData.
+
+Flags:
+  -h, --help                    Show context-sensitive help.
+  -l, --log-level="info"        Set the logging level (debug|info|warn|error)
+  -v, --version                 Print version information and quit
+
+  -B, --baud-rate=2400          Baud rate for serial ports
+      --data-bits=8             Number of data bits for serial port
+      --stop-bits=1             Number of stop bits for serial port
+      --parity="N"              Parity for serial port (N, E, O)
+  -P, --poll-interval=10s       Time to wait between polling cycles
+  -t, --read-timeout=5s         Timeout when reading from devices
+  -w, --web-server-address=STRING
+                                Address to use for serving HTTP. <IP>:<Port>,
+                                i.e., 127.0.0.1:8080
+  -T, --device-type="serial"    One of serial,hidraw,tcp
+  -R, --protocol="auto"         Modbus protocol (auto, ModbusRTU, ModbusTCP)
+  -i, --modbus-id=1             Modbus slave ID
+
+MQTT
+  --mqtt-broker=STRING      The MQTT server to publish battery data. E.g.
+                            tcp://127.0.0.1:1883 ($MQTT_BROKER)
+  --mqtt-password=STRING    Password for the MQTT connection ($MQTT_PASSWORD)
+  --mqtt-topic-prefix="homeassistant"
+                            Prefix for all topics published to MQTT
+                            ($MQTT_TOPIC_PREFIX)
+  --mqtt-user=STRING        User for the MQTT connection ($MQTT_USER)

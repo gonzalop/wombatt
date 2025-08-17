@@ -7,8 +7,9 @@ Inverters supported:
 - Any that can handle the PI30 protocol. Known to work:
     - EG4-6500EX
     - EG4-3000s (unconfirmed)
-- Solark inverters (12k and 15k models confirmed)
-- EG4 18kPV inverters
+- Solark inverters (12k and 15k, unconfirmed)
+- EG4 18kPV inverters (unconfirmed)
+- EG4 6000XP inverters (unconfirmed)
 
 Battery/BMS supported:
 - EG4-LL (--bms-type=EG4LLv2)

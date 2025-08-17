@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
-	"io"
 
 	"wombatt/internal/common"
 	"wombatt/internal/modbus"
@@ -339,12 +338,4 @@ func ReadRealtimeData(reader modbus.RegisterReader, id uint8) (*RealtimeData, er
 	rtd.AFCIMaxArcCH4 = binary.BigEndian.Uint16(data3[62:64])
 
 	return rtd, nil
-}
-
-// WriteTo writes the data to the given writer.
-func WriteTo(writer io.Writer, data any) {
-	cb := func(info map[string]string, val any) {
-		fmt.Fprintf(writer, "%s: %v%s\n", info["desc"], val, info["unit"])
-	}
-	common.TraverseStruct(data, cb)
 }

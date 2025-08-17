@@ -3,6 +3,7 @@ package common
 
 import (
 	"fmt"
+	"io"
 	"log/slog"
 	"math"
 	"reflect"
@@ -187,4 +188,12 @@ func handleBitgroupsTag(bgroups string, val string) string {
 		}
 	}
 	return result
+}
+
+// WriteTo writes the struct fields' description value and unit as text to the given writer.
+func WriteTo(writer io.Writer, data any) {
+	cb := func(info map[string]string, val any) {
+		fmt.Fprintf(writer, "%s: %v%s\n", info["desc"], val, info["unit"])
+	}
+	TraverseStruct(data, cb)
 }
