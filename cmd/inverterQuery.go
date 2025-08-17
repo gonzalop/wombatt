@@ -44,7 +44,7 @@ func (cmd *InverterQueryCmd) Run(globals *Globals) error {
 	ctx := context.Background()
 	var failed error
 	for _, dev := range cmd.Address {
-		port, err := common.NewPort(dev, int(cmd.BaudRate), cmd.DataBits, cmd.StopBits, cmd.Parity)
+		port, err := common.NewPort(dev, int(cmd.BaudRate), cmd.DataBits, cmd.StopBits, cmd.Parity, cmd.DeviceType)
 		if err != nil {
 			failed = errors.Join(failed, err)
 			continue

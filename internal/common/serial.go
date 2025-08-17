@@ -180,7 +180,7 @@ func (p *internalPort) ReopenWithBackoff() error {
 }
 
 // NewPort creates a new Port based on the provided parameters.
-func NewPort(portName string, baudRate, dataBits, stopBits int, parity string) (Port, error) {
+func NewPort(portName string, baudRate, dataBits, stopBits int, parity string, deviceType string) (Port, error) {
 	var serialParity serial.Parity
 	switch strings.ToUpper(parity) {
 	case "N":
@@ -200,19 +200,11 @@ func NewPort(portName string, baudRate, dataBits, stopBits int, parity string) (
 		Parity:   serialParity,
 	}
 
-	var portType DeviceType
-	var address string
-
-	if strings.Contains(portName, ":/") {
-		portType = TCPDevice
-		address = portName
-	} else if strings.HasPrefix(portName, "/dev/hidraw") {
-		portType = HidRawDevice
-		address = portName
-	} else {
-		portType = SerialDevice
-		address = portName
+	portType, ok := DeviceTypeFromString[strings.ToLower(deviceType)]
+	if !ok {
+		return nil, fmt.Errorf("invalid device type: %s", deviceType)
 	}
+	address := portName
 
 	opts := &PortOptions{
 		Mode:    mode,
