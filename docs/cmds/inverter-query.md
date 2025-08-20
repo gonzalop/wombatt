@@ -1,29 +1,30 @@
 ## inverter-query
 `inverter-query` sends commands to various inverter types, including PI30, Solark, EG4 18kPV and EG4 6000XP protocols.
 
+### Usage
+
+```
+wombatt inverter-query --address=ADDRESS,... --command=COMMAND,... [flags]
+```
+
 ### Flags
 
-Usage: wombatt inverter-query --address=ADDRESS,... --command=COMMAND,... [flags]
-
-Flags:
-  -h, --help                    Show context-sensitive help.
-  -l, --log-level="info"        Set the logging level (debug|info|warn|error)
-  -v, --version                 Print version information and quit
-
-  -p, --address=ADDRESS,...     Ports or addresses used for communication with
-                                the inverters
-  -c, --command=COMMAND,...     Commands to send to the inverters
-  -B, --baud-rate=2400          Baud rate
-      --data-bits=8             Number of data bits for serial port
-      --stop-bits=1             Number of stop bits for serial port
-      --parity="N"              Parity for serial port (N, E, O)
-  -t, --read-timeout=5s         Per inverter timeout for processing all the
-                                commands being sent
-  -T, --device-type="serial"    One of serial,hidraw,tcp
-  -I, --inverter-type="pi30"    Type of inverter protocol (pi30, solark,
-                                eg4_18kpv, eg4_6000xp)
-  -R, --protocol="auto"         Modbus protocol (auto, ModbusRTU, ModbusTCP)
-  -i, --modbus-id=1             Modbus slave ID
+| Flag | Description | Default |
+| --- | --- | --- |
+| `-h`, `--help` | Show context-sensitive help. | |
+| `-l`, `--log-level` | Set the logging level (debug|info|warn|error) | `info` |
+| `-v`, `--version` | Print version information and quit | |
+| `-p`, `--address` | Ports or addresses used for communication with the inverters | |
+| `-c`, `--command` | Commands to send to the inverters | |
+| `-B`, `--baud-rate` | Baud rate | `2400` |
+| `--data-bits` | Number of data bits for serial port | `8` |
+| `--stop-bits` | Number of stop bits for serial port | `1` |
+| `--parity` | Parity for serial port (N, E, O) | `N` |
+| `-t`, `--read-timeout` | Per inverter timeout for processing all the commands being sent | `5s` |
+| `-T`, `--device-type` | One of serial,hidraw,tcp | `serial` |
+| `-I`, `--inverter-type` | Type of inverter protocol (pi30, solark, eg4_18kpv, eg4_6000xp) | `pi30` |
+| `-R`, `--protocol` | Modbus protocol (auto, ModbusRTU, ModbusTCP) | `auto` |
+| `-i`, `--modbus-id` | Modbus slave ID | `1` |
 
 ### Examples
 
