@@ -1,16 +1,28 @@
-# Commands and usage
-Run `wombatt -h` for short help on the available subcommands.
-Run `wombatt <subcommand> -h` for more specific help on any subcommand.
+# Wombatt
 
-- Monitoring
-    - [monitor-batteries](monitor-batteries.md)
-    - [monitor-inverters](monitor-inverters.md)
+A wanna-be Swiss army knife for inverter and battery monitoring.
 
-- Single query or command
-    - [battery-info](battery-info.md)
-    - [inverter-query](inverter-query.md)
+### Usage
 
-- Debugging, development
-    - [modbus-read](modbus-read.md)
-    - [forward](forward.md)
+```
+wombatt <command> [flags]
+```
 
+### Commands
+
+Run `wombatt <command> --help` for more information on a command.
+
+- **[battery-info](battery-info.md)**: Displays battery information
+- **[forward](forward.md)**: Forwards commands between a two devices
+- **[inverter-query](inverter-query.md)**: Sends PI30 protocol commands to inverters
+- **[modbus-read](modbus-read.md)**: Reads Modbus holding registers
+- **[monitor-batteries](monitor-batteries.md)**: Monitors batteries state, MQTT publishing optional
+- **[monitor-inverters](monitor-inverters.md)**: Monitors inverters state, with optional MQTT publishing. It can be used with PI30, Solark, EG4 18kPV, or EG4 6000XP Modbus protocols.
+
+### Flags
+
+| Flag | Description | Default |
+| --- | --- | --- |
+| `-h`, `--help` | Show context-sensitive help. | |
+| `-l`, `--log-level` | Set the logging level (debug|info|warn|error) | `info` |
+| `-v`, `--version` | Print version information and quit | |

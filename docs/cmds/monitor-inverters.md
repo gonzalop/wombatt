@@ -1,5 +1,5 @@
 ## monitor-inverters
-`monitor-inverters` monitors inverters using PI30, Solark, EG4 18kPV, or EG4 6000XP Modbus protocol, with optional MQTT publishing.
+`monitor-inverters` monitors inverters state, with optional MQTT publishing. It can be used with PI30, Solark, EG4 18kPV, or EG4 6000XP Modbus protocols.
 
 ### Examples
 The command below will monitor the inverters connected to /dev/ttyS0 and

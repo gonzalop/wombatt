@@ -30,7 +30,7 @@ type CLI struct {
 	InverterQuery    InverterQueryCmd    `cmd:"" help:"Sends PI30 protocol commands to inverters"`
 	ModbusRead       ModbusReadCmd       `cmd:"" help:"Reads Modbus holding registers\n"`
 	MonitorBatteries MonitorBatteriesCmd `cmd:"" help:"Monitors batteries state, MQTT publishing optional"`
-	MonitorInverters MonitorInvertersCmd `cmd:"" help:"Monitors inverters using PI30 protocol, MQTT publishing optional"`
+	MonitorInverters MonitorInvertersCmd `cmd:"" help:"Monitors inverters state, MQTT publishing optional"`
 }
 
 // MQTTFlags are embedded in multiple commands.

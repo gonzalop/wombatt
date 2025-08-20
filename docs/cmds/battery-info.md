@@ -1,10 +1,32 @@
 ## battery-info
 `battery-info` displays battery status information.
 
+### Usage
+
+```
+wombatt battery-info --address=STRING --battery-id=BATTERY-ID,... [flags]
+```
+
+### Flags
+
+| Flag | Description | Default |
+| --- | --- | --- |
+| `-h`, `--help` | Show context-sensitive help. | |
+| `-l`, `--log-level` | Set the logging level (debug|info|warn|error) | `info` |
+| `-v`, `--version` | Print version information and quit | |
+| `-p`, `--address` | Serial port or address used for communication | |
+| `-i`, `--battery-id` | IDs of the batteries to get info from. | |
+| `-t`, `--read-timeout` | Timeout when reading from serial ports | `500ms` |
+| `-B`, `--baud-rate` | Baud rate | `9600` |
+| `--bms-type` | One of EG4LLv2,lifepower4,lifepowerv2,pacemodbus | `EG4LLv2` |
+| `--protocol` | One of auto,ModbusRTU,ModbusTCP,lifepower4 | `auto` |
+| `-T`, `--device-type` | One of serial,hidraw,tcp | `serial` |
+
 ### Examples
+
 For instance, to query the battery with ID #2:
-~~~
-$ ./wombatt battery-info --serial-port /dev/ttyUSB0 --battery-id 2
+```
+$ ./wombatt battery-info --address /dev/ttyUSB0 --battery-id 2
 Battery #2
 ===========
 battery voltage: 52.9V
@@ -54,5 +76,22 @@ median cell voltage: 3.306V
 model: LFP-51.2V100Ah-V1.0
 firmware version: Z02T04
 serial: 2022-10-26
-~~~
+```
 
+**Query multiple batteries:**
+
+```
+$ ./wombatt battery-info --address /dev/ttyUSB0 --battery-id 1,2,3
+```
+
+**Using a different BMS type:**
+
+```
+$ ./wombatt battery-info --address /dev/ttyUSB0 --battery-id 1 --bms-type lifepower4
+```
+
+**Connecting via TCP:**
+
+```
+$ ./wombatt battery-info --address 192.168.1.100:502 --battery-id 1 --device-type tcp --protocol ModbusTCP
+```
