@@ -3,7 +3,6 @@ package common
 import (
 	"fmt"
 	"io"
-	"log"
 	"log/slog"
 	"net"
 	"os"
@@ -47,15 +46,23 @@ func (*TestPort) Close() error {
 	return nil
 }
 
+// DeviceType represents the type of communication device.
 type DeviceType int
 
 const (
+	// TestByteDevice is a device type used for testing purposes.
 	TestByteDevice DeviceType = iota
+	// SerialDevice represents a serial port device.
 	SerialDevice
+	// HidRawDevice represents a HID raw device.
 	HidRawDevice
+	// TCPDevice represents a TCP network device.
 	TCPDevice
+
+	DefaultMaxBackoffInterval = 20 * time.Second
 )
 
+// DeviceTypeFromString maps string representations of device types to their DeviceType constants.
 var DeviceTypeFromString = map[string]DeviceType{
 	"test":   TestByteDevice,
 	"serial": SerialDevice,
@@ -64,11 +71,12 @@ var DeviceTypeFromString = map[string]DeviceType{
 }
 
 // PortOptions contains the port name and the settings used when opening it.
+// PortOptions contains the necessary parameters for opening a communication port.
 type PortOptions struct {
-	*serial.Mode
+	*serial.Mode // Mode contains serial port settings like BaudRate, DataBits, etc.
 
-	Type    DeviceType
-	Address string
+	Type    DeviceType // Type specifies the kind of device (e.g., SerialDevice, TCPDevice).
+	Address string     // Address is the port name (e.g., "/dev/ttyUSB0") or network address (e.g., "192.168.1.1:8080").
 }
 
 var deviceOpen = map[DeviceType]func(*PortOptions) (Port, error){
@@ -85,6 +93,7 @@ type internalPort struct {
 	lock sync.Mutex
 }
 
+// openSerial opens a serial port based on the provided options.
 func openSerial(opts *PortOptions) (Port, error) {
 	p, err := serial.Open(opts.Address, opts.Mode)
 	if err != nil {
@@ -96,6 +105,7 @@ func openSerial(opts *PortOptions) (Port, error) {
 	return &internalPort{ReadWriteCloser: p, PortOptions: &o}, nil
 }
 
+// openHidRaw opens a HID raw device (e.g., a file representing the device) based on the provided options.
 func openHidRaw(opts *PortOptions) (Port, error) {
 	// TODO: maybe try to emulate the baud rate from opts?
 	slog.Debug("opening file", "file", opts.Address)
@@ -107,6 +117,7 @@ func openHidRaw(opts *PortOptions) (Port, error) {
 	return &internalPort{ReadWriteCloser: f, PortOptions: &o}, nil
 }
 
+// openTCP opens a TCP connection based on the provided options.
 func openTCP(opts *PortOptions) (Port, error) {
 	slog.Debug("dialing TCP server", "address", opts.Address)
 	conn, err := net.Dial("tcp", opts.Address)
@@ -118,9 +129,13 @@ func openTCP(opts *PortOptions) (Port, error) {
 }
 
 // Port adds one more functions opening a port with retries and exponential backoff.
+// Port defines the interface for a communication port (e.g., serial, TCP, HID).
 type Port interface {
 	io.ReadWriteCloser
+	// ReopenWithBackoff attempts to close and then reopen the port with exponential backoff.
+	// It returns an error if the port cannot be reopened after multiple retries.
 	ReopenWithBackoff() error
+	// Type returns the DeviceType of the port.
 	Type() DeviceType
 }
 
@@ -137,15 +152,6 @@ func OpenPort(opts *PortOptions) (Port, error) {
 	return c, nil
 }
 
-// OpenPortOrFatal will terminate the program with an error message if it can't open the requested port.
-func OpenPortOrFatal(opts *PortOptions) Port {
-	res, err := OpenPort(opts)
-	if err != nil {
-		log.Fatalf("%v", err)
-	}
-	return res
-}
-
 // OpenPortWithBackoff will keep trying to successfully open a new port for up to the specified duration.
 func OpenPortWithBackoff(opts *PortOptions, d time.Duration) (Port, error) {
 	f := func() (Port, error) {
@@ -156,8 +162,12 @@ func OpenPortWithBackoff(opts *PortOptions, d time.Duration) (Port, error) {
 	}
 
 	b := backoff.NewExponentialBackOff()
-	b.MaxElapsedTime = d
-	b.MaxInterval = 20 * time.Second
+	if d == 0 {
+		b.MaxElapsedTime = DefaultMaxBackoffInterval * 2 // Ensure at least one retry
+	} else {
+		b.MaxElapsedTime = d
+	}
+	b.MaxInterval = DefaultMaxBackoffInterval
 	port, err := backoff.RetryNotifyWithData[Port](f, b, n)
 	if err != nil {
 		return port, err
@@ -169,7 +179,8 @@ func (p *internalPort) Type() DeviceType {
 	return p.PortOptions.Type
 }
 
-// ReopenWithBackoff will close the port and forever try to open it until it succeeds.
+// ReopenWithBackoff attempts to close the current port and then re-open it
+// with an exponential backoff strategy until it succeeds.
 func (p *internalPort) ReopenWithBackoff() error {
 	p.lock.Lock()
 	defer p.lock.Unlock()
@@ -179,8 +190,11 @@ func (p *internalPort) ReopenWithBackoff() error {
 	return err
 }
 
-// NewPort creates a new Port based on the provided parameters.
-func NewPort(portName string, baudRate, dataBits, stopBits int, parity string, deviceType string) (Port, error) {
+// NewPort creates a new Port instance with the specified parameters.
+// It handles serial port settings (baud rate, data bits, stop bits, parity)
+// and determines the device type (serial, TCP, HID raw).
+// It returns the initialized Port and an error if any parameter is invalid.
+func NewPort(portName, deviceType string, baudRate, dataBits, stopBits int, parity string) (Port, error) {
 	var serialParity serial.Parity
 	switch strings.ToUpper(parity) {
 	case "N":

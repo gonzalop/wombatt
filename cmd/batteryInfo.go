@@ -30,11 +30,17 @@ func (cmd *BatteryInfoCmd) Run(globals *Globals) error {
 		Mode:    &serial.Mode{BaudRate: int(cmd.BaudRate)},
 		Type:    common.DeviceTypeFromString[cmd.DeviceType],
 	}
-	battery := bms.Instance(string(cmd.BMSType))
+	battery, err := bms.Instance(string(cmd.BMSType))
+	if err != nil {
+		return fmt.Errorf("failed to create BMS instance: %w", err)
+	}
 	if cmd.Protocol == "auto" {
 		cmd.Protocol = battery.DefaultProtocol(cmd.DeviceType)
 	}
-	port := common.OpenPortOrFatal(portOptions)
+	port, err := common.OpenPort(portOptions)
+	if err != nil {
+		return fmt.Errorf("failed to open port: %w", err)
+	}
 	reader, err := modbus.Reader(port, cmd.Protocol, string(cmd.BMSType))
 	if err != nil {
 		log.Fatal(err.Error())

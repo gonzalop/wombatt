@@ -95,7 +95,7 @@ func runInverterMonitor(cmd *MonitorInvertersCmd, monitors []*inverterMonitor) e
 		for i, m := range monitors {
 			go func(i int, m *inverterMonitor) {
 				defer wg.Done()
-				port, err := common.NewPort(m.Device, int(cmd.BaudRate), cmd.DataBits, cmd.StopBits, cmd.Parity, cmd.DeviceType)
+				port, err := common.NewPort(m.Device, cmd.DeviceType, int(cmd.BaudRate), cmd.DataBits, cmd.StopBits, cmd.Parity)
 				if err != nil {
 					slog.Error("error opening device", "device", m.Device, "error", err)
 					responses[i] = &cmdResponse{nil, []error{err}, m}

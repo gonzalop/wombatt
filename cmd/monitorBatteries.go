@@ -50,7 +50,10 @@ func (cmd *MonitorBatteriesCmd) Run(globals *Globals) error {
 			log.Fatalf("%v", err)
 		}
 	}
-	battery := bms.Instance(string(cmd.BMSType))
+	battery, err := bms.Instance(string(cmd.BMSType))
+	if err != nil {
+		return fmt.Errorf("failed to create BMS instance: %w", err)
+	}
 	if cmd.Protocol == "auto" {
 		cmd.Protocol = battery.DefaultProtocol(cmd.DeviceType)
 	}
@@ -83,7 +86,10 @@ func (cmd *MonitorBatteriesCmd) Run(globals *Globals) error {
 		Mode:    &serial.Mode{BaudRate: int(cmd.BaudRate)},
 		Type:    common.DeviceTypeFromString[cmd.DeviceType],
 	}
-	port := common.OpenPortOrFatal(portOptions)
+	port, err := common.OpenPort(portOptions)
+	if err != nil {
+		return fmt.Errorf("failed to open port: %w", err)
+	}
 	monitorBatteries(ch, port, cmd, battery)
 	return nil
 }

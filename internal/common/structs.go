@@ -49,20 +49,7 @@ func TraverseStruct(data any, cb TraverseStructCallback) {
 		info["precision"] = f.Tag.Get("precision")
 		val := v.Interface()
 		if f.Type.Kind() == reflect.Array {
-			if f.Tag.Get("type") == "string" {
-				cb(info, string(v.Bytes()))
-				continue
-			}
-			aValue := reflect.ValueOf(val)
-			for k := range aValue.Len() {
-				newVal, err := handleMultiplier(mult, aValue.Index(k))
-				if err != nil {
-					slog.Error("error converting array value", "error", err, "value", aValue.Index(k), "multiplier", mult)
-					continue
-				}
-				info["name"] = fmt.Sprintf(name, k+1)
-				cb(info, newVal)
-			}
+			handleArrayField(f, v, info, mult, name, cb)
 			continue
 		}
 		vals := f.Tag.Get("values")
@@ -102,6 +89,29 @@ func TraverseStruct(data any, cb TraverseStructCallback) {
 	}
 }
 
+func handleArrayField(f reflect.StructField, v reflect.Value, info map[string]string, mult, name string, cb TraverseStructCallback) {
+	if f.Tag.Get("type") == "string" {
+		cb(info, string(v.Bytes()))
+		return
+	}
+	aValue := reflect.ValueOf(v.Interface()) // Use v.Interface() to get the underlying array
+	for k := range aValue.Len() {
+		newVal, err := handleMultiplier(mult, aValue.Index(k))
+		if err != nil {
+			slog.Error("error converting array value", "error", err, "value", aValue.Index(k), "multiplier", mult)
+			continue
+		}
+		// Create a copy of info map to avoid modifying the original for subsequent array elements
+		elementInfo := make(map[string]string)
+		for key, val := range info {
+			elementInfo[key] = val
+		}
+		elementInfo["name"] = fmt.Sprintf(name, k+1)
+		cb(elementInfo, newVal)
+	}
+}
+
+// parseValues parses a comma-separated string of key:value pairs into a map.
 func parseValues(values string) map[string]string {
 	result := make(map[string]string)
 	for kv := range strings.SplitSeq(values, ",") {
@@ -116,6 +126,8 @@ func parseValues(values string) map[string]string {
 
 }
 
+// handleMultiplier applies a numerical multiplier to a field's value.
+// It converts the field to int64, applies the multiplier, and rounds the result.
 func handleMultiplier(multiplier string, field reflect.Value) (any, error) {
 	if multiplier == "" {
 		return field.Interface(), nil
@@ -134,6 +146,8 @@ func handleMultiplier(multiplier string, field reflect.Value) (any, error) {
 	return r, nil
 }
 
+// handleFlagsTag processes a bitmask value based on a comma-separated string of flag descriptions.
+// It returns a comma-separated string of active flag descriptions.
 func handleFlagsTag(flags string, val uint32) string {
 	result := ""
 	fl := strings.Split(flags, ",")
@@ -150,7 +164,9 @@ func handleFlagsTag(flags string, val uint32) string {
 	return result
 }
 
-// The inverters might return some bits groups in one ASCII character.
+// handleBitgroupsTag processes a string value containing multiple bit groups,
+// typically returned by inverters as ASCII characters. Each bit group is parsed
+// based on provided descriptions and converted into a human-readable string.
 func handleBitgroupsTag(bgroups string, val string) string {
 	groups := strings.Split(bgroups, "|")
 	groupIdx := 0

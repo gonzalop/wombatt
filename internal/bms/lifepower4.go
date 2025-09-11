@@ -7,8 +7,8 @@ import (
 )
 
 const (
-	cmdGetAnalogValue uint8 = 0x42
-	cmdGetAlarmInfo   uint8 = 0x44
+	analogValueCommand uint8 = 0x42
+	alarmInfoCommand   uint8 = 0x44
 )
 
 type LFP4 struct {
@@ -28,7 +28,7 @@ func (*LFP4) DefaultProtocol(_ string) string {
 
 func (*LFP4) ReadInfo(reader modbus.RegisterReader, id uint8, timeout time.Duration) (any, error) {
 	var result LFP4AnalogValueBatteryInfo
-	if _, err := readIntoStruct(&result, reader, timeout, id, 0 /*ignored*/, cmdGetAnalogValue); err != nil {
+	if _, err := readIntoStruct(&result, reader, timeout, id, 0, analogValueCommand); err != nil {
 		return nil, err
 	}
 	return &result, nil
@@ -36,7 +36,7 @@ func (*LFP4) ReadInfo(reader modbus.RegisterReader, id uint8, timeout time.Durat
 
 func (*LFP4) ReadExtraInfo(reader modbus.RegisterReader, id uint8, timeout time.Duration) (any, error) {
 	var extra LFP4AlarmInfo
-	if _, err := readIntoStruct(&extra, reader, timeout, id, 0 /*ignored*/, cmdGetAlarmInfo); err != nil {
+	if _, err := readIntoStruct(&extra, reader, timeout, id, 0, alarmInfoCommand); err != nil {
 		return nil, err
 	}
 	return &extra, nil

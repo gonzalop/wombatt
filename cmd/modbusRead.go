@@ -102,7 +102,10 @@ func (cmd *ModbusReadCmd) Run(globals *Globals) error {
 		Mode:    &serial.Mode{BaudRate: int(cmd.BaudRate)},
 		Type:    common.DeviceTypeFromString[cmd.DeviceType],
 	}
-	port := common.OpenPortOrFatal(portOptions)
+	port, err := common.OpenPort(portOptions)
+	if err != nil {
+		return fmt.Errorf("failed to open port: %w", err)
+	}
 	reader, err := modbus.Reader(port, cmd.Protocol, "")
 	if err != nil {
 		log.Fatal(err.Error())

@@ -37,13 +37,23 @@ func (*EG4LLv2) DefaultProtocol(deviceType string) string {
 	}
 }
 
+func (e *EG4LLv2) readAndValidateEG4ModbusInfo(result any, reader modbus.RegisterReader, id uint8, timeout time.Duration, address uint16, count uint8) error {
+	data, err := readIntoStruct(result, reader, timeout, id, address, count)
+	if err != nil {
+		return err
+	}
+	expectedLen := int(count) * 2
+	if len(data) != expectedLen {
+		slog.Debug("data received", "data", hex.EncodeToString(data))
+		return fmt.Errorf("unexpected data length: got %d, want %d", len(data), expectedLen)
+	}
+	return nil
+}
+
 func (e *EG4LLv2) ReadInfo(reader modbus.RegisterReader, id uint8, timeout time.Duration) (any, error) {
 	var info EG4ModbusBatteryInfo
-	if data, err := readIntoStruct(&info, reader, timeout, id, modbusBasicInfoAddress, modbusBasicInfoRegisterCount); err != nil {
+	if err := e.readAndValidateEG4ModbusInfo(&info, reader, id, timeout, modbusBasicInfoAddress, modbusBasicInfoRegisterCount); err != nil {
 		return nil, err
-	} else if len(data) != (int(modbusBasicInfoRegisterCount) * 2) {
-		slog.Debug("data received", "data", hex.EncodeToString(data))
-		return nil, fmt.Errorf("unexpected data length: got %d, want %d", len(data), int(modbusBasicInfoRegisterCount)*2)
 	}
 	result := EG4BatteryInfo{EG4ModbusBatteryInfo: info}
 	result.FullCapacity /= 3600 // FullCapacity is in mAs -> 3600000 == 100Ah
@@ -53,11 +63,8 @@ func (e *EG4LLv2) ReadInfo(reader modbus.RegisterReader, id uint8, timeout time.
 
 func (e *EG4LLv2) ReadExtraInfo(reader modbus.RegisterReader, id uint8, timeout time.Duration) (any, error) {
 	var extra EG4ModbusExtraBatteryInfo
-	if data, err := readIntoStruct(&extra, reader, timeout, id, modbusExtraInfoAddress, modbusExtraInfoRegisterCount); err != nil {
+	if err := e.readAndValidateEG4ModbusInfo(&extra, reader, id, timeout, modbusExtraInfoAddress, modbusExtraInfoRegisterCount); err != nil {
 		return nil, err
-	} else if len(data) != (int(modbusExtraInfoRegisterCount) * 2) {
-		slog.Debug("extra data received", "data", hex.EncodeToString(data))
-		return nil, fmt.Errorf("unexpected data length: got %d, want %d", len(data), int(modbusExtraInfoRegisterCount)*2)
 	}
 	return &extra, nil
 }

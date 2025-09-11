@@ -2,7 +2,6 @@ package bms
 
 import (
 	"bytes"
-	"encoding/binary"
 	"encoding/hex"
 	"io"
 	"reflect"
@@ -171,7 +170,10 @@ func TestBatteryInfo(t *testing.T) {
 		if reader == nil {
 			t.Fatalf("no available reader: %v", err)
 		}
-		inst := Instance(tt.bmsType)
+		inst, err := Instance(tt.bmsType)
+		if err != nil {
+			t.Fatalf("error creating BMS instance: %v", err)
+		}
 		if inst == nil {
 			t.Fatalf("invalid battery type with no instance")
 		}
@@ -190,10 +192,7 @@ func TestBatteryInfo(t *testing.T) {
 		if err != nil {
 			t.Fatalf("error reading battery info (%d): %v", tid, err)
 		}
-		var b bytes.Buffer
-		if err := binary.Write(&b, binary.BigEndian, bat); err != nil {
-			t.Fatalf("error writing to buffer: %v", err)
-		}
+
 		if !reflect.DeepEqual(bat, tt.value) {
 			t.Errorf("structs not equal (%d). got %v; want %v", tid, bat, tt.value)
 		}

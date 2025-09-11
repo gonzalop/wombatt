@@ -37,13 +37,23 @@ func (*Pace) DefaultProtocol(deviceType string) string {
 	}
 }
 
+func (e *Pace) readAndValidatePaceModbusInfo(result any, reader modbus.RegisterReader, id uint8, timeout time.Duration, address uint16, count uint8) error {
+	data, err := readIntoStruct(result, reader, timeout, id, address, count)
+	if err != nil {
+		return err
+	}
+	expectedLen := int(count) * 2
+	if len(data) != expectedLen {
+		slog.Debug("data received", "data", hex.EncodeToString(data))
+		return fmt.Errorf("unexpected data length: got %d, want %d", len(data), expectedLen)
+	}
+	return nil
+}
+
 func (e *Pace) ReadInfo(reader modbus.RegisterReader, id uint8, timeout time.Duration) (any, error) {
 	var info PaceModbusBatteryInfo
-	if data, err := readIntoStruct(&info, reader, timeout, id, paceBasicInfoAddress, paceBasicInfoRegisterCount); err != nil {
+	if err := e.readAndValidatePaceModbusInfo(&info, reader, id, timeout, paceBasicInfoAddress, paceBasicInfoRegisterCount); err != nil {
 		return nil, err
-	} else if len(data) != (int(paceBasicInfoRegisterCount) * 2) {
-		slog.Debug("data received", "data", hex.EncodeToString(data))
-		return nil, fmt.Errorf("unexpected data length: got %d, want %d", len(data), int(paceBasicInfoRegisterCount)*2)
 	}
 	result := PaceBatteryInfo{PaceModbusBatteryInfo: info}
 	updateVoltageStats(result.CellVoltages, &result.VoltageStats)
@@ -52,11 +62,8 @@ func (e *Pace) ReadInfo(reader modbus.RegisterReader, id uint8, timeout time.Dur
 
 func (e *Pace) ReadExtraInfo(reader modbus.RegisterReader, id uint8, timeout time.Duration) (any, error) {
 	var extra PaceModbusExtraBatteryInfo
-	if data, err := readIntoStruct(&extra, reader, timeout, id, paceExtraInfoAddress, paceExtraInfoRegisterCount); err != nil {
+	if err := e.readAndValidatePaceModbusInfo(&extra, reader, id, timeout, paceExtraInfoAddress, paceExtraInfoRegisterCount); err != nil {
 		return nil, err
-	} else if len(data) != (int(paceExtraInfoRegisterCount) * 2) {
-		slog.Debug("extra data received", "data", hex.EncodeToString(data))
-		return nil, fmt.Errorf("unexpected data length: got %d, want %d", len(data), int(paceExtraInfoRegisterCount)*2)
 	}
 	return &extra, nil
 }
