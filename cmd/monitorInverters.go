@@ -233,12 +233,14 @@ func invertersDiscoveryConfig(mqttTopicPrefix string, monitors []*inverterMonito
 			case *pi30.EmptyResponse:
 				continue
 			}
-			addStructDiscoveryConfig(m.client, st, mqttTopicPrefix, m.MQTTTag)
+			addStructDiscoveryConfig(m, st, mqttTopicPrefix)
 		}
 	}
 }
 
-func addStructDiscoveryConfig(client mqttha.Client, st any, topicPrefix, tag string) {
+func addStructDiscoveryConfig(m *inverterMonitor, st any, topicPrefix string) {
+	client := m.client
+	tag := m.MQTTTag
 	f := func(info map[string]string, value any) {
 		name := info["name"]
 		config := map[string]any{
@@ -248,6 +250,11 @@ func addStructDiscoveryConfig(client mqttha.Client, st any, topicPrefix, tag str
 			"name":           fmt.Sprintf("Inverter %s %s", strings.TrimSpace(strings.ReplaceAll(tag, "_", " ")), name),
 			"object_id":      fmt.Sprintf("%s_%s", tag, name),
 			"value_template": fmt.Sprintf("{{ value_json.%s }}", name),
+			"device": map[string]any{
+				"identifiers": []string{tag},
+				"name":        fmt.Sprintf("Inverter %s", tag),
+				"model":       m.InverterType,
+			},
 		}
 		config["unique_id"] = config["object_id"]
 		dclass := info["dclass"]
@@ -286,6 +293,9 @@ func (im *inverterMonitor) publishToMQTT(mqttTopicPrefix string, results []any, 
 	}
 	if len(config) == 0 {
 		return
+	}
+	config["device"] = map[string]string{
+		"identifiers": im.MQTTTag,
 	}
 	topic := fmt.Sprintf("%s/sensor/%s_info/state", mqttTopicPrefix, im.MQTTTag)
 	if err := im.client.PublishMap(topic, false, config); err != nil {

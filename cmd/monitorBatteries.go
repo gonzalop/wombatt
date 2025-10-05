@@ -132,6 +132,9 @@ func mqttPublish(client mqttha.Client, ch chan *batteryInfo, cmd *MonitorBatteri
 			config[info["name"]] = value
 		}
 		common.TraverseStruct(bi.Info, f)
+		config["device"] = map[string]string{
+			"identifiers": fmt.Sprintf("%s_battery%d", cmd.MQTTPrefix, bi.ID),
+		}
 		topic := fmt.Sprintf("%s/sensor/%s_battery%d_info/state", cmd.MQTTTopicPrefix, cmd.MQTTPrefix, bi.ID)
 		if err := client.PublishMap(topic, false, config); err != nil {
 			slog.Error("mqtt error publishing", "server", cmd.MQTTBroker, "error", err)
@@ -155,6 +158,11 @@ func addDiscoveryConfig(client mqttha.Client, cmd *MonitorBatteriesCmd, id uint,
 			"name":           fmt.Sprintf("Battery %d %s", id, strings.ReplaceAll(name, "_", " ")),
 			"object_id":      fmt.Sprintf("%s_battery_%d_%s", cmd.MQTTPrefix, id, name),
 			"value_template": fmt.Sprintf("{{ value_json.%s }}", name),
+			"device": map[string]any{
+				"identifiers": []string{fmt.Sprintf("%s_battery%d", cmd.MQTTPrefix, id)},
+				"name":        fmt.Sprintf("Battery %d", id),
+				"model":       cmd.BMSType,
+			},
 		}
 		config["unique_id"] = config["object_id"]
 		dclass := info["dclass"]
