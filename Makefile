@@ -15,8 +15,6 @@ M = $(shell if [ "$$(tput colors 2> /dev/null || echo 0)" -ge 8 ]; then printf "
 GENERATED = # List of generated files
 
 GOIMPORTS = $(shell which goimports)
-GOCOV = $(shell which gocov)
-GOCOVXML=$(shell which gocov-xml)
 GOTESTSUM=$(shell which gotestsum)
 GOLANGCILINT=$(shell which golangci-lint)
 
@@ -38,16 +36,6 @@ ifeq (, $(GOIMPORTS))
 	$(error "No goimport in $$PATH, please run 'make install-tools')
 endif
 
-gocov:
-ifeq (, $(GOCOV))
-	$(error "No gocov in $$PATH, please run 'make install-tools')
-endif
-
-gocov-xml:
-ifeq (, $(GOCOVXML))
-	$(error "No gocov-xml in $$PATH, please run 'make install-tools')
-endif
-
 gotestsum:
 ifeq (, $(GOTESTSUM))
 	$(error "No gotestsum in $$PATH, please run 'make install-tools')
@@ -60,15 +48,11 @@ endif
 
 update-tools:
 	go install golang.org/x/tools/cmd/goimports@latest
-	go install github.com/axw/gocov/gocov@latest
-	go install github.com/AlekSi/gocov-xml@latest
 	go install gotest.tools/gotestsum@latest
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 
 install-tools:
 	test -x "$(GOIMPORTS)" || go install golang.org/x/tools/cmd/goimports@latest
-	test -x "$(GOCOV)" || go install github.com/axw/gocov/gocov@latest
-	test -x "$(GOCOVXML)" || go install github.com/AlekSi/gocov-xml@latest
 	test -x "$(GOTESTSUM)" || go install gotest.tools/gotestsum@latest
 	test -x "$(GOLANGCILINT)" || go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 
@@ -92,16 +76,16 @@ test-bench: $(GENERATED) ; $(info $(M) running benchmarks…) @ ## Run benchmark
 COVERAGE_MODE = atomic
 .PHONY: test-coverage
 test-coverage: fmt golangci-lint-run $(GENERATED)
-test-coverage: | gocov gocov-xml gotestsum ; $(info $(M) running coverage tests…) @ ## Run coverage tests
+test-coverage: | gotestsum ; $(info $(M) running coverage tests…) @ ## Run coverage tests
 	$Q mkdir -p test
 	$Q gotestsum -- \
 		-coverpkg=$(shell echo $(PKGS) | tr ' ' ',') \
 		-covermode=$(COVERAGE_MODE) \
 		-coverprofile=test/profile.out $(PKGS)
 	$Q $(GO) tool cover -html=test/profile.out -o test/coverage.html
-	$Q gocov convert test/profile.out | gocov-xml > test/coverage.xml
-	@echo -n "Code coverage: "; \
-		echo "scale=1;$$(sed -En 's/^<coverage line-rate="([0-9.]+)".*/\1/p' test/coverage.xml) * 100 / 1" | bc -q
+	$Q $(GO) tool cover -func=test/profile.out > test/coverage.txt
+	@echo -n "Code coverage: "
+	@grep "^total:" test/coverage.txt | awk '{print $$3}'
 
 .PHONY: golangci-lint-run
 golangci-lint-run: | golangci-lint ; $(info $(M) running golangci-lint…) @
