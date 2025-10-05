@@ -34,7 +34,7 @@ See [wombatt command documentation](docs/cmds/wombatt.md) for more details.
 - **monitor-inverters**: Monitors inverters state, with optional MQTT publishing.
 
 ## Releases
-Get binary releases at https://wombatt.cc/releases/
+Get binary releases at https://github.com/gonzalop/wombatt/releases
 
 ## Docker images
 Docker images are available at https://hub.docker.com/r/gonzalomono/wombatt.
