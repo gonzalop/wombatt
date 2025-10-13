@@ -10,7 +10,7 @@ require (
 	github.com/stretchr/testify v1.11.1
 	go.bug.st/serial v1.6.4
 	golang.org/x/exp v0.0.0-20250103183323-7d7fa50e5329
-	golang.org/x/text v0.29.0
+	golang.org/x/text v0.30.0
 )
 
 require (
