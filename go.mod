@@ -4,6 +4,7 @@ go 1.24.2
 
 require (
 	github.com/alecthomas/kong v1.12.1
+	github.com/alecthomas/kong-yaml v0.2.0
 	github.com/cenkalti/backoff/v4 v4.3.0
 	github.com/eclipse/paho.mqtt.golang v1.5.1
 	github.com/howeyc/crc16 v0.0.0-20171223171357-2b2a61e366a6
@@ -14,10 +15,10 @@ require (
 )
 
 require (
-	github.com/alecthomas/kong-yaml v0.2.0 // indirect
 	github.com/creack/goselect v0.1.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
+	github.com/kr/text v0.2.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
 	golang.org/x/net v0.44.0 // indirect
