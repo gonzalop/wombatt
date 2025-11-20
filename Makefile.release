@@ -1,5 +1,6 @@
 NAME:=wombatt
-VERSION:=0.0.15
+VERSION ?= $(shell git describe --tags --always --dirty --match=v* 2> /dev/null || \
+			cat .version 2> /dev/null || echo v0)
 LINUX_ARCH:=amd64 arm arm64
 
 all:
