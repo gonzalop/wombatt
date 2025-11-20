@@ -8,6 +8,7 @@ import (
 	"wombatt/cmd"
 
 	"github.com/alecthomas/kong"
+	kongyaml "github.com/alecthomas/kong-yaml"
 )
 
 func logSetup(levelName string) {
@@ -40,6 +41,7 @@ func main() {
 		kong.Name("wombatt"),
 		kong.Description("A wanna-be Swiss army knife for inverter and battery monitoring."),
 		kong.UsageOnError(),
+		kong.Configuration(kongyaml.Loader, "/etc/wombatt.yaml", "~/.wombatt.yaml"),
 		kong.ConfigureHelp(kong.HelpOptions{
 			//			Compact: true,
 		}),

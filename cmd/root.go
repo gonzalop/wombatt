@@ -7,9 +7,9 @@ import (
 )
 
 type Globals struct {
-	//	Config   string      `help:"Location of client config files" default:"~/.eg4.yaml" type:"path"`
-	LogLevel string      `short:"l" enum:"debug,info,warn,error" help:"Set the logging level (debug|info|warn|error)" default:"info"`
-	Version  VersionFlag `short:"v" name:"version" help:"Print version information and quit"`
+	Config   kong.ConfigFlag `help:"Location of client config files" type:"path"`
+	LogLevel string          `short:"l" enum:"debug,info,warn,error" help:"Set the logging level (debug|info|warn|error)" default:"info"`
+	Version  VersionFlag     `short:"v" name:"version" help:"Print version information and quit"`
 }
 
 type VersionFlag bool

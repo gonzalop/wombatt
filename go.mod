@@ -14,6 +14,7 @@ require (
 )
 
 require (
+	github.com/alecthomas/kong-yaml v0.2.0 // indirect
 	github.com/creack/goselect v0.1.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
