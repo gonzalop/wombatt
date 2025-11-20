@@ -24,5 +24,6 @@ Run `wombatt <command> --help` for more information on a command.
 | Flag | Description | Default |
 | --- | --- | --- |
 | `-h`, `--help` | Show context-sensitive help. | |
+| `--config` | Location of client config files | |
 | `-l`, `--log-level` | Set the logging level (debug|info|warn|error) | `info` |
 | `-v`, `--version` | Print version information and quit | |

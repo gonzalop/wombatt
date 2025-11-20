@@ -21,7 +21,7 @@ wombatt monitor-batteries --address=STRING --battery-id=BATTERY-ID,... [flags]
 | `-t`, `--read-timeout` | Timeout when reading from devices | `500ms` |
 | `--bms-type` | One of EG4LLv2,lifepower4,lifepowerv2,pacemodbus | `EG4LLv2` |
 | `--mqtt-prefix` | MQTT prefix for the fields published | `eg4` |
-| `-w`, `--web-server-address` | Address to use for serving HTTP. <IP>:<Port>, i.e., 127.0.0.1:8080 | |
+| `-w`, `--web-server-address` | Address to use for serving the web dashboard and prometheus metrics. <IP>:<Port>, i.e., 127.0.0.1:8080 | |
 | `--protocol` | One of auto,ModbusRTU,ModbusTCP,lifepower4 | `auto` |
 | `-T`, `--device-type` | One of serial,hidraw,tcp | `serial` |
 
@@ -43,7 +43,7 @@ $ ./wombatt monitor-batteries -w :8000 -p /dev/ttyUSB1 --mqtt-broker tcp://127.0
 
 The default prefix for the items added to MQTT is `eg4` (i.e., `homeassistant/eg4_battery2_info/...`).
 
-The same infomation is made available via web on port 8000
-(http://127.0.0.1:8000/battery/2 and so on) as text or JSON (add
-`?format=json` to the URL), with the ability to request specific
-fields (`?fields=<name>`).
+The same infomation is made available via a web dashboard and prometheus metrics on port 8000.
+The battery information is also available as text or JSON (add `?format=json` to the URL),
+with the ability to request specific fields (`?fields=<name>`).
+Prometheus metrics are available at the `/metrics` endpoint.

@@ -1,7 +1,7 @@
 ![wombatt logo](https://github.com/gonzalop/wombatt/blob/main/extras/wombatt-small.jpg?raw=true)
 # wombatt
 
-wombatt is a set of tools to monitor batteries and inverters, and to send commands to inverters.
+wombatt is a set of tools to monitor batteries and inverters, send commands to inverters.
 
 ## Supported Inverters
 - PI30 protocol (e.g., EG4-6500EX, EG4-3000s)
@@ -21,6 +21,10 @@ and slight variations of Modbus ASCII.
 
 The data can be exposed via console, web server (txt, json), or MQTT (Homeassistant auto-discovery topics automatically added).
 
+## Features
+- **Web Dashboard**: A web-based user interface to monitor your inverters and batteries in real-time.
+- **Prometheus Metrics**: Expose metrics in a Prometheus-compatible format for easy integration with monitoring systems.
+- **YAML Configuration**: Configure wombatt using a YAML file for advanced and flexible setups.
 
 See [wombatt command documentation](docs/cmds/wombatt.md) for more details.
 

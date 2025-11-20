@@ -26,7 +26,7 @@ wombatt monitor-inverters <monitors> ... [flags]
 | `--parity` | Parity for serial port (N, E, O) | `N` |
 | `-P`, `--poll-interval` | Time to wait between polling cycles | `10s` |
 | `-t`, `--read-timeout` | Timeout when reading from devices | `5s` |
-| `-w`, `--web-server-address` | Address to use for serving HTTP. <IP>:<Port>, i.e., 127.0.0.1:8080 | |
+| `-w`, `--web-server-address` | Address to use for serving the web dashboard and prometheus metrics. <IP>:<Port>, i.e., 127.0.0.1:8080 | |
 | `-T`, `--device-type` | One of serial,hidraw,tcp | `serial` |
 | `-R`, `--protocol` | Modbus protocol (auto, ModbusRTU, ModbusTCP) | `auto` |
 | `-i`, `--modbus-id` | Modbus slave ID | `1` |
@@ -41,6 +41,11 @@ wombatt monitor-inverters <monitors> ... [flags]
 | `--mqtt-user` | User for the MQTT connection | `$MQTT_USER` |
 
 ### Examples
+
+When a web server is enabled, a web dashboard and prometheus metrics are available.
+The inverter information is also available as text or JSON (add `?format=json` to the URL),
+with the ability to request specific fields (`?fields=<name>`).
+Prometheus metrics are available at the `/metrics` endpoint.
 
 The command below will monitor the inverters connected to /dev/ttyS0 and
 /dev/ttyS1, run the `Q1`, `QPIGS`, and `QPIRI` commands on both of them,
