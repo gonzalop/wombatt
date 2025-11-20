@@ -61,4 +61,41 @@ func TestServer(t *testing.T) {
 		t.Errorf("got: '%v'", obj.Hola)
 	}
 	srv.Publish("hola", nil)
+
+	// Test Metrics
+	srv.Publish("metrics_test", &struct {
+		Voltage float64 `name:"Voltage" unit:"V"`
+		Current int     `name:"Current" unit:"A"`
+		Status  string  `name:"Status"`
+	}{
+		Voltage: 53.2,
+		Current: 10,
+		Status:  "OK",
+	})
+
+	metrics := f("http://127.0.0.1:5000/metrics", http.StatusOK)
+	if !strings.Contains(metrics, `wombatt_voltage{source="/test/metrics_test"} 53.2`) {
+		t.Errorf("metrics voltage not found. got: '%v'", metrics)
+	}
+	if !strings.Contains(metrics, `wombatt_current{source="/test/metrics_test"} 10`) {
+		t.Errorf("metrics current not found. got: '%v'", metrics)
+	}
+	if strings.Contains(metrics, "wombatt_status") {
+		t.Errorf("metrics should not contain string values. got: '%v'", metrics)
+	}
+
+	// Test Static Files
+	// Since we can't easily mock embed.FS in the same package without changing the var,
+	// and the real static files are embedded, we can test if we get the real index.html.
+	// Note: This assumes index.html exists in internal/web/static/index.html
+	// The server is mounted at /test, but static files are served at root /
+	index := f("http://127.0.0.1:5000/", http.StatusOK)
+	if !strings.Contains(index, "<title>Wombatt Dashboard</title>") {
+		t.Errorf("index.html not served at root. got: '%v'", index)
+	}
+
+	css := f("http://127.0.0.1:5000/style.css", http.StatusOK)
+	if !strings.Contains(css, "body {") {
+		t.Errorf("style.css not served. got: '%v'", css)
+	}
 }

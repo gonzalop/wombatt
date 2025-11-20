@@ -6,10 +6,10 @@ import (
 	"testing"
 	"time"
 
-	bms_pkg "wombatt/internal/bms"
-	"wombatt/internal/modbus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	bms_pkg "wombatt/internal/bms"
+	"wombatt/internal/modbus"
 )
 
 type mockModbusClient struct {
