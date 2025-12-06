@@ -154,17 +154,17 @@ func addDiscoveryConfig(client mqttha.Client, cmd *MonitorBatteriesCmd, id uint,
 		config := map[string]any{
 			// "expire_after":?
 			// "force_update":   true,
-			"state_topic":    fmt.Sprintf("%s/sensor/%s_battery%d_info/state", cmd.MQTTTopicPrefix, cmd.MQTTPrefix, id),
-			"name":           fmt.Sprintf("Battery %d %s", id, strings.ReplaceAll(name, "_", " ")),
-			"object_id":      fmt.Sprintf("%s_battery_%d_%s", cmd.MQTTPrefix, id, name),
-			"value_template": fmt.Sprintf("{{ value_json.%s }}", name),
+			"state_topic":       fmt.Sprintf("%s/sensor/%s_battery%d_info/state", cmd.MQTTTopicPrefix, cmd.MQTTPrefix, id),
+			"name":              fmt.Sprintf("Battery %d %s", id, strings.ReplaceAll(name, "_", " ")),
+			"default_entity_id": fmt.Sprintf("%s_battery_%d_%s", cmd.MQTTPrefix, id, name),
+			"value_template":    fmt.Sprintf("{{ value_json.%s }}", name),
 			"device": map[string]any{
 				"identifiers": []string{fmt.Sprintf("%s_battery%d", cmd.MQTTPrefix, id)},
 				"name":        fmt.Sprintf("Battery %d", id),
 				"model":       cmd.BMSType,
 			},
 		}
-		config["unique_id"] = config["object_id"]
+		config["unique_id"] = config["default_entity_id"]
 		dclass := info["dclass"]
 		if dclass != "" {
 			config["device_class"] = dclass
