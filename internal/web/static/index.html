@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,18 +10,23 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
     <div class="container">
         <header>
             <h1>Wombatt <span class="status-dot" id="connection-status"></span></h1>
             <p class="subtitle">Energy Monitoring System</p>
         </header>
-        
-        <main id="dashboard">
+
+        <main id="dashboard" class="dashboard-grid">
             <!-- Cards will be injected here by JS -->
-            <div class="loading">Waiting for data...</div>
+            <div class="loading-state">
+                <div class="spinner"></div>
+                <p>Connecting to Wombatt...</p>
+            </div>
         </main>
     </div>
     <script src="app.js"></script>
 </body>
+
 </html>
