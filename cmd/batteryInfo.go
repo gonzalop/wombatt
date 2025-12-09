@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"log/slog"
 	"strings"
 	"time"
 
@@ -51,7 +52,7 @@ func (cmd *BatteryInfoCmd) Run(globals *Globals) error {
 		if err != nil {
 			failed = errors.Join(failed, fmt.Errorf("error getting info of ID#%d: %w", id, err))
 			if err := port.ReopenWithBackoff(); err != nil {
-				log.Fatalf("error reopening port: %v", err)
+				slog.Error("failed reopening port", "port", portOptions.Address, "error", err)
 			}
 			continue
 		}
@@ -59,7 +60,7 @@ func (cmd *BatteryInfoCmd) Run(globals *Globals) error {
 		if err != nil {
 			failed = errors.Join(failed, fmt.Errorf("error getting extra info of ID#%d: %w", id, err))
 			if err := port.ReopenWithBackoff(); err != nil {
-				log.Fatalf("error reopening port: %v", err)
+				slog.Error("failed reopening port (extra)", "port", portOptions.Address, "error", err)
 			}
 			continue
 		}
