@@ -30,63 +30,72 @@ func TraverseStruct(data any, cb TraverseStructCallback) {
 			continue
 		}
 		v := stValue.Field(i)
-		if f.Name == "_" || f.Tag.Get("skip") != "" {
-			continue
-		}
-		desc := f.Tag.Get("desc")
-		if desc == "" {
-			desc = f.Name
-		}
-		info := make(map[string]string)
-		name := f.Tag.Get("name")
-		unit := f.Tag.Get("unit")
-		mult := f.Tag.Get("multiplier")
-		info["name"] = name
-		info["unit"] = unit
-		info["desc"] = desc
-		info["icon"] = f.Tag.Get("icon")
-		info["dclass"] = f.Tag.Get("dclass")
-		info["precision"] = f.Tag.Get("precision")
-		val := v.Interface()
-		if f.Type.Kind() == reflect.Array {
-			handleArrayField(f, v, info, mult, name, cb)
-			continue
-		}
-		vals := f.Tag.Get("values")
-		if vals != "" {
-			val = fmt.Sprintf("%v", v.Interface())
-			m := parseValues(vals)
-			if v, ok := m[val.(string)]; ok {
-				val = v
-			}
-		}
-		if mult != "" {
-			newVal, err := handleMultiplier(mult, v)
-			if err != nil {
-				slog.Error("error converting multiplier", "error", err, "value", v, "multiplier", mult)
-				continue
-			}
-			cb(info, newVal)
-			continue
-		}
-		flags := f.Tag.Get("flags")
-		if flags != "" && (f.Type.Name() == "uint8" || f.Type.Name() == "uint16" || f.Type.Name() == "uint32") {
-			u32 := v.Convert(reflect.TypeOf(uint32(0))).Interface().(uint32)
-			val = handleFlagsTag(flags, u32)
-			if val == "" {
-				val = u32
-			}
-		}
-		bgroups := f.Tag.Get("bitgroups")
-		if bgroups != "" {
-			str := v.String()
-			if str != "" {
-				val = handleBitgroupsTag(bgroups, str)
-			}
-		}
-
-		cb(info, val)
+		processField(f, v, cb)
 	}
+}
+
+func processField(f reflect.StructField, v reflect.Value, cb TraverseStructCallback) {
+	if f.Name == "_" || f.Tag.Get("skip") != "" {
+		return
+	}
+	info := getFieldInfo(f)
+	if f.Type.Kind() == reflect.Array {
+		handleArrayField(f, v, info, f.Tag.Get("multiplier"), info["name"], cb)
+		return
+	}
+	if mult := f.Tag.Get("multiplier"); mult != "" {
+		newVal, err := handleMultiplier(mult, v)
+		if err != nil {
+			slog.Error("error converting multiplier", "error", err, "value", v, "multiplier", mult)
+			return
+		}
+		cb(info, newVal)
+		return
+	}
+	cb(info, getProcessedValue(f, v))
+}
+
+func getFieldInfo(f reflect.StructField) map[string]string {
+	desc := f.Tag.Get("desc")
+	if desc == "" {
+		desc = f.Name
+	}
+	info := make(map[string]string)
+	info["name"] = f.Tag.Get("name")
+	info["unit"] = f.Tag.Get("unit")
+	info["desc"] = desc
+	info["icon"] = f.Tag.Get("icon")
+	info["dclass"] = f.Tag.Get("dclass")
+	info["precision"] = f.Tag.Get("precision")
+	return info
+}
+
+func getProcessedValue(f reflect.StructField, v reflect.Value) any {
+	val := v.Interface()
+	vals := f.Tag.Get("values")
+	if vals != "" {
+		val = fmt.Sprintf("%v", v.Interface())
+		m := parseValues(vals)
+		if v, ok := m[val.(string)]; ok {
+			val = v
+		}
+	}
+	flags := f.Tag.Get("flags")
+	if flags != "" && (f.Type.Name() == "uint8" || f.Type.Name() == "uint16" || f.Type.Name() == "uint32") {
+		u32 := v.Convert(reflect.TypeOf(uint32(0))).Interface().(uint32)
+		val = handleFlagsTag(flags, u32)
+		if val == "" {
+			val = u32
+		}
+	}
+	bgroups := f.Tag.Get("bitgroups")
+	if bgroups != "" {
+		str := v.String()
+		if str != "" {
+			val = handleBitgroupsTag(bgroups, str)
+		}
+	}
+	return val
 }
 
 func handleArrayField(f reflect.StructField, v reflect.Value, info map[string]string, mult, name string, cb TraverseStructCallback) {

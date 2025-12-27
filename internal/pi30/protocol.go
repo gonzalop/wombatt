@@ -148,60 +148,60 @@ func decodeResponse(parts []string, target any) error {
 			continue
 		}
 		v := stValue.Field(i)
-		isInt := false
-		isUint := false
-		bits := 0
-		base := 10
-		switch v.Interface().(type) {
-		case int8:
-			isInt = true
-			bits = 8
-			if f.Tag.Get("parseas") == "binary" {
-				base = 2
-			}
-		case uint8:
-			isUint = true
-			bits = 8
-			if f.Tag.Get("parseas") == "binary" {
-				base = 2
-			}
-		case uint16:
-			isUint = true
-			bits = 16
-			if f.Tag.Get("parseas") == "binary" {
-				base = 2
-			}
-		case int16:
-			isInt = true
-			bits = 16
-		case int:
-			isInt = true
-			bits = 32
-		case float32:
-			val, err := strconv.ParseFloat(parts[i], 32)
-			if err != nil {
-				return fmt.Errorf("error converting float type for %s: value '%s'", f.Name, parts[i])
-			}
-			v.SetFloat(val)
-		case string:
-			v.SetString(parts[i])
-		default:
-			return fmt.Errorf("unknown type: add %v", v.Type())
-		}
-		if isInt {
-			num, err := strconv.ParseInt(parts[i], base, bits)
-			if err != nil {
-				return fmt.Errorf("error converting integer type for %s, value '%s: %v'", f.Name, parts[i], err)
-			}
-			v.SetInt(num)
-		} else if isUint {
-			num, err := strconv.ParseUint(parts[i], base, bits)
-			if err != nil {
-				return fmt.Errorf("error converting integer type for %s, value '%s: %v'", f.Name, parts[i], err)
-			}
-			v.SetUint(num)
+		if err := setField(v, f, parts[i]); err != nil {
+			return err
 		}
 	}
+	return nil
+}
+
+func setField(v reflect.Value, f reflect.StructField, part string) error {
+	base := 10
+	if f.Tag.Get("parseas") == "binary" {
+		base = 2
+	}
+
+	switch v.Kind() {
+	case reflect.Int8:
+		return setInt(v, part, base, 8, f.Name)
+	case reflect.Uint8:
+		return setUint(v, part, base, 8, f.Name)
+	case reflect.Uint16:
+		return setUint(v, part, base, 16, f.Name)
+	case reflect.Int16:
+		return setInt(v, part, 10, 16, f.Name)
+	case reflect.Int:
+		return setInt(v, part, 10, 32, f.Name)
+	case reflect.Float32:
+		val, err := strconv.ParseFloat(part, 32)
+		if err != nil {
+			return fmt.Errorf("error converting float type for %s: value '%s'", f.Name, part)
+		}
+		v.SetFloat(val)
+		return nil
+	case reflect.String:
+		v.SetString(part)
+		return nil
+	default:
+		return fmt.Errorf("unknown type: add %v", v.Type())
+	}
+}
+
+func setInt(v reflect.Value, s string, base, bits int, name string) error {
+	num, err := strconv.ParseInt(s, base, bits)
+	if err != nil {
+		return fmt.Errorf("error converting integer type for %s, value '%s: %v'", name, s, err)
+	}
+	v.SetInt(num)
+	return nil
+}
+
+func setUint(v reflect.Value, s string, base, bits int, name string) error {
+	num, err := strconv.ParseUint(s, base, bits)
+	if err != nil {
+		return fmt.Errorf("error converting integer type for %s, value '%s: %v'", name, s, err)
+	}
+	v.SetUint(num)
 	return nil
 }
 

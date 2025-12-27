@@ -107,32 +107,48 @@ func TestRunCommands(t *testing.T) {
 	for ii, tt := range tests {
 		rw := newReadWriter([]byte(tt.response), tt.writeError)
 		results, errors := RunCommands(ctx, rw, tt.commands)
-		for i, err := range errors {
-			if err != nil && (len(tt.errstr) == 0 || !strings.Contains(fmt.Sprintf("%v", err), tt.errstr[i])) {
-				var e string
-				if len(tt.errstr) != 0 {
-					e = tt.errstr[0]
-				}
-				t.Errorf("error (#%d): '%v' '%s'", ii, err, e)
-			}
-			if err != nil && (len(tt.errstr) == 0 || tt.errstr[i] == "") {
-				t.Errorf("error (#%d): got error '%v'; want no error", ii, err)
-			}
-			if err == nil && (len(tt.errstr) > 0 && tt.errstr[i] != "") {
-				t.Errorf("error (#%d): got no error; want ~%s", ii, tt.errstr[i])
-			}
+		checkErrors(t, ii, errors, tt.errstr)
+		checkFields(t, ii, results, tt.nfields)
+	}
+}
+
+func checkErrors(t *testing.T, ii int, errors []error, errstrs []string) {
+	for i, err := range errors {
+		wantError := ""
+		if i < len(errstrs) {
+			wantError = errstrs[i]
 		}
-		if tt.nfields != 0 && results[0] != nil {
-			common.WriteTo(os.Stdout, results[0])
-			counter := 0
-			fu := func(map[string]string, any) {
-				counter++
+
+		if err == nil {
+			if wantError != "" {
+				t.Errorf("error (#%d): got no error; want ~%s", ii, wantError)
 			}
-			common.TraverseStruct(results[0], fu)
-			if tt.nfields != counter {
-				t.Errorf("wrong number of fields (#%d): got %d; want %d", ii, counter, tt.nfields)
-			}
+			continue
 		}
+
+		if wantError == "" {
+			t.Errorf("error (#%d): got error '%v'; want no error", ii, err)
+			continue
+		}
+
+		if !strings.Contains(err.Error(), wantError) {
+			t.Errorf("error (#%d): got '%v' want substring '%s'", ii, err, wantError)
+		}
+	}
+}
+
+func checkFields(t *testing.T, ii int, results []any, nfields int) {
+	if nfields == 0 || len(results) == 0 || results[0] == nil {
+		return
+	}
+	common.WriteTo(os.Stdout, results[0])
+	counter := 0
+	fu := func(map[string]string, any) {
+		counter++
+	}
+	common.TraverseStruct(results[0], fu)
+	if nfields != counter {
+		t.Errorf("wrong number of fields (#%d): got %d; want %d", ii, counter, nfields)
 	}
 }
 
