@@ -1,0 +1,5 @@
+name: Wombatt Add-ons
+url: 'https://github.com/gonzalop/wombatt'
+maintainer: Gonzalo
+addons:
+  - homeassistant-addon

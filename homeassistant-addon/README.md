@@ -17,7 +17,7 @@ To install this add-on, you need to add its GitHub repository as a custom add-on
     *   In Home Assistant, navigate to **Supervisor** (or **Settings** -> **Add-ons**).
     *   Go to the **Add-on Store** tab.
     *   Click the three dots in the top right corner and select **Repositories**.
-    *   Enter the URL of this GitHub repository (e.g., `https://github.com/your-username/wombatt/homeassistant-addon`) and click **Add**.
+    *   Enter the URL of this GitHub repository (e.g., `https://github.com/gonzalop/wombatt`) and click **Add**.
     *   Close the repositories dialog and refresh the page.
 
 2.  **Install the Add-on:**
