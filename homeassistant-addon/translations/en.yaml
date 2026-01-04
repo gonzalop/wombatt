@@ -39,7 +39,7 @@ configuration:
         description: "Parity for serial communication (N, E, O)."
       modbus_id:
         name: Modbus ID
-        description: "Modbus ID of the device."
+        description: "Modbus slave ID (only used for solark, eg4_18kpv, and eg4_6000xp inverters, not pi30)."
       protocol:
         name: Protocol
         description: "Communication protocol (auto, ModbusRTU, ModbusTCP)."

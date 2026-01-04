@@ -1,5 +1,5 @@
 name: Wombatt
-version: 0.2.1
+version: 0.2.2
 slug: wombatt
 description: Monitor inverters and batteries
 arch:
@@ -26,7 +26,7 @@ options:
     data_bits: 8  # Data bits for serial communication
     stop_bits: 1  # Stop bits for serial communication
     parity: N  # Parity: N (none), E (even), or O (odd)
-    modbus_id: 1  # Modbus slave ID
+    modbus_id: 1  # Modbus slave ID (only used for solark, eg4_18kpv, and eg4_6000xp inverters)
     monitors: ""  # Comma-separated list of monitors (e.g., /dev/ttyUSB0,QPIRI,inverter1)
     protocol: auto  # Protocol: auto, ModbusRTU, or ModbusTCP
     poll_interval: 10s  # Time between polling cycles (e.g., 10s, 1m)

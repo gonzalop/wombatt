@@ -29,7 +29,7 @@ wombatt monitor-inverters <monitors> ... [flags]
 | `-w`, `--web-server-address` | Address to use for serving the web dashboard and prometheus metrics. <IP>:<Port>, i.e., 127.0.0.1:8080 | |
 | `-T`, `--device-type` | One of serial,hidraw,tcp | `serial` |
 | `-R`, `--protocol` | Modbus protocol (auto, ModbusRTU, ModbusTCP) | `auto` |
-| `-i`, `--modbus-id` | Modbus slave ID | `1` |
+| `-i`, `--modbus-id` | Modbus slave ID (only used for solark, eg4_18kpv, and eg4_6000xp inverters) | `1` |
 
 #### MQTT Flags
 

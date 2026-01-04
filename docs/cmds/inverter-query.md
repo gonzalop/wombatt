@@ -24,7 +24,7 @@ wombatt inverter-query --address=ADDRESS,... --command=COMMAND,... [flags]
 | `-T`, `--device-type` | One of serial,hidraw,tcp | `serial` |
 | `-I`, `--inverter-type` | Type of inverter protocol (pi30, solark, eg4_18kpv, eg4_6000xp) | `pi30` |
 | `-R`, `--protocol` | Modbus protocol (auto, ModbusRTU, ModbusTCP) | `auto` |
-| `-i`, `--modbus-id` | Modbus slave ID | `1` |
+| `-i`, `--modbus-id` | Modbus slave ID (only used for solark, eg4_18kpv, and eg4_6000xp inverters) | `1` |
 
 ### Examples
 

@@ -58,7 +58,7 @@ These options apply to both `inverters` and `batteries` modes:
 *   `parity`: Parity for serial port (N, E, O).
 *   `monitors`: A list of strings, each defining a device to monitor. Format: `<device>,<command1[:command2:command3...]>,<mqtt_prefix>[,<inverter_type>]`.
     *   Example: `/dev/ttyUSB0,QPIRI:QPGS1,eg4_1,pi30`
-*   `modbus_id`: Modbus slave ID (e.g., `1`).
+*   `modbus_id`: Modbus slave ID (only used for solark, eg4_18kpv, and eg4_6000xp inverters, not pi30).
 
 ### Battery Specific Options (when `mode` is `batteries`)
 

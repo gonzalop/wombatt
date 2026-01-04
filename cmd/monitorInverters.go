@@ -35,7 +35,7 @@ type MonitorInvertersCmd struct {
 
 	DeviceType string `short:"T" default:"serial" enum:"${device_types}" help:"One of ${device_types}"`
 	Protocol   string `short:"R" default:"auto" enum:"ModbusRTU,ModbusTCP,auto" help:"Modbus protocol (auto, ModbusRTU, ModbusTCP)"`
-	ModbusID   int    `short:"i" default:"1" help:"Modbus slave ID"`
+	ModbusID   int    `short:"i" default:"1" help:"Modbus slave ID (only used for solark, eg4_18kpv, and eg4_6000xp inverters)"`
 }
 
 func (cmd *MonitorInvertersCmd) Run(globals *Globals) error {
