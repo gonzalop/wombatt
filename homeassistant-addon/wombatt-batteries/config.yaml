@@ -1,0 +1,52 @@
+name: "Wombatt for Batteries"
+version: 0.0.16
+slug: wombatt-batteries
+description: Monitors batteries
+arch:
+  - aarch64
+  - amd64
+  - armv7
+url: https://github.com/gonzalop/wombatt
+panel_icon: mdi:home-battery-outline
+startup: application
+boot: auto
+privileged:
+  - SYS_RAWIO
+usb: true
+uart: true
+options:
+  # Common options (apply to both modes)
+  common:
+    log_level: info  # Log level: debug, info, warn, or error
+    mqtt_broker: "core-mosquitto:1883"  # MQTT broker address
+    mqtt_user: ""  # MQTT username (optional)
+    mqtt_password: ""  # MQTT password (optional)
+    mqtt_topic_prefix: homeassistant  # Prefix for MQTT topics
+  # Battery monitoring configuration (used when mode=batteries)
+  batteries:
+    address: "/dev/ttyUSB0"  # Device address (serial port or IP:port)
+    baud_rate: 9600  # Baud rate for serial communication
+    bms_type: EG4LLv2  # BMS type: EG4LLv2, lifepower4, lifepowerv2, or pacemodbus
+    mqtt_prefix: eg4  # Prefix for MQTT topics (defaults to 'eg4')
+    battery_ids: ""  # Comma-separated list of battery IDs (e.g., 1,2,3)
+    protocol: auto  # Protocol: auto, lifepower4, lifepowerv2, or pacemodbus
+    poll_interval: 10s  # Time between polling cycles (e.g., 10s, 1m)
+    read_timeout: 500ms  # Timeout when reading from devices
+    device_type: serial  # Device type: serial, hidraw, or tcp
+schema:
+  common:
+    log_level: "list(debug|info|warn|error)?"
+    mqtt_broker: "str?"
+    mqtt_user: "str?"
+    mqtt_password: "str?"
+    mqtt_topic_prefix: "str?"
+  batteries:
+    address: "str?"
+    baud_rate: "int?"
+    bms_type: "list(EG4LLv2|lifepower4|lifepowerv2|pacemodbus)?"
+    mqtt_prefix: "str?"
+    battery_ids: "str"
+    protocol: "list(auto|lifepower4|lifepowerv2|pacemodbus)?"
+    poll_interval: "str?"
+    read_timeout: "str?"
+    device_type: "list(serial|hidraw|tcp)?"

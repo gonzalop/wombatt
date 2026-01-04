@@ -2,9 +2,9 @@
   <img src="extras/wombatt-2026-small.webp" alt="wombatt logo" />
 </div>
 
-# wombatt
+# Wombatt
 
-wombatt is a set of tools to monitor batteries and inverters, send commands to inverters.
+wombatt is a set of tools to monitor batteries and inverters, send commands to inverters and more.
 
 ## Supported Inverters
 - PI30 protocol (e.g., EG4-6500EX, EG4-3000s)
@@ -23,6 +23,12 @@ wombatt can use direct RS232 or RS485 connections, or TCP to communicate using M
 and slight variations of Modbus ASCII.
 
 The data can be exposed via console, web server (txt, json), or MQTT (Homeassistant auto-discovery topics automatically added).
+
+## Home Assistant Add-ons
+
+[![Open your Home Assistant instance and show the add add-on repository dialog with a specific repository URL pre-filled.](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fgonzalop%2Fwombatt)
+
+Wombatt is available as Home Assistant add-ons for easy integration. Click the button above to add the repository to your Home Assistant instance.
 
 ## Features
 - **Web Dashboard**: A web-based user interface to monitor your inverters and batteries in real-time.
@@ -92,3 +98,4 @@ For instructions on how to install and configure the Home Assistant add-on, see 
 ## Reporting bugs and requesting features
 Please use https://github.com/gonzalop/wombatt/issues to report any bug, request new features
 or support for batteries, inverters, etc.
+
