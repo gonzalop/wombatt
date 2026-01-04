@@ -30,6 +30,10 @@ The data can be exposed via console, web server (txt, json), or MQTT (Homeassist
 
 Wombatt is available as Home Assistant add-ons for easy integration. Click the button above to add the repository to your Home Assistant instance.
 
+For instructions on how to install and configure the add-ons, see:
+- [Wombatt for Inverters](homeassistant-addon/wombatt-inverters/README.md)
+- [Wombatt for Batteries](homeassistant-addon/wombatt-batteries/README.md)
+
 ## Features
 - **Web Dashboard**: A web-based user interface to monitor your inverters and batteries in real-time.
 - **Prometheus Metrics**: Expose metrics in a Prometheus-compatible format for easy integration with monitoring systems.
@@ -91,9 +95,6 @@ Note that the steps to build the binary from source can be skipped if you get th
 [releases link](https://github.com/gonzalop/wombatt#releases) above.
 
 [Video from AmateurSolarBuild@dyisolarforums:](https://youtu.be/wwLMO1hMxnY)
-
-## Home Assistant Add-on
-For instructions on how to install and configure the Home Assistant add-on, see the [Home Assistant Add-on README](homeassistant-addon/README.md).
 
 ## Reporting bugs and requesting features
 Please use https://github.com/gonzalop/wombatt/issues to report any bug, request new features
