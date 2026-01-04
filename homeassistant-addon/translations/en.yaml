@@ -11,7 +11,7 @@ configuration:
         description: "Log level (debug, info, warn, error)."
       mqtt_broker:
         name: MQTT Broker
-        description: "MQTT broker address (e.g., tcp://192.168.1.100:1883)."
+        description: "MQTT broker address (e.g., core-mosquitto:1883)."
       mqtt_user:
         name: MQTT User
         description: "MQTT username (optional)."

@@ -1,5 +1,5 @@
 name: Wombatt
-version: 0.2.2
+version: 0.2.3
 slug: wombatt
 description: Monitor inverters and batteries
 arch:
@@ -15,7 +15,7 @@ options:
   # Common options (apply to both modes)
   common:
     log_level: info  # Log level: debug, info, warn, or error
-    mqtt_broker: ""  # MQTT broker address (e.g., tcp://192.168.1.100:1883)
+    mqtt_broker: "core-mosquitto:1883"  # MQTT broker address (e.g., tcp://192.168.1.100:1883)
     mqtt_user: ""  # MQTT username (optional)
     mqtt_password: ""  # MQTT password (optional)
     mqtt_topic_prefix: homeassistant  # Prefix for MQTT topics
