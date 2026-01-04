@@ -1,4 +1,7 @@
-![wombatt logo](https://github.com/gonzalop/wombatt/blob/main/extras/wombatt-small.jpg?raw=true)
+<div align="center">
+  <img src="extras/wombatt-2026-small.webp" alt="wombatt logo" />
+</div>
+
 # wombatt
 
 wombatt is a set of tools to monitor batteries and inverters, send commands to inverters.
