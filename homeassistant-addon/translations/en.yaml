@@ -5,87 +5,90 @@ configuration:
   common:
     name: Common Options
     description: "Global configuration options."
-    log_level:
-      name: Log Level
-      description: "Log level (debug, info, warn, error)."
-    mqtt_broker:
-      name: MQTT Broker
-      description: "MQTT broker address (e.g., tcp://192.168.1.100:1883)."
-    mqtt_user:
-      name: MQTT User
-      description: "MQTT username (optional)."
-    mqtt_password:
-      name: MQTT Password
-      description: "MQTT password (optional)."
-    mqtt_topic_prefix:
-      name: MQTT Topic Prefix
-      description: "Prefix for MQTT topics (optional)."
+    fields:
+      log_level:
+        name: Log Level
+        description: "Log level (debug, info, warn, error)."
+      mqtt_broker:
+        name: MQTT Broker
+        description: "MQTT broker address (e.g., tcp://192.168.1.100:1883)."
+      mqtt_user:
+        name: MQTT User
+        description: "MQTT username (optional)."
+      mqtt_password:
+        name: MQTT Password
+        description: "MQTT password (optional)."
+      mqtt_topic_prefix:
+        name: MQTT Topic Prefix
+        description: "Prefix for MQTT topics (optional)."
   inverters:
     name: Inverters Configuration
     description: "Configuration for inverter monitoring."
-    baud_rate:
-      name: Baud Rate
-      description: "Baud rate for serial communication."
-    data_bits:
-      name: Data Bits
-      description: "Data bits for serial communication."
-    stop_bits:
-      name: Stop Bits
-      description: "Stop bits for serial communication."
-    parity:
-      name: Parity
-      description: "Parity for serial communication (N, E, O)."
-    modbus_id:
-      name: Modbus ID
-      description: "Modbus ID of the device."
-    protocol:
-      name: Protocol
-      description: "Communication protocol (auto, ModbusRTU, ModbusTCP)."
-    monitors:
-      name: Monitors
-      description: "A comma-separated list of monitor device paths (e.g., /dev/ttyUSB0,/dev/ttyUSB1)."
-    poll_interval:
-      name: Poll Interval
-      description: "Interval between data polls (e.g., 10s)."
-    read_timeout:
-      name: Read Timeout
-      description: "Timeout for reading data (e.g., 5s)."
-    web_server_address:
-      name: Web Server Address
-      description: "Address for the web server (e.g., :8080) to expose metrics and status."
-    device_type:
-      name: Device Type
-      description: "Device type (serial, hidraw, tcp)."
+    fields:
+      baud_rate:
+        name: Baud Rate
+        description: "Baud rate for serial communication."
+      data_bits:
+        name: Data Bits
+        description: "Data bits for serial communication."
+      stop_bits:
+        name: Stop Bits
+        description: "Stop bits for serial communication."
+      parity:
+        name: Parity
+        description: "Parity for serial communication (N, E, O)."
+      modbus_id:
+        name: Modbus ID
+        description: "Modbus ID of the device."
+      protocol:
+        name: Protocol
+        description: "Communication protocol (auto, ModbusRTU, ModbusTCP)."
+      monitors:
+        name: Monitors
+        description: "A comma-separated list of monitor device paths (e.g., /dev/ttyUSB0,/dev/ttyUSB1)."
+      poll_interval:
+        name: Poll Interval
+        description: "Interval between data polls (e.g., 10s)."
+      read_timeout:
+        name: Read Timeout
+        description: "Timeout for reading data (e.g., 5s)."
+      web_server_address:
+        name: Web Server Address
+        description: "Address for the web server (e.g., :8080) to expose metrics and status."
+      device_type:
+        name: Device Type
+        description: "Device type (serial, hidraw, tcp)."
   batteries:
     name: Batteries Configuration
     description: "Configuration for battery monitoring."
-    address:
-      name: Address
-      description: "Device address (e.g., /dev/ttyUSB0 or 192.168.1.50:502)."
-    baud_rate:
-      name: Baud Rate
-      description: "Baud rate for serial communication."
-    bms_type:
-      name: BMS Type
-      description: "BMS type (EG4LLv2, lifepower4, lifepowerv2, pacemodbus)."
-    mqtt_prefix:
-      name: MQTT Prefix
-      description: "Prefix for MQTT topics (defaults to 'eg4')."
-    battery_ids:
-      name: Battery IDs
-      description: "A comma-separated list of battery IDs (e.g., 1,2,3)."
-    protocol:
-      name: Protocol
-      description: "Communication protocol (auto, lifepower4, lifepowerv2, pacemodbus)."
-    poll_interval:
-      name: Poll Interval
-      description: "Interval between data polls (e.g., 10s)."
-    read_timeout:
-      name: Read Timeout
-      description: "Timeout for reading data (e.g., 500ms)."
-    web_server_address:
-      name: Web Server Address
-      description: "Address for the web server (e.g., :8080) to expose metrics and status."
-    device_type:
-      name: Device Type
-      description: "Device type (serial, hidraw, tcp)."
+    fields:
+      address:
+        name: Address
+        description: "Device address (e.g., /dev/ttyUSB0 or 192.168.1.50:502)."
+      baud_rate:
+        name: Baud Rate
+        description: "Baud rate for serial communication."
+      bms_type:
+        name: BMS Type
+        description: "BMS type (EG4LLv2, lifepower4, lifepowerv2, pacemodbus)."
+      mqtt_prefix:
+        name: MQTT Prefix
+        description: "Prefix for MQTT topics (defaults to 'eg4')."
+      battery_ids:
+        name: Battery IDs
+        description: "A comma-separated list of battery IDs (e.g., 1,2,3)."
+      protocol:
+        name: Protocol
+        description: "Communication protocol (auto, lifepower4, lifepowerv2, pacemodbus)."
+      poll_interval:
+        name: Poll Interval
+        description: "Interval between data polls (e.g., 10s)."
+      read_timeout:
+        name: Read Timeout
+        description: "Timeout for reading data (e.g., 500ms)."
+      web_server_address:
+        name: Web Server Address
+        description: "Address for the web server (e.g., :8080) to expose metrics and status."
+      device_type:
+        name: Device Type
+        description: "Device type (serial, hidraw, tcp)."
