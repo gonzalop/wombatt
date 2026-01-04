@@ -1,59 +1,76 @@
 name: Wombatt
-version: 0.1.0
+version: 0.2.0
 slug: wombatt
-description: Wombatt Home Assistant Add-on
+description: Monitor inverters and batteries
 arch:
   - aarch64
   - amd64
   - armv7
-  - i386
 url: https://github.com/gonzalop/wombatt
 startup: application
 boot: auto
 options:
-  log_level: info
   mode: inverters
-  mqtt_broker: ""
-  mqtt_user: ""
-  mqtt_password: ""
-  mqtt_topic_prefix: ""
-  poll_interval: 10s
-  read_timeout: 5s
-  web_server_address: ""
-  device_type: serial
-  protocol: auto
-  baud_rate: 2400
-  data_bits: 8
-  stop_bits: 1
-  parity: N
-  monitors: []
-  modbus_id: 1
-  address: ""
-  battery_ids: []
-  bms_type: EG4LLv2
-  mqtt_prefix: eg4
+  common:
+    log_level: info
+    mqtt_broker: ""
+    mqtt_user: ""
+    mqtt_password: ""
+    mqtt_topic_prefix: homeassistant
+  inverters:
+    baud_rate: 2400
+    data_bits: 8
+    stop_bits: 1
+    parity: N
+    modbus_id: 1
+    monitors: ""
+    protocol: auto
+    poll_interval: 10s
+    read_timeout: 5s
+    web_server_address: ""
+    device_type: serial
+  batteries:
+    address: "/dev/ttyUSB0"
+    baud_rate: 9600
+    bms_type: EG4LLv2
+    mqtt_prefix: eg4
+    battery_ids: ""
+    protocol: auto
+    poll_interval: 10s
+    read_timeout: 500ms
+    web_server_address: ""
+    device_type: serial
 schema:
-  log_level: "list(debug|info|warn|error)?"
   mode: "list(inverters|batteries)"
-  mqtt_broker: "str?"
-  mqtt_user: "str?"
-  mqtt_password: "str?"
-  mqtt_topic_prefix: "str?"
-  poll_interval: "str?"
-  read_timeout: "str?"
-  web_server_address: "str?"
-  device_type: "list(serial|hidraw|tcp)?"
-  protocol: "list(auto|ModbusRTU|ModbusTCP|lifepower4)?"
-  baud_rate: "int?"
-  data_bits: "int?"
-  stop_bits: "int?"
-  parity: "list(N|E|O)?"
-  monitors: "list(str)?"
-  modbus_id: "int?"
-  address: "str?"
-  battery_ids: "list(int)?"
-  bms_type: "list(EG4LLv2|lifepower4|lifepowerv2|pacemodbus)?"
-  mqtt_prefix: "str?"
+  common:
+    log_level: "list(debug|info|warn|error)?"
+    mqtt_broker: "str?"
+    mqtt_user: "str?"
+    mqtt_password: "str?"
+    mqtt_topic_prefix: "str?"
+  inverters:
+    baud_rate: "int?"
+    data_bits: "int?"
+    stop_bits: "int?"
+    parity: "list(N|E|O)?"
+    modbus_id: "int?"
+    monitors: "str?"
+    protocol: "list(auto|ModbusRTU|ModbusTCP)?"
+    poll_interval: "str?"
+    read_timeout: "str?"
+    web_server_address: "str?"
+    device_type: "list(serial|hidraw|tcp)?"
+  batteries:
+    address: "str?"
+    baud_rate: "int?"
+    bms_type: "list(EG4LLv2|lifepower4|lifepowerv2|pacemodbus)?"
+    mqtt_prefix: "str?"
+    battery_ids: "str?"
+    protocol: "list(auto|lifepower4|lifepowerv2|pacemodbus)?"
+    poll_interval: "str?"
+    read_timeout: "str?"
+    web_server_address: "str?"
+    device_type: "list(serial|hidraw|tcp)?"
 ports:
   8080/tcp: null
 ports_description:
