@@ -4,7 +4,7 @@ _wombatt_completions() {
     local cur prev
     local common bi br bt dt mqtt p pi sp rto webs id start count regtype of off db sb par tout
 
-    common="-h --help -v --version -l --log-level"
+    common="-h --help -v --version -l --log-level --config"
 
     # Common flags for serial ports
     db="-D --data-bits"
@@ -27,11 +27,13 @@ _wombatt_completions() {
 
     # Flags for InverterQueryCmd
     command="-c --command"
+    inv_type="-I --inverter-type"
+    modbus_id="-i --modbus-id"
+    p_R="-R --protocol"
 
     # Flags for ModbusReadCmd
-    mr_p="-R --protocol"
-    mr_id="-i --id"
-    id="--id"
+    mr_p="--protocol"
+    mr_id="--id"
     start="--start"
     count="--count"
     regtype="--register-type"
@@ -64,7 +66,7 @@ _wombatt_completions() {
                 COMPREPLY=($(compgen -W "$common $br $dt $controller_port $subordinate_port" -- ${cur}))
                 ;;
             "inverter-query")
-                COMPREPLY=($(compgen -W "$common $br $dt $rto $sp $command $db $sb $par $mr_p $mr_id" -- ${cur}))
+                COMPREPLY=($(compgen -W "$common $br $dt $rto $sp $command $db $sb $par $p_R $modbus_id $inv_type" -- ${cur}))
                 ;;
             "modbus-read")
                 COMPREPLY=($(compgen -W "$common $br $dt $mr_p $rto $sp $mr_id $start $count $regtype $of $off" -- ${cur}))
@@ -73,7 +75,7 @@ _wombatt_completions() {
                 COMPREPLY=($(compgen -W "$common $bi $br $bt $dt $mqtt $p $pi $rto $sp $webs $mqtt_prefix" -- ${cur}))
                 ;;
             "monitor-inverters")
-                COMPREPLY=($(compgen -W "$common $br $db $sb $par $dt $mqtt $pi $rto $webs $p $id -I" -- ${cur}))
+                COMPREPLY=($(compgen -W "$common $br $db $sb $par $dt $mqtt $pi $rto $webs $p_R $modbus_id" -- ${cur}))
                 ;;
             
         esac
