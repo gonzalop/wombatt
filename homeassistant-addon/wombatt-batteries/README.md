@@ -28,13 +28,15 @@ To install this add-on, you need to add its GitHub repository as a custom add-on
 
 After installation, go to the **Configuration** tab of the add-on.
 
-### Common Options
-
-*   `log_level`: Set the logging level (debug, info, warn, error). Default: `info`
-*   `mqtt_broker`: MQTT broker address (e.g., `core-mosquitto:1883`). Default: `core-mosquitto:1883`
+### MQTT Configuration
+*   `auto_discovery`: Automatically discover MQTT settings from Home Assistant. If enabled and the Home Assistant MQTT service is found, it will overwrite the `address`, `user`, and `password` fields. Note that SSL is not supported at this time.
+*   `address`: MQTT broker address (e.g., `core-mosquitto:1883`). Default: `core-mosquitto:1883`
 *   `mqtt_user`: MQTT username (optional).
 *   `mqtt_password`: MQTT password (optional).
-*   `mqtt_topic_prefix`: MQTT topic prefix for Home Assistant discovery. **Must be `homeassistant`** for automatic sensor discovery. Default: `homeassistant`
+*   `topic_prefix`: MQTT topic prefix for Home Assistant discovery. **Must be `homeassistant`** for automatic sensor discovery. Default: `homeassistant`
+
+### Logging
+*   `level`: Set the logging level (debug, info, warn, error). Default: `info`
 
 ### Battery Options
 

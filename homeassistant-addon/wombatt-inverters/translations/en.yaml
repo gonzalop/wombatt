@@ -1,23 +1,30 @@
 configuration:
-  common:
-    name: Common Options
-    description: "Global configuration options."
+  mqtt_config:
+    name: MQTT Configuration
+    description: "MQTT connection settings."
     fields:
-      log_level:
-        name: Log Level
-        description: "Log level (debug, info, warn, error)."
-      mqtt_broker:
-        name: MQTT Broker
+      auto_discovery:
+        name: Auto Discovery
+        description: "Automatically discover MQTT settings from Home Assistant. Overwrites Address, Username, and Password if the MQTT service is found."
+      address:
+        name: Broker Address
         description: "MQTT broker address (e.g., core-mosquitto:1883)."
       mqtt_user:
-        name: MQTT User
+        name: Username
         description: "MQTT username (optional)."
       mqtt_password:
-        name: MQTT Password
+        name: Password
         description: "MQTT password (optional)."
-      mqtt_topic_prefix:
-        name: MQTT Topic Prefix
+      topic_prefix:
+        name: Topic Prefix
         description: "Prefix for MQTT topics (optional)."
+  logging:
+    name: Logging
+    description: "Logging settings."
+    fields:
+      level:
+        name: Log Level
+        description: "Log level (debug, info, warn, error)."
   inverters:
     name: Inverters Configuration
     description: "Configuration for inverter monitoring."
@@ -42,7 +49,7 @@ configuration:
         description: "Communication protocol (auto, ModbusRTU, ModbusTCP)."
       monitors:
         name: Monitors
-        description: "A comma-separated list of monitor device paths (e.g., /dev/ttyUSB0,/dev/ttyUSB1)."
+        description: "List of monitors. Format: device,commands,mqtt_prefix[,type] (e.g. /dev/ttyUSB0,QPIRI:QPGS1,eg4_1,pi30)."
       poll_interval:
         name: Poll Interval
         description: "Interval between data polls (e.g., 10s)."

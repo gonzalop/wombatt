@@ -14,14 +14,17 @@ privileged:
   - SYS_RAWIO
 usb: true
 uart: true
+services:
+  - "mqtt:want"
 options:
   # Common options (apply to both modes)
-  common:
-    log_level: info  # Log level: debug, info, warn, or error
-    mqtt_broker: "core-mosquitto:1883"  # MQTT broker address
+  # MQTT configuration
+  mqtt_config:
+    auto_discovery: true  # Automatically discover MQTT configuration
+    address: "core-mosquitto:1883"  # MQTT broker address
     mqtt_user: ""  # MQTT username (optional)
     mqtt_password: ""  # MQTT password (optional)
-    mqtt_topic_prefix: homeassistant  # Prefix for MQTT topics
+    topic_prefix: homeassistant  # Prefix for MQTT topics
   # Inverter monitoring configuration (used when mode=inverters)
   inverters:
     baud_rate: 2400  # Baud rate for serial communication
@@ -34,13 +37,29 @@ options:
     poll_interval: 10s  # Time between polling cycles (e.g., 10s, 1m)
     read_timeout: 5s  # Timeout when reading from devices
     device_type: serial  # Device type: serial, hidraw, or tcp
+  # Logging configuration
+  logging:
+    level: info  # Log level: debug, info, warn, or error
 schema:
-  common:
-    log_level: "list(debug|info|warn|error)?"
-    mqtt_broker: "str?"
+  mqtt_config:
+    auto_discovery: "bool?"
+    address: "str?"
     mqtt_user: "str?"
     mqtt_password: "str?"
-    mqtt_topic_prefix: "str?"
+    topic_prefix: "str?"
+  inverters:
+    baud_rate: "int?"
+    data_bits: "int?"
+    stop_bits: "int?"
+    parity: "list(N|E|O)?"
+    modbus_id: "int?"
+    monitors: "str"
+    protocol: "list(auto|ModbusRTU|ModbusTCP)?"
+    poll_interval: "str?"
+    read_timeout: "str?"
+    device_type: "list(serial|hidraw|tcp)?"
+  logging:
+    level: "list(debug|info|warn|error)?"
   inverters:
     baud_rate: "int?"
     data_bits: "int?"

@@ -22,24 +22,55 @@ CONFIG_PATH=/data/options.json
 #   ...and so on...
 eval "$(jq -r 'path(.. | scalars) as $p | ($p | map(ascii_upcase) | join("_")) + "=" + (getpath($p) | @sh)' ${CONFIG_PATH})"
 
+if [ "${MQTT_CONFIG_AUTO_DISCOVERY}" = "true" ]; then
+    echo "MQTT Auto-discovery enabled. Attempting to fetch configuration..."
+    if [ -n "${SUPERVISOR_TOKEN}" ]; then
+        SERVICE_RESULT=$(curl -s -H "Authorization: Bearer ${SUPERVISOR_TOKEN}" -H "Content-Type: application/json" http://supervisor/services/mqtt)
+        if [ "$(echo "${SERVICE_RESULT}" | jq -r .result)" = "ok" ]; then
+            echo "MQTT configuration found via Supervisor."
+            BROKER_HOST=$(echo "${SERVICE_RESULT}" | jq -r .data.host)
+            BROKER_PORT=$(echo "${SERVICE_RESULT}" | jq -r .data.port)
+            BROKER_USER=$(echo "${SERVICE_RESULT}" | jq -r .data.username)
+            BROKER_PASS=$(echo "${SERVICE_RESULT}" | jq -r .data.password)
+            BROKER_SSL=$(echo "${SERVICE_RESULT}" | jq -r .data.ssl)
+
+            if [ "${BROKER_SSL}" = "true" ]; then
+                echo "Warning: SSL auto-configuration not fully implemented, using plain port if possible or assuming proxy handles it."
+                # Note: If SSL is required, we might need adjustments to wombatt args.
+                # Wombatt currently takes a broker address.
+            fi
+
+            MQTT_CONFIG_ADDRESS="${BROKER_HOST}:${BROKER_PORT}"
+            MQTT_CONFIG_MQTT_USER="${BROKER_USER}"
+            MQTT_CONFIG_MQTT_PASSWORD="${BROKER_PASS}"
+        else
+            echo "Could not fetch MQTT configuration from Supervisor: $(echo "${SERVICE_RESULT}" | jq -r .message)"
+        fi
+    else
+        echo "SUPERVISOR_TOKEN not set, cannot perform auto-discovery."
+    fi
+else
+    echo "MQTT Auto-discovery disabled."
+fi
+
 WOMBATT_CMD="monitor-inverters"
 WOMBATT_ARGS=""
 
 # Common options
-if [ -n "${COMMON_LOG_LEVEL}" ]; then
-  WOMBATT_ARGS="${WOMBATT_ARGS} --log-level ${COMMON_LOG_LEVEL}"
+if [ -n "${LOGGING_LEVEL}" ]; then
+  WOMBATT_ARGS="${WOMBATT_ARGS} --log-level ${LOGGING_LEVEL}"
 fi
-if [ -n "${COMMON_MQTT_BROKER}" ]; then
-  WOMBATT_ARGS="${WOMBATT_ARGS} --mqtt-broker ${COMMON_MQTT_BROKER}"
+if [ -n "${MQTT_CONFIG_ADDRESS}" ]; then
+  WOMBATT_ARGS="${WOMBATT_ARGS} --mqtt-broker ${MQTT_CONFIG_ADDRESS}"
 fi
-if [ -n "${COMMON_MQTT_USER}" ]; then
-  WOMBATT_ARGS="${WOMBATT_ARGS} --mqtt-user ${COMMON_MQTT_USER}"
+if [ -n "${MQTT_CONFIG_MQTT_USER}" ]; then
+  WOMBATT_ARGS="${WOMBATT_ARGS} --mqtt-user ${MQTT_CONFIG_MQTT_USER}"
 fi
-if [ -n "${COMMON_MQTT_PASSWORD}" ]; then
-  WOMBATT_ARGS="${WOMBATT_ARGS} --mqtt-password ${COMMON_MQTT_PASSWORD}"
+if [ -n "${MQTT_CONFIG_MQTT_PASSWORD}" ]; then
+  WOMBATT_ARGS="${WOMBATT_ARGS} --mqtt-password ${MQTT_CONFIG_MQTT_PASSWORD}"
 fi
-if [ -n "${COMMON_MQTT_TOPIC_PREFIX}" ]; then
-  WOMBATT_ARGS="${WOMBATT_ARGS} --mqtt-topic-prefix ${COMMON_MQTT_TOPIC_PREFIX}"
+if [ -n "${MQTT_CONFIG_TOPIC_PREFIX}" ]; then
+  WOMBATT_ARGS="${WOMBATT_ARGS} --mqtt-topic-prefix ${MQTT_CONFIG_TOPIC_PREFIX}"
 fi
 
 if [ -n "${INVERTERS_POLL_INTERVAL}" ]; then
