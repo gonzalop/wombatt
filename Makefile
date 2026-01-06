@@ -29,6 +29,21 @@ wombatt: $(shell find -name \*.go)
 		-tags release \
 		-ldflags '-s -w -X $(MODULE)/cmd.Version=$(VERSION) -X $(MODULE)/cmd.BuildDate=$(DATE)' \
 		-o $(BINARY) main.go
+
+# Container details
+REGISTRY ?= docker.io/gonzalomono
+IMAGE    ?= wombatt
+
+.PHONY: container
+container: ## Build the container image
+	podman build --platform linux/amd64,linux/arm64,linux/arm/v7 --build-arg VERSION=$(VERSION) --build-arg DATE=$(DATE) --manifest $(BINARY):$(VERSION) .
+	podman build --platform linux/amd64,linux/arm64,linux/arm/v7 --build-arg VERSION=$(VERSION) --build-arg DATE=$(DATE) --manifest $(BINARY):latest .
+
+.PHONY: push
+push-container: ## Push the container image to the registry
+	podman manifest push $(BINARY):$(VERSION) docker://$(REGISTRY)/$(IMAGE):$(VERSION)
+	podman manifest push $(BINARY):latest docker://$(REGISTRY)/$(IMAGE):latest
+
 # Tools
 
 goimports:

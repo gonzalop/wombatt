@@ -1,5 +1,5 @@
 name: "Wombatt for Inverters"
-version: 0.0.16
+version: 0.5.0
 slug: wombatt-inverters
 description: Monitors inverters
 arch:
