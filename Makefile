@@ -39,7 +39,7 @@ container: ## Build the container image
 	podman build --platform linux/amd64,linux/arm64,linux/arm/v7 --build-arg VERSION=$(VERSION) --build-arg DATE=$(DATE) --manifest $(BINARY):$(VERSION) .
 	podman build --platform linux/amd64,linux/arm64,linux/arm/v7 --build-arg VERSION=$(VERSION) --build-arg DATE=$(DATE) --manifest $(BINARY):latest .
 
-.PHONY: push
+.PHONY: push-container
 push-container: ## Push the container image to the registry
 	podman manifest push $(BINARY):$(VERSION) docker://$(REGISTRY)/$(IMAGE):$(VERSION)
 	podman manifest push $(BINARY):latest docker://$(REGISTRY)/$(IMAGE):latest
