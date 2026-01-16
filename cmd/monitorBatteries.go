@@ -124,7 +124,7 @@ func monitorBatteries(ch chan *batteryInfo, port common.Port, cmd *MonitorBatter
 	}
 }
 
-func mqttPublish(client mqttha.Client, ch chan *batteryInfo, cmd *MonitorBatteriesCmd, emptyInfo any) {
+func mqttPublish(client *mqttha.Client, ch chan *batteryInfo, cmd *MonitorBatteriesCmd, emptyInfo any) {
 	createDiscoveryConfig(client, cmd, emptyInfo)
 	for bi := range ch {
 		config := make(map[string]any)
@@ -142,13 +142,13 @@ func mqttPublish(client mqttha.Client, ch chan *batteryInfo, cmd *MonitorBatteri
 	}
 }
 
-func createDiscoveryConfig(client mqttha.Client, cmd *MonitorBatteriesCmd, emptyInfo any) {
+func createDiscoveryConfig(client *mqttha.Client, cmd *MonitorBatteriesCmd, emptyInfo any) {
 	for _, id := range cmd.ID {
 		addDiscoveryConfig(client, cmd, id, emptyInfo)
 	}
 }
 
-func addDiscoveryConfig(client mqttha.Client, cmd *MonitorBatteriesCmd, id uint, st any) {
+func addDiscoveryConfig(client *mqttha.Client, cmd *MonitorBatteriesCmd, id uint, st any) {
 	f := func(info map[string]string, value any) {
 		name := info["name"]
 		config := map[string]any{

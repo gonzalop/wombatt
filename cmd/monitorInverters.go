@@ -50,7 +50,7 @@ func (cmd *MonitorInvertersCmd) Run(globals *Globals) error {
 	if err != nil {
 		log.Fatal(err)
 	}
-	var client mqttha.Client
+	var client *mqttha.Client
 	if cmd.MQTTBroker != "" {
 		var err error
 		client, err = mqttha.Connect(cmd.MQTTBroker, cmd.MQTTUser, cmd.MQTTPassword)
@@ -79,7 +79,7 @@ type inverterMonitor struct {
 	MQTTTag      string
 	InverterType string // New field to differentiate inverter types
 
-	client    mqttha.Client
+	client    *mqttha.Client
 	webServer *web.Server
 }
 

@@ -1,46 +1,50 @@
 package mqttha
 
 import (
+	"context"
 	"encoding/json"
+	"log/slog"
+	"time"
 
-	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"github.com/gonzalop/mq"
 )
 
-// MqttClient has additional methods to the regular mqtt.Client ones.
-type Client interface {
-	mqtt.Client
-
-	// PublishMap will publish a JSON encoded map to the given topic.
-	PublishMap(topic string, retain bool, config map[string]any) error
-}
-
-type haClient struct {
-	mqtt.Client
+type Client struct {
+	client *mq.Client
 }
 
 // Connect connects to the given MQTT instance.
-func Connect(host, user, password string) (Client, error) {
-	opts := mqtt.NewClientOptions()
-	opts.Order = false
-	opts.SetUsername(user)
-	opts.SetPassword(password)
-	opts.AddBroker(host)
-	client := mqtt.NewClient(opts)
-	if token := client.Connect(); token.Wait() && token.Error() != nil {
-		return nil, token.Error()
+func Connect(host, user, password string) (*Client, error) {
+	client, err := mq.Dial(host,
+		mq.WithCredentials(user, password),
+		mq.WithProtocolVersion(mq.ProtocolV50),
+		mq.WithKeepAlive(30*time.Second),
+		mq.WithTopicAliasMaximum(400),
+		mq.WithLogger(slog.Default()),
+	)
+	if err != nil {
+		return nil, err
 	}
-	return haClient{client}, nil
+
+	return &Client{client}, nil
 }
 
 // PublishMap will publish a JSON encoded map to the given topic.
-func (c haClient) PublishMap(topic string, retain bool, data map[string]any) error {
+func (c *Client) PublishMap(topic string, retain bool, data map[string]any) error {
 	j, err := json.Marshal(data)
 	if err != nil {
 		return err
 	}
-	token := c.Publish(topic, 0, retain, j)
-	if token.Wait() && token.Error() != nil {
-		return token.Error()
+	token := c.client.Publish(topic, j, mq.WithRetain(retain), mq.WithAlias())
+	err = token.Wait(context.Background())
+	if err != nil {
+		return err
 	}
 	return nil
+}
+
+func (c *Client) Disconnect(ms time.Duration) {
+	ctx, cancel := context.WithTimeout(context.Background(), ms)
+	defer cancel()
+	_ = c.client.Disconnect(ctx)
 }
