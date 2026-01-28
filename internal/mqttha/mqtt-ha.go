@@ -3,10 +3,18 @@ package mqttha
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log/slog"
 	"time"
 
 	"github.com/gonzalop/mq"
+)
+
+const (
+	NoRetain     = false
+	Retain       = true
+	NoTopicAlias = false
+	TopicAlias   = true
 )
 
 type Client struct {
@@ -29,18 +37,47 @@ func Connect(host, user, password string) (*Client, error) {
 	return &Client{client}, nil
 }
 
+// compactMap recursively replaces long-form HA keys with their abbreviations.
+func compactMap(data map[string]any) map[string]any {
+	compact := make(map[string]any, len(data))
+
+	for k, v := range data {
+		key := k
+		if alias, ok := haAliases[k]; ok {
+			// Found a short alias for the key
+			fmt.Printf("Found one: %s %s\n", key, alias)
+			key = alias
+		}
+
+		switch val := v.(type) {
+		case map[string]any:
+			// Recurse into nested maps (like the "device" object)
+			compact[key] = compactMap(val)
+		default:
+			compact[key] = val
+		}
+	}
+
+	return compact
+}
+
 // PublishMap will publish a JSON encoded map to the given topic.
-func (c *Client) PublishMap(topic string, retain bool, data map[string]any) error {
-	j, err := json.Marshal(data)
+func (c *Client) PublishMap(topic string, data map[string]any, retain bool, useTopicAlias bool) error {
+	// Create a new map for the compact version
+	compactData := compactMap(data)
+	j, err := json.Marshal(compactData)
 	if err != nil {
 		return err
 	}
-	token := c.client.Publish(topic, j, mq.WithRetain(retain), mq.WithAlias())
-	err = token.Wait(context.Background())
-	if err != nil {
-		return err
+	opts := []mq.PublishOption{
+		mq.WithRetain(retain),
 	}
-	return nil
+	if useTopicAlias {
+		opts = append(opts, mq.WithAlias())
+	}
+
+	token := c.client.Publish(topic, j, opts...)
+	return token.Wait(context.Background())
 }
 
 func (c *Client) Disconnect(ms time.Duration) {

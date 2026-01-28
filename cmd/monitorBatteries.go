@@ -136,7 +136,7 @@ func mqttPublish(client *mqttha.Client, ch chan *batteryInfo, cmd *MonitorBatter
 			"identifiers": fmt.Sprintf("%s_battery%d", cmd.MQTTPrefix, bi.ID),
 		}
 		topic := fmt.Sprintf("%s/sensor/%s_battery%d_info/state", cmd.MQTTTopicPrefix, cmd.MQTTPrefix, bi.ID)
-		if err := client.PublishMap(topic, false, config); err != nil {
+		if err := client.PublishMap(topic, config, mqttha.NoRetain, mqttha.TopicAlias); err != nil {
 			slog.Error("mqtt error publishing", "server", cmd.MQTTBroker, "error", err)
 		}
 	}
@@ -187,7 +187,7 @@ func addDiscoveryConfig(client *mqttha.Client, cmd *MonitorBatteriesCmd, id uint
 		}
 
 		topic := fmt.Sprintf("%s/sensor/%s_battery%d_%s/config", cmd.MQTTTopicPrefix, cmd.MQTTPrefix, id, name)
-		if err := client.PublishMap(topic, true, config); err != nil {
+		if err := client.PublishMap(topic, config, mqttha.Retain, mqttha.NoTopicAlias); err != nil {
 			slog.Error("mqtt error publishing", "server", cmd.MQTTBroker, "error", err)
 		}
 	}
