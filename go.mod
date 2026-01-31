@@ -6,7 +6,7 @@ require (
 	github.com/alecthomas/kong v1.13.0
 	github.com/alecthomas/kong-yaml v0.2.0
 	github.com/cenkalti/backoff/v4 v4.3.0
-	github.com/gonzalop/mq v0.9.1
+	github.com/gonzalop/mq v0.9.2
 	github.com/howeyc/crc16 v0.0.0-20171223171357-2b2a61e366a6
 	github.com/stretchr/testify v1.11.1
 	go.bug.st/serial v1.6.4
