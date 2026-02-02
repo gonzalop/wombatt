@@ -86,7 +86,7 @@ func TestPaceBMS_ReadInfo(t *testing.T) {
 	assert.Equal(t, uint16(0x04), pInfo.StatusFlag)
 	assert.Equal(t, uint16(0x08), pInfo.BalanceStatus)
 
-	for i := 0; i < 16; i++ {
+	for i := range 16 {
 		assert.Equal(t, uint16(3200+i), pInfo.CellVoltages[i])
 	}
 

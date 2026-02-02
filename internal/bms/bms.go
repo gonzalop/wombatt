@@ -10,11 +10,10 @@ import (
 	"fmt"
 	"log/slog"
 	"reflect"
+	"slices"
 	"time"
 
 	"wombatt/internal/modbus"
-
-	"golang.org/x/exp/slices"
 )
 
 const (

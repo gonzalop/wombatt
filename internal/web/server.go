@@ -7,18 +7,17 @@ import (
 	"fmt"
 	"io/fs"
 	"log/slog"
+	"maps"
 	"net"
 	"net/http"
 	"reflect"
 	"regexp"
-	"sort"
+	"slices"
 	"strings"
 	"sync"
 	"time"
 
 	"wombatt/internal/common"
-
-	"golang.org/x/exp/maps"
 )
 
 //go:embed static
@@ -142,8 +141,7 @@ func (ls *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write(j)
 		return
 	}
-	keys := maps.Keys(page)
-	sort.Strings(keys)
+	keys := slices.Sorted(maps.Keys(page))
 	w.Header().Set("Content-Type", "text/plain; charset=UTF-8")
 	for _, k := range keys {
 		_, _ = w.Write(fmt.Appendf(nil, "%s: %v\n", k, page[k]))

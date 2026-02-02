@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"maps"
 	"math"
 	"reflect"
 	"strconv"
@@ -82,7 +83,7 @@ func getProcessedValue(f reflect.StructField, v reflect.Value) any {
 	}
 	flags := f.Tag.Get("flags")
 	if flags != "" && (f.Type.Name() == "uint8" || f.Type.Name() == "uint16" || f.Type.Name() == "uint32") {
-		u32 := v.Convert(reflect.TypeOf(uint32(0))).Interface().(uint32)
+		u32 := v.Convert(reflect.TypeFor[uint32]()).Interface().(uint32)
 		val = handleFlagsTag(flags, u32)
 		if val == "" {
 			val = u32
@@ -112,9 +113,7 @@ func handleArrayField(f reflect.StructField, v reflect.Value, info map[string]st
 		}
 		// Create a copy of info map to avoid modifying the original for subsequent array elements
 		elementInfo := make(map[string]string)
-		for key, val := range info {
-			elementInfo[key] = val
-		}
+		maps.Copy(elementInfo, info)
 		elementInfo["name"] = fmt.Sprintf(name, k+1)
 		cb(elementInfo, newVal)
 	}
@@ -145,11 +144,11 @@ func handleMultiplier(multiplier string, field reflect.Value) (any, error) {
 	if err != nil {
 		return nil, err
 	}
-	toType := reflect.TypeOf(int64(0))
+	toType := reflect.TypeFor[int64]()
 	if !field.CanConvert(toType) {
 		return nil, fmt.Errorf("can't convert %v to int64", field.Interface())
 	}
-	v := field.Convert(reflect.TypeOf(int64(0)))
+	v := field.Convert(reflect.TypeFor[int64]())
 	minv := 1 / m
 	r := math.Round(m*float64(v.Interface().(int64))*minv) / minv
 	return r, nil

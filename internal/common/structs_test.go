@@ -1,9 +1,9 @@
 package common
 
 import (
+	"maps"
+	"slices"
 	"testing"
-
-	"golang.org/x/exp/maps"
 )
 
 type emptyStruct struct {
@@ -133,7 +133,7 @@ func TestTraverseStruct(t *testing.T) {
 					t.Errorf("#%dunexpected tag: %s", ii, tag)
 				}
 			}
-			tags = maps.Keys(m)
+			tags = slices.Collect(maps.Keys(m))
 		}
 		TraverseStruct(tt.st, cb)
 		if tt.nfields > 0 && tt.nfields != fieldCount {

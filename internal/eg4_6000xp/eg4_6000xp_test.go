@@ -265,7 +265,7 @@ func TestReadRealtimeDataPartialError(t *testing.T) {
 	}
 
 	// Also populate data for other blocks to ensure the error comes from the intended block
-	for i := uint16(0); i < 40; i++ {
+	for i := range uint16(40) {
 		reader.setRegisterData(i, u16ToBytes(i))
 	}
 	for i := uint16(80); i < 120; i++ {

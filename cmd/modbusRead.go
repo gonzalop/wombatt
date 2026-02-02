@@ -138,8 +138,8 @@ func readOutputFormatFile(fileName string) (string, error) {
 	var lines []string
 	for _, s := range input {
 		line := ""
-		if idx := strings.IndexByte(s, '#'); idx != -1 {
-			line = s[:idx]
+		if before, _, ok := strings.Cut(s, "#"); ok {
+			line = before
 		} else {
 			line = s
 		}
@@ -268,19 +268,19 @@ func parseArrayType(typeName string, sizeStr string) (reflect.Type, error) {
 func parseSingleType(typeName string) (reflect.Type, error) {
 	switch typeName {
 	case "byte":
-		return reflect.TypeOf(byte(0)), nil
+		return reflect.TypeFor[byte](), nil
 	case "int8", "i8":
-		return reflect.TypeOf(int8(0)), nil
+		return reflect.TypeFor[int8](), nil
 	case "int16", "i16":
-		return reflect.TypeOf(int16(0)), nil
+		return reflect.TypeFor[int16](), nil
 	case "int32", "i32":
-		return reflect.TypeOf(int32(0)), nil
+		return reflect.TypeFor[int32](), nil
 	case "uint8", "u8":
-		return reflect.TypeOf(uint8(0)), nil
+		return reflect.TypeFor[uint8](), nil
 	case "uint16", "u16":
-		return reflect.TypeOf(uint16(0)), nil
+		return reflect.TypeFor[uint16](), nil
 	case "uint32", "u32":
-		return reflect.TypeOf(uint32(0)), nil
+		return reflect.TypeFor[uint32](), nil
 	default:
 		return nil, fmt.Errorf("invalid type name: %s", typeName)
 	}
