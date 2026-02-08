@@ -3,7 +3,6 @@ package mqttha
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"log/slog"
 	"time"
 
@@ -61,8 +60,6 @@ func compactMap(data map[string]any) map[string]any {
 	for k, v := range data {
 		key := k
 		if alias, ok := haAliases[k]; ok {
-			// Found a short alias for the key
-			fmt.Printf("Found one: %s %s\n", key, alias)
 			key = alias
 		}
 
