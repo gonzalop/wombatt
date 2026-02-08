@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.5.1 - 2026-02-08
+
+### ✨ New Features
+- **Optimized MQTT communication**: Switched to a new MQTT library and implemented Home Assistant abbreviations for discovery keys, significantly reducing the size of discovery messages.
+- **Improved MQTT performance**: Optimized the use of topic aliases and message retention for more efficient data publishing.
+
+### 🛠 Maintenance
+- **Internal code modernization**: Updated the codebase to use modern Go features (Go 1.22+).
+- **Dependency updates**: Updated internal and external dependencies.
+
 ## 0.5.0 - 2026-01-05
 
 ### 🚀 Major Changes
