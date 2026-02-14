@@ -10,7 +10,6 @@ require (
 	github.com/howeyc/crc16 v0.0.0-20171223171357-2b2a61e366a6
 	github.com/stretchr/testify v1.11.1
 	go.bug.st/serial v1.6.4
-	golang.org/x/text v0.33.0
 )
 
 require (

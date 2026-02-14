@@ -17,8 +17,6 @@ import (
 	"wombatt/internal/modbus"
 
 	"go.bug.st/serial"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 )
 
 type ModbusReadCmd struct {
@@ -171,7 +169,7 @@ func printRegisters(format string, data []byte) error {
 					return err
 				}
 			case 1: // name
-				name = strings.ReplaceAll(cases.Title(language.English, cases.Compact).String(f), " ", "_")
+				name = toTitleCase(f)
 			case 2:
 				if f != "" {
 					tag = fmt.Sprintf(`unit:"%s"`, f)
@@ -284,4 +282,14 @@ func parseSingleType(typeName string) (reflect.Type, error) {
 	default:
 		return nil, fmt.Errorf("invalid type name: %s", typeName)
 	}
+}
+
+func toTitleCase(s string) string {
+	words := strings.Fields(s)
+	for i, w := range words {
+		if len(w) > 0 {
+			words[i] = strings.ToUpper(w[:1]) + w[1:]
+		}
+	}
+	return strings.Join(words, "_")
 }
