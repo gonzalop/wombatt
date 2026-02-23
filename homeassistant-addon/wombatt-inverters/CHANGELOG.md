@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.5.2 - 2026-02-23
+
+### 🛡 Security & Hardening
+- **Reduced container privileges**: Removed unnecessary `SYS_RAWIO` capability.
+- **Non-root execution**: The add-on now runs as a non-privileged `wombatt` user for improved security.
+- **Credential protection**: MQTT passwords are now passed via environment variables and hidden from logs and the process list.
+- **AppArmor support**: Enabled AppArmor profile for better container isolation.
+- **Startup script hardening**: Replaced `eval` with a safer configuration parsing method and used Bash arrays for robust argument handling.
+- **Web server hardening**: Added HTTP timeouts, security headers, and properly isolated the server using a private mux.
+
+### 🚀 Improvements
+- **Graceful shutdown**: Implemented proper signal handling (SIGINT/SIGTERM) to ensure clean cleanup of resources (MQTT, serial ports, web server) on stop.
+- **Improved Home Assistant security rating**: Explicitly declared security features in `config.yaml`.
+
 ## 0.5.1 - 2026-02-08
 
 ### ✨ New Features

@@ -1,6 +1,6 @@
 ARG BUILD_FROM
 
-FROM gonzalomono/wombatt:v0.5.1 as source
+FROM gonzalomono/wombatt:v0.5.2 as source
 
 FROM $BUILD_FROM
 COPY --from=source /wombatt /usr/bin/wombatt
