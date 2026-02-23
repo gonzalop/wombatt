@@ -38,7 +38,7 @@ type MonitorInvertersCmd struct {
 	ModbusID   int    `short:"i" default:"1" help:"Modbus slave ID (only used for solark, eg4_18kpv, and eg4_6000xp inverters)"`
 }
 
-func (cmd *MonitorInvertersCmd) Run(globals *Globals) error {
+func (cmd *MonitorInvertersCmd) Run(globals *Globals, ctx context.Context) error {
 	if len(cmd.Monitors) == 0 {
 		return fmt.Errorf("missing inverter ports")
 	}
@@ -58,6 +58,7 @@ func (cmd *MonitorInvertersCmd) Run(globals *Globals) error {
 			log.Fatalf("error connecting to MQTT broker at %s: %v\n", cmd.MQTTBroker, err)
 
 		}
+		defer client.Disconnect(250)
 	}
 	var webServer *web.Server
 	if len(cmd.WebServerAddress) > 0 {
@@ -65,12 +66,18 @@ func (cmd *MonitorInvertersCmd) Run(globals *Globals) error {
 		if err := webServer.Start(); err != nil {
 			log.Fatalf("%v", err)
 		}
+		defer func() {
+			slog.Info("shutting down web server...")
+			sdCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			_ = webServer.Shutdown(sdCtx)
+		}()
 	}
 	for _, m := range monitors {
 		m.client = client
 		m.webServer = webServer
 	}
-	return runInverterMonitor(cmd, monitors)
+	return runInverterMonitor(ctx, cmd, monitors)
 }
 
 type inverterMonitor struct {
@@ -83,65 +90,73 @@ type inverterMonitor struct {
 	webServer *web.Server
 }
 
-func runInverterMonitor(cmd *MonitorInvertersCmd, monitors []*inverterMonitor) error {
+func runInverterMonitor(ctx context.Context, cmd *MonitorInvertersCmd, monitors []*inverterMonitor) error {
 	var wg sync.WaitGroup
 	if monitors[0].client != nil {
 		invertersDiscoveryConfig(cmd.MQTTTopicPrefix, monitors)
 	}
-	ctx := context.Background()
 	for {
-		responses := make([]*cmdResponse, len(monitors))
-		wg.Add(len(monitors))
-		for i, m := range monitors {
-			go func(i int, m *inverterMonitor) {
-				defer wg.Done()
-				port, err := common.NewPort(m.Device, cmd.DeviceType, int(cmd.BaudRate), cmd.DataBits, cmd.StopBits, cmd.Parity)
-				if err != nil {
-					slog.Error("error opening device", "device", m.Device, "error", err)
-					responses[i] = &cmdResponse{nil, []error{err}, m}
-					return
-				}
-				defer port.Close()
-				ctx_to, cancel := context.WithTimeout(ctx, cmd.ReadTimeout)
-				defer cancel()
-
-				var results []any
-				var errors []error
-
-				slog.Info("fetching info from inverter", "inverter-name", m.Device, "inverter-type", m.InverterType, "commands", m.Commands)
-
-				switch m.InverterType {
-				case "pi30":
-					results, errors = pi30.RunCommands(ctx_to, port, m.Commands)
-				case "solark":
-					// For Solark, the supported commands are "RealtimeData" and "IntrinsicAttributes".
-					results, errors = solark.RunCommands(ctx_to, port, cmd.Protocol, uint8(cmd.ModbusID), m.Commands)
-				case "eg4_18kpv":
-					results, errors = eg4_18kpv.RunCommands(ctx_to, port, cmd.Protocol, uint8(cmd.ModbusID), m.Commands)
-				case "eg4_6000xp":
-					results, errors = eg4_6000xp.RunCommands(ctx_to, port, cmd.Protocol, uint8(cmd.ModbusID), m.Commands)
-				default:
-					errors = append(errors, fmt.Errorf("unknown inverter type: %s", m.InverterType))
-				}
-
-				responses[i] = &cmdResponse{results, errors, m}
-				okCommands := []string{}
-				for k := range errors {
-					if errors[k] != nil {
-						continue
+		select {
+		case <-ctx.Done():
+			return nil
+		default:
+			responses := make([]*cmdResponse, len(monitors))
+			wg.Add(len(monitors))
+			for i, m := range monitors {
+				go func(i int, m *inverterMonitor) {
+					defer wg.Done()
+					port, err := common.NewPort(m.Device, cmd.DeviceType, int(cmd.BaudRate), cmd.DataBits, cmd.StopBits, cmd.Parity)
+					if err != nil {
+						slog.Error("error opening device", "device", m.Device, "error", err)
+						responses[i] = &cmdResponse{nil, []error{err}, m}
+						return
 					}
-					okCommands = append(okCommands, m.Commands[k])
-				}
-				slog.Info("publishing info from inverter", "inverter-name", m.Device, "commands", okCommands)
-			}(i, m)
+					defer port.Close()
+					ctx_to, cancel := context.WithTimeout(ctx, cmd.ReadTimeout)
+					defer cancel()
+
+					var results []any
+					var errors []error
+
+					slog.Info("fetching info from inverter", "inverter-name", m.Device, "inverter-type", m.InverterType, "commands", m.Commands)
+
+					switch m.InverterType {
+					case "pi30":
+						results, errors = pi30.RunCommands(ctx_to, port, m.Commands)
+					case "solark":
+						// For Solark, the supported commands are "RealtimeData" and "IntrinsicAttributes".
+						results, errors = solark.RunCommands(ctx_to, port, cmd.Protocol, uint8(cmd.ModbusID), m.Commands)
+					case "eg4_18kpv":
+						results, errors = eg4_18kpv.RunCommands(ctx_to, port, cmd.Protocol, uint8(cmd.ModbusID), m.Commands)
+					case "eg4_6000xp":
+						results, errors = eg4_6000xp.RunCommands(ctx_to, port, cmd.Protocol, uint8(cmd.ModbusID), m.Commands)
+					default:
+						errors = append(errors, fmt.Errorf("unknown inverter type: %s", m.InverterType))
+					}
+
+					responses[i] = &cmdResponse{results, errors, m}
+					okCommands := []string{}
+					for k := range errors {
+						if errors[k] != nil {
+							continue
+						}
+						okCommands = append(okCommands, m.Commands[k])
+					}
+					slog.Info("publishing info from inverter", "inverter-name", m.Device, "commands", okCommands)
+				}(i, m)
+			}
+			wg.Wait()
+			for i, r := range responses {
+				r.ValidateResponses()
+				r.Publish(cmd.MQTTTopicPrefix, i)
+			}
+			responses = nil
+			select {
+			case <-ctx.Done():
+				return nil
+			case <-time.After(cmd.PollInterval):
+			}
 		}
-		wg.Wait()
-		for i, r := range responses {
-			r.ValidateResponses()
-			r.Publish(cmd.MQTTTopicPrefix, i)
-		}
-		responses = nil
-		time.Sleep(cmd.PollInterval)
 	}
 }
 

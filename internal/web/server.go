@@ -51,7 +51,11 @@ func NewServer(address string, root string) *Server {
 		rawPages: rp,
 		root:     root,
 		address:  address,
-		server:   &http.Server{},
+		server: &http.Server{
+			ReadTimeout:  5 * time.Second,
+			WriteTimeout: 10 * time.Second,
+			IdleTimeout:  120 * time.Second,
+		},
 	}
 }
 
@@ -60,14 +64,23 @@ func (ls *Server) Start() error {
 	if err != nil {
 		return err
 	}
-	// Always handle root to serve static files and dashboard
-	http.Handle("/", ls)
-	http.HandleFunc("/metrics", ls.ServeMetrics)
+
+	mux := http.NewServeMux()
+	mux.Handle("/", ls)
+	mux.HandleFunc("/metrics", ls.ServeMetrics)
+
+	// Add security headers to all requests
+	ls.server.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+		w.Header().Set("X-Frame-Options", "SAMEORIGIN")
+		mux.ServeHTTP(w, r)
+	})
+
 	go func() {
 		fmt.Printf("Listening on %v\n", ln.Addr())
 		err := ls.server.Serve(ln)
 		ls.err = err
-		if err != nil {
+		if err != nil && err != http.ErrServerClosed {
 			slog.Error("error calling TCP Serve", "error", err)
 		}
 	}()
@@ -159,7 +172,7 @@ func (ls *Server) ServeMetrics(w http.ResponseWriter, r *http.Request) {
 
 	for path, page := range ls.rawPages {
 		// Use full path as source so dashboard can find it
-		source := path
+		source := strings.ReplaceAll(path, "\"", "\\\"")
 		for key, value := range page {
 			val := reflect.ValueOf(value)
 			var floatVal float64

@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"log/slog"
@@ -42,13 +43,19 @@ type batteryInfo struct {
 	Info any
 }
 
-func (cmd *MonitorBatteriesCmd) Run(globals *Globals) error {
+func (cmd *MonitorBatteriesCmd) Run(globals *Globals, ctx context.Context) error {
 	var webServer *web.Server
 	if len(cmd.WebServerAddress) > 0 {
 		webServer = web.NewServer(cmd.WebServerAddress, "/battery/")
 		if err := webServer.Start(); err != nil {
 			log.Fatalf("%v", err)
 		}
+		defer func() {
+			slog.Info("shutting down web server...")
+			sdCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			_ = webServer.Shutdown(sdCtx)
+		}()
 	}
 	battery, err := bms.Instance(string(cmd.BMSType))
 	if err != nil {
@@ -72,12 +79,20 @@ func (cmd *MonitorBatteriesCmd) Run(globals *Globals) error {
 	}
 	ch := make(chan *batteryInfo, len(cmd.ID))
 	go func() {
-		for bi := range ch {
-			if mqttChannel != nil {
-				mqttChannel <- bi
-			}
-			if webServer != nil {
-				webServer.Publish(fmt.Sprintf("%d", bi.ID), bi.Info)
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case bi, ok := <-ch:
+				if !ok {
+					return
+				}
+				if mqttChannel != nil {
+					mqttChannel <- bi
+				}
+				if webServer != nil {
+					webServer.Publish(fmt.Sprintf("%d", bi.ID), bi.Info)
+				}
 			}
 		}
 	}()
@@ -90,37 +105,48 @@ func (cmd *MonitorBatteriesCmd) Run(globals *Globals) error {
 	if err != nil {
 		return fmt.Errorf("failed to open port: %w", err)
 	}
-	monitorBatteries(ch, port, cmd, battery)
+	defer port.Close()
+	monitorBatteries(ctx, ch, port, cmd, battery)
 	return nil
 }
 
-func monitorBatteries(ch chan *batteryInfo, port common.Port, cmd *MonitorBatteriesCmd, battery bms.BMS) {
+func monitorBatteries(ctx context.Context, ch chan *batteryInfo, port common.Port, cmd *MonitorBatteriesCmd, battery bms.BMS) {
 	reader, err := modbus.Reader(port, cmd.Protocol, string(cmd.BMSType))
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 	for {
-		slog.Info("fetching info from batteries", "battery-id", cmd.ID)
-		success := []uint{}
-		for _, id := range cmd.ID {
-			info, err := battery.ReadInfo(reader, uint8(id), cmd.ReadTimeout)
-			if err != nil {
-				if err := port.ReopenWithBackoff(); err != nil {
-					slog.Error("error reopening", "error", err)
+		select {
+		case <-ctx.Done():
+			return
+		default:
+			slog.Info("fetching info from batteries", "battery-id", cmd.ID)
+			success := []uint{}
+			for _, id := range cmd.ID {
+				info, err := battery.ReadInfo(reader, uint8(id), cmd.ReadTimeout)
+				if err != nil {
+					if err := port.ReopenWithBackoff(); err != nil {
+						slog.Error("error reopening", "error", err)
+					}
+					continue
 				}
-				continue
+				if ch != nil {
+					ch <- &batteryInfo{uint8(id), info}
+				} else {
+					fmt.Printf("Battery #%d\n===========\n", id)
+					writeBatteryInfo(info)
+					fmt.Println()
+				}
+				success = append(success, id)
 			}
-			if ch != nil {
-				ch <- &batteryInfo{uint8(id), info}
-			} else {
-				fmt.Printf("Battery #%d\n===========\n", id)
-				writeBatteryInfo(info)
-				fmt.Println()
+			slog.Info("published info for batteries", "battery-id", success)
+
+			select {
+			case <-ctx.Done():
+				return
+			case <-time.After(cmd.PollInterval):
 			}
-			success = append(success, id)
 		}
-		slog.Info("published info for batteries", "battery-id", success)
-		time.Sleep(cmd.PollInterval)
 	}
 }
 

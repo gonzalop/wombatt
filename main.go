@@ -1,9 +1,12 @@
 package main
 
 import (
+	"context"
 	"log"
 	"log/slog"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"wombatt/cmd"
 
@@ -37,7 +40,12 @@ func main() {
 	cli := cmd.CLI{
 		Globals: cmd.Globals{},
 	}
-	ctx := kong.Parse(&cli,
+
+	// Create a context that is canceled on SIGINT or SIGTERM
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	kctx := kong.Parse(&cli,
 		kong.Name("wombatt"),
 		kong.Description("A wanna-be Swiss army knife for inverter and battery monitoring."),
 		kong.UsageOnError(),
@@ -51,6 +59,6 @@ func main() {
 			"protocols":    "auto,ModbusRTU,ModbusTCP,lifepower4",
 		})
 	logSetup(cli.Globals.LogLevel)
-	err := ctx.Run(&cli.Globals)
-	ctx.FatalIfErrorf(err)
+	err := kctx.Run(&cli.Globals, ctx)
+	kctx.FatalIfErrorf(err)
 }
