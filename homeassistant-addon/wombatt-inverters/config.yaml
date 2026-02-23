@@ -6,6 +6,8 @@ arch:
   - aarch64
   - amd64
   - armv7
+apparmor: true
+stage: stable
 url: https://github.com/gonzalop/wombatt
 panel_icon: mdi:solar-power
 startup: application
