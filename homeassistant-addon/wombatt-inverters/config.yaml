@@ -10,8 +10,6 @@ url: https://github.com/gonzalop/wombatt
 panel_icon: mdi:solar-power
 startup: application
 boot: auto
-privileged:
-  - SYS_RAWIO
 usb: true
 uart: true
 services:
@@ -60,15 +58,4 @@ schema:
     device_type: "list(serial|hidraw|tcp)?"
   logging:
     level: "list(debug|info|warn|error)?"
-  inverters:
-    baud_rate: "int?"
-    data_bits: "int?"
-    stop_bits: "int?"
-    parity: "list(N|E|O)?"
-    modbus_id: "int?"
-    monitors: "str"
-    protocol: "list(auto|ModbusRTU|ModbusTCP)?"
-    poll_interval: "str?"
-    read_timeout: "str?"
-    device_type: "list(serial|hidraw|tcp)?"
 

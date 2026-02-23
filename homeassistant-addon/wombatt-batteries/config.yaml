@@ -10,8 +10,6 @@ url: https://github.com/gonzalop/wombatt
 panel_icon: mdi:home-battery-outline
 startup: application
 boot: auto
-privileged:
-  - SYS_RAWIO
 usb: true
 uart: true
 services:
@@ -58,13 +56,3 @@ schema:
     device_type: "list(serial|hidraw|tcp)?"
   logging:
     level: "list(debug|info|warn|error)?"
-  batteries:
-    address: "str?"
-    baud_rate: "int?"
-    bms_type: "list(EG4LLv2|lifepower4|lifepowerv2|pacemodbus)?"
-    mqtt_prefix: "str?"
-    battery_ids: "str"
-    protocol: "list(auto|lifepower4|lifepowerv2|pacemodbus)?"
-    poll_interval: "str?"
-    read_timeout: "str?"
-    device_type: "list(serial|hidraw|tcp)?"
