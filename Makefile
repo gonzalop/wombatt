@@ -16,12 +16,12 @@ GENERATED = # List of generated files
 
 GOIMPORTS = $(shell which goimports)
 GOTESTSUM=$(shell which gotestsum)
-GOLANGCILINT=$(shell which golangci-lint)
+GOLANGREVIVE=$(shell which revive)
 
 .SUFFIXES:
 .PHONY: all
-#all: fmt golangci-lint-run $(GENERATED) | $(basename $(MODULE)) ; $(info $(M) building executable…) @ ## Build program binary
-all: fmt golangci-lint-run $(GENERATED) | wombatt ; $(info $(M) building executable…) @ ## Build program binary
+#all: fmt revive-run $(GENERATED) | $(basename $(MODULE)) ; $(info $(M) building executable…) @ ## Build program binary
+all: fmt revive-run $(GENERATED) | wombatt ; $(info $(M) building executable…) @ ## Build program binary
 
 .PHONY: wombatt
 wombatt: $(shell find -name \*.go)
@@ -56,20 +56,20 @@ ifeq (, $(GOTESTSUM))
 	$(error "No gotestsum in $$PATH, please run 'make install-tools')
 endif
 
-golangci-lint:
-ifeq (, $(GOLANGCILINT))
-	$(error "No golangci-lint $$PATH, please run 'make install-tools')
+revive:
+ifeq (, $(GOLANGREVIVE))
+	$(error "No revive $$PATH, please run 'make install-tools')
 endif
 
 update-tools:
 	go install golang.org/x/tools/cmd/goimports@latest
 	go install gotest.tools/gotestsum@latest
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+	go install github.com/mgechev/revive@latest
 
 install-tools:
 	test -x "$(GOIMPORTS)" || go install golang.org/x/tools/cmd/goimports@latest
 	test -x "$(GOTESTSUM)" || go install gotest.tools/gotestsum@latest
-	test -x "$(GOLANGCILINT)" || go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+	test -x "$(GOLANGREVIVE)" || go install github.com/mgechev/revive@latest
 
 # Generate
 
@@ -81,7 +81,7 @@ test-short:   ARGS=-short        ## Run only short tests
 test-race:    ARGS=-race         ## Run tests with race detector
 $(TEST_TARGETS): NAME=$(MAKECMDGOALS:test-%=%)
 $(TEST_TARGETS): test
-check test tests: fmt golangci-lint-run $(GENERATED) | gotestsum ; $(info $(M) running $(NAME:%=% )tests…) @ ## Run tests
+check test tests: fmt revive-run $(GENERATED) | gotestsum ; $(info $(M) running $(NAME:%=% )tests…) @ ## Run tests
 	$Q mkdir -p test
 	$Q gotestsum --junitfile test/tests.xml -- -timeout $(TIMEOUT)s $(ARGS) $(PKGS)
 .PHONY: test-bench
@@ -90,7 +90,7 @@ test-bench: $(GENERATED) ; $(info $(M) running benchmarks…) @ ## Run benchmark
 
 COVERAGE_MODE = atomic
 .PHONY: test-coverage
-test-coverage: fmt golangci-lint-run $(GENERATED)
+test-coverage: fmt revive-run $(GENERATED)
 test-coverage: | gotestsum ; $(info $(M) running coverage tests…) @ ## Run coverage tests
 	$Q mkdir -p test
 	$Q gotestsum -- \
@@ -102,9 +102,9 @@ test-coverage: | gotestsum ; $(info $(M) running coverage tests…) @ ## Run cov
 	@echo -n "Code coverage: "
 	@grep "^total:" test/coverage.txt | awk '{print $$3}'
 
-.PHONY: golangci-lint-run
-golangci-lint-run: | golangci-lint ; $(info $(M) running golangci-lint…) @
-	$Q golangci-lint run
+.PHONY: revive-run
+revive-run: | revive ; $(info $(M) running revive…) @
+	$Q revive
 
 .PHONY: fmt
 fmt: | goimports ; $(info $(M) running gofmt…) @ ## Run gofmt on all source files

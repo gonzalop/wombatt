@@ -1,3 +1,4 @@
+// Package main for wombatt
 package main
 
 import (
