@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.5.3 - 2026-03-08
+
+### 🛠 Maintenance
+- **Go version upgrade**: Updated to Go 1.25.0 for improved performance and modern language features.
+- **Dependency updates**: Updated messaging library (`github.com/gonzalop/mq`) to v0.9.5 and `golang.org/x/sys` to v0.42.0.
+- **Enhanced linting**: Migrated from `golangci-lint` to `revive` for more targeted and efficient code quality checks.
+- **CLI improvements**: Refactored command-line context handling using `kong.Bind` and `kong.BindTo` for better consistency and reliability.
+
 ## 0.5.2 - 2026-02-23
 
 ### 🛡 Security & Hardening
