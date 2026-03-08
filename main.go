@@ -54,12 +54,14 @@ func main() {
 		kong.ConfigureHelp(kong.HelpOptions{
 			//			Compact: true,
 		}),
+		kong.Bind(&cli.Globals),
+		kong.BindTo(ctx, (*context.Context)(nil)),
 		kong.Vars{
 			"bms_types":    "EG4LLv2,lifepower4,lifepowerv2,pacemodbus",
 			"device_types": "serial,hidraw,tcp",
 			"protocols":    "auto,ModbusRTU,ModbusTCP,lifepower4",
 		})
 	logSetup(cli.Globals.LogLevel)
-	err := kctx.Run(&cli.Globals, ctx)
+	err := kctx.Run()
 	kctx.FatalIfErrorf(err)
 }
