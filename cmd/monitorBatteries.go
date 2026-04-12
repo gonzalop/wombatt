@@ -101,53 +101,54 @@ func (cmd *MonitorBatteriesCmd) Run(globals *Globals, ctx context.Context) error
 		Mode:    &serial.Mode{BaudRate: int(cmd.BaudRate)},
 		Type:    common.DeviceTypeFromString[cmd.DeviceType],
 	}
-	port, err := common.OpenPort(portOptions)
-	if err != nil {
-		return fmt.Errorf("failed to open port: %w", err)
+
+	for {
+		select {
+		case <-ctx.Done():
+			return nil
+		default:
+			port, err := common.OpenPort(portOptions)
+			if err != nil {
+				slog.Error("failed to open port", "address", cmd.Address, "error", err)
+			} else {
+				monitorBatteries(ctx, ch, port, cmd, battery)
+				port.Close()
+			}
+			select {
+			case <-ctx.Done():
+				return nil
+			case <-time.After(cmd.PollInterval):
+			}
+		}
 	}
-	defer port.Close()
-	monitorBatteries(ctx, ch, port, cmd, battery)
-	return nil
 }
 
 func monitorBatteries(ctx context.Context, ch chan *batteryInfo, port common.Port, cmd *MonitorBatteriesCmd, battery bms.BMS) {
 	reader, err := modbus.Reader(port, cmd.Protocol, string(cmd.BMSType))
 	if err != nil {
-		log.Fatal(err.Error())
+		slog.Error("error creating modbus reader", "error", err)
+		return
 	}
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		default:
-			slog.Info("fetching info from batteries", "battery-id", cmd.ID)
-			success := []uint{}
-			for _, id := range cmd.ID {
-				info, err := battery.ReadInfo(reader, uint8(id), cmd.ReadTimeout)
-				if err != nil {
-					if err := port.ReopenWithBackoff(); err != nil {
-						slog.Error("error reopening", "error", err)
-					}
-					continue
-				}
-				if ch != nil {
-					ch <- &batteryInfo{uint8(id), info}
-				} else {
-					fmt.Printf("Battery #%d\n===========\n", id)
-					writeBatteryInfo(info)
-					fmt.Println()
-				}
-				success = append(success, id)
+	slog.Info("fetching info from batteries", "battery-id", cmd.ID)
+	success := []uint{}
+	for _, id := range cmd.ID {
+		info, err := battery.ReadInfo(reader, uint8(id), cmd.ReadTimeout)
+		if err != nil {
+			if err := port.ReopenWithBackoff(); err != nil {
+				slog.Error("error reopening", "error", err)
 			}
-			slog.Info("published info for batteries", "battery-id", success)
-
-			select {
-			case <-ctx.Done():
-				return
-			case <-time.After(cmd.PollInterval):
-			}
+			continue
 		}
+		if ch != nil {
+			ch <- &batteryInfo{uint8(id), info}
+		} else {
+			fmt.Printf("Battery #%d\n===========\n", id)
+			writeBatteryInfo(info)
+			fmt.Println()
+		}
+		success = append(success, id)
 	}
+	slog.Info("published info for batteries", "battery-id", success)
 }
 
 func mqttPublish(client *mqttha.Client, ch chan *batteryInfo, cmd *MonitorBatteriesCmd, emptyInfo any) {

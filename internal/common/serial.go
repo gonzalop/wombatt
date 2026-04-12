@@ -87,10 +87,43 @@ var deviceOpen = map[DeviceType]func(*PortOptions) (Port, error){
 }
 
 type internalPort struct {
-	io.ReadWriteCloser
+	ReadWriteCloser io.ReadWriteCloser
 	*PortOptions
 
 	lock sync.Mutex
+}
+
+func (p *internalPort) Read(b []byte) (n int, err error) {
+	p.lock.Lock()
+	defer p.lock.Unlock()
+	if p.ReadWriteCloser == nil {
+		return 0, fmt.Errorf("port is closed")
+	}
+	return p.ReadWriteCloser.Read(b)
+}
+
+func (p *internalPort) Write(b []byte) (n int, err error) {
+	p.lock.Lock()
+	defer p.lock.Unlock()
+	if p.ReadWriteCloser == nil {
+		return 0, fmt.Errorf("port is closed")
+	}
+	return p.ReadWriteCloser.Write(b)
+}
+
+func (p *internalPort) Close() error {
+	p.lock.Lock()
+	defer p.lock.Unlock()
+	return p.close()
+}
+
+func (p *internalPort) close() error {
+	if p.ReadWriteCloser == nil {
+		return nil
+	}
+	err := p.ReadWriteCloser.Close()
+	p.ReadWriteCloser = nil
+	return err
 }
 
 // openSerial opens a serial port based on the provided options.
@@ -184,9 +217,17 @@ func (p *internalPort) Type() DeviceType {
 func (p *internalPort) ReopenWithBackoff() error {
 	p.lock.Lock()
 	defer p.lock.Unlock()
-	p.Close()
+	p.close()
 	port, err := OpenPortWithBackoff(p.PortOptions, 0)
-	p.ReadWriteCloser = port
+	if port != nil {
+		// OpenPortWithBackoff might return a Port interface.
+		// Since OpenPort returns an *internalPort, we need to extract the ReadWriteCloser from it.
+		if ip, ok := port.(*internalPort); ok {
+			p.ReadWriteCloser = ip.ReadWriteCloser
+		} else {
+			p.ReadWriteCloser = port
+		}
+	}
 	return err
 }
 
