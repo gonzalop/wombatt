@@ -1,5 +1,5 @@
 ARG BUILD_ARCH=amd64
-ARG WOMBATT_IMAGE=docker.io/gonzalomono/wombatt:v0.6.0
+ARG WOMBATT_IMAGE=docker.io/gonzalomono/wombatt:v0.6.2
 
 FROM ghcr.io/home-assistant/${BUILD_ARCH}-base:latest
 

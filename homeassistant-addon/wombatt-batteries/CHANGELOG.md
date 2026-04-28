@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.6.2 - 2026-04-28
+
+### 🛠 Maintenance
+- **Fix Docker Build**: Finalized Docker build structure for reliable Home Assistant add-on installation.
+
 ## 0.6.1 - 2026-04-28
 
 ### 🛠 Maintenance
