@@ -1,9 +1,11 @@
-ARG BUILD_FROM
+ARG BUILD_ARCH=amd64
+ARG WOMBATT_IMAGE=docker.io/gonzalomono/wombatt:v0.6.0
 
-FROM gonzalomono/wombatt:v0.6.0 as source
+FROM ghcr.io/home-assistant/${BUILD_ARCH}-base:latest
 
-FROM $BUILD_FROM
-COPY --from=source /wombatt /usr/bin/wombatt
+# Re-declare ARG so it's available after FROM
+ARG WOMBATT_IMAGE
+COPY --from=${WOMBATT_IMAGE} /wombatt /usr/bin/wombatt
 
 RUN apk add --no-cache ca-certificates jq
 
