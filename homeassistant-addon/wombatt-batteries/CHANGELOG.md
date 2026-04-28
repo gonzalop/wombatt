@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.6.3 - 2026-04-28
+
+### 🛠 Maintenance
+- **Fix Docker Build**: Enhanced Docker build robustness with fallback base images and automated versioning.
+
 ## 0.6.2 - 2026-04-28
 
 ### 🛠 Maintenance
