@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.6.0 - 2026-04-28
+
+### 🚀 Improvements
+- **Battery Monitoring Stability**: Fixed a panic in the `monitor-batteries` command and implemented retry logic for unreachable battery addresses, improving overall robustness in multi-battery setups.
+
+### 🛠 Maintenance
+- **Dependency updates**:
+    - Updated `golang.org/x/sys` to v0.43.0.
+    - Updated `github.com/alecthomas/kong` to v1.15.0.
+    - Bumped other internal dependencies for improved security and performance.
+
 ## 0.5.3 - 2026-03-08
 
 ### 🛠 Maintenance
