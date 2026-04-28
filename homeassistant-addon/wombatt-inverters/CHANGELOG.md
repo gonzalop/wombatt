@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.6.1 - 2026-04-28
+
+### 🛠 Maintenance
+- **Fix Docker Build**: Resolved an issue where the Home Assistant add-on failed to build due to an uninitialized `BUILD_FROM` argument.
+
 ## 0.6.0 - 2026-04-28
 
 ### 🚀 Improvements

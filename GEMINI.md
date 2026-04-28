@@ -1,0 +1,17 @@
+- This is a git repository.
+- It contains a Go application used to query and monitor inverters and batteries.
+- The main entrypoint is `main.go`, and commands are defined in the `cmd/` directory.
+- The core logic is in the `internal/` directory, with packages for different protocols and devices (e.g., `bms`, `eg4_18kpv`, `solark`).
+- The project uses a `Makefile` for build and release tasks. Check the `Makefile` for common targets like `build`, `test`, etc.
+- The `extras/` directory contains supplementary materials, including a bash completion script (`wombatt-completion.sh`) and configurations for Home Assistant integration.
+- Don't do anything with untracked files that you have not created.
+- Don't send commit messages with unescaped backticks.
+- Do not push the changes upstream.
+- The documentation for some or all of the protocols is under the `docs/ref` directory. Specific documents include:
+    - `EG4_LifePower4_Communication_Protocol.pdf`
+    - `EG4-18KPV-12LV-Modbus-Protocol.pdf`
+    - `EG4-LL-MODBUS-Communication-Protocol_ENG-correct-1.pdf`
+    - `PACE-BMS-Modbus-Protocol-for-RS485-V1.3-20170627.pdf`
+    - `PI30MAX.Communication.Protocol20210217.pdf`
+    - `solark-modbus-1.1.pdf`
+
