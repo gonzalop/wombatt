@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"log"
 	"log/slog"
-	"math"
 	"os"
 	"reflect"
 	"strconv"
@@ -251,15 +250,15 @@ func parseFieldType(fieldType string) (reflect.Type, error) {
 
 func parseArrayType(typeName string, sizeStr string) (reflect.Type, error) {
 	size, err := strconv.ParseUint(sizeStr, 10, 32)
-	if err != nil || math.MaxInt32 < size {
-		return nil, fmt.Errorf("%w: invalid size value %q", err, sizeStr)
+	if err != nil || size > 256 {
+		return nil, fmt.Errorf("invalid or too large array size: %q (max 256)", sizeStr)
 	}
 
 	t, err := parseSingleType(typeName)
 	if err != nil {
 		return nil, err
 	}
-	arrayType := reflect.New(reflect.ArrayOf(int(size), t)).Elem().Type()
+	arrayType := reflect.ArrayOf(int(size), t)
 	return arrayType, nil
 }
 

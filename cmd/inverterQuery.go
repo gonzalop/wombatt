@@ -44,51 +44,48 @@ func (cmd *InverterQueryCmd) Run(globals *Globals) error {
 	ctx := context.Background()
 	var failed error
 	for _, dev := range cmd.Address {
-		port, err := common.NewPort(dev, cmd.DeviceType, int(cmd.BaudRate), cmd.DataBits, cmd.StopBits, cmd.Parity)
+		err := func(dev string) error {
+			port, err := common.NewPort(dev, cmd.DeviceType, int(cmd.BaudRate), cmd.DataBits, cmd.StopBits, cmd.Parity)
+			if err != nil {
+				return err
+			}
+			defer port.Close()
+
+			tctx, cancel := context.WithTimeout(ctx, cmd.ReadTimeout)
+			defer cancel()
+
+			var results []any
+			var errs []error
+
+			switch cmd.InverterType {
+			case InverterTypePI30:
+				results, errs = pi30.RunCommands(tctx, port, cmd.Command)
+			case InverterTypeSolark:
+				results, errs = solark.RunCommands(tctx, port, cmd.Protocol, uint8(cmd.ModbusID), cmd.Command)
+			case InverterTypeEG418KPV:
+				results, errs = eg4_18kpv.RunCommands(tctx, port, cmd.Protocol, uint8(cmd.ModbusID), cmd.Command)
+			case InverterTypeEG46000XP:
+				results, errs = eg4_6000xp.RunCommands(tctx, port, cmd.Protocol, uint8(cmd.ModbusID), cmd.Command)
+			default:
+				return fmt.Errorf("unsupported inverter type: %s", cmd.InverterType)
+			}
+
+			if results == nil && len(errs) == 1 {
+				return fmt.Errorf("error running commands on port %s: %w", dev, errs[0])
+			}
+			for i, res := range results {
+				command := cmd.Command[i]
+				if errs[i] != nil {
+					return fmt.Errorf("error running %s on port %s: %w", command, dev, errs[i])
+				}
+				fmt.Printf("Device: %s, Command: %s\n%s\n", dev, command, strings.Repeat("=", 40))
+				common.WriteTo(os.Stdout, res)
+			}
+			return nil
+		}(dev)
 		if err != nil {
 			failed = errors.Join(failed, err)
-			continue
 		}
-		defer port.Close()
-
-		tctx, cancel := context.WithTimeout(ctx, cmd.ReadTimeout)
-
-		var results []any
-		var errs []error
-
-		switch cmd.InverterType {
-		case InverterTypePI30:
-			results, errs = pi30.RunCommands(tctx, port, cmd.Command)
-		case InverterTypeSolark:
-			results, errs = solark.RunCommands(tctx, port, cmd.Protocol, uint8(cmd.ModbusID), cmd.Command)
-		case InverterTypeEG418KPV:
-			results, errs = eg4_18kpv.RunCommands(tctx, port, cmd.Protocol, uint8(cmd.ModbusID), cmd.Command)
-		case InverterTypeEG46000XP:
-			results, errs = eg4_6000xp.RunCommands(tctx, port, cmd.Protocol, uint8(cmd.ModbusID), cmd.Command)
-		default:
-			cancel()
-			port.Close()
-			failed = errors.Join(failed, fmt.Errorf("unsupported inverter type: %s", cmd.InverterType))
-			continue
-		}
-
-		cancel()
-		if results == nil && len(errs) == 1 {
-			port.Close()
-			failed = errors.Join(failed, fmt.Errorf("error running commands on port %s: %w", dev, errs[0]))
-			continue
-		}
-		for i, res := range results {
-			command := cmd.Command[i]
-			if errs[i] != nil {
-				port.Close()
-				failed = errors.Join(failed, fmt.Errorf("error running %s on port %s: %w", command, dev, errs[i]))
-				continue
-			}
-			fmt.Printf("Device: %s, Command: %s\n%s\n", dev, command, strings.Repeat("=", 40))
-			common.WriteTo(os.Stdout, res)
-		}
-		port.Close()
 	}
 	if failed != nil {
 		log.Fatal(failed)

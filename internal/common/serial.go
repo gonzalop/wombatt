@@ -99,7 +99,11 @@ func (p *internalPort) Read(b []byte) (n int, err error) {
 	if p.ReadWriteCloser == nil {
 		return 0, fmt.Errorf("port is closed")
 	}
-	return p.ReadWriteCloser.Read(b)
+	n, err = p.ReadWriteCloser.Read(b)
+	if n == 0 && err == nil && len(b) > 0 {
+		return 0, fmt.Errorf("read timeout")
+	}
+	return n, err
 }
 
 func (p *internalPort) Write(b []byte) (n int, err error) {
@@ -132,6 +136,7 @@ func openSerial(opts *PortOptions) (Port, error) {
 	if err != nil {
 		return nil, err
 	}
+	_ = p.SetReadTimeout(5000) // 5 seconds
 	_ = p.ResetInputBuffer()
 	_ = p.ResetOutputBuffer()
 	o := *opts
@@ -153,7 +158,7 @@ func openHidRaw(opts *PortOptions) (Port, error) {
 // openTCP opens a TCP connection based on the provided options.
 func openTCP(opts *PortOptions) (Port, error) {
 	slog.Debug("dialing TCP server", "address", opts.Address)
-	conn, err := net.Dial("tcp", opts.Address)
+	conn, err := net.DialTimeout("tcp", opts.Address, 10*time.Second)
 	if err != nil {
 		return nil, err
 	}
