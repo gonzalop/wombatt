@@ -46,6 +46,9 @@ func (*TestPort) Close() error {
 	return nil
 }
 
+func (*TestPort) Lock()   {}
+func (*TestPort) Unlock() {}
+
 // DeviceType represents the type of communication device.
 type DeviceType int
 
@@ -93,9 +96,15 @@ type internalPort struct {
 	lock sync.Mutex
 }
 
-func (p *internalPort) Read(b []byte) (n int, err error) {
+func (p *internalPort) Lock() {
 	p.lock.Lock()
-	defer p.lock.Unlock()
+}
+
+func (p *internalPort) Unlock() {
+	p.lock.Unlock()
+}
+
+func (p *internalPort) Read(b []byte) (n int, err error) {
 	if p.ReadWriteCloser == nil {
 		return 0, fmt.Errorf("port is closed")
 	}
@@ -107,8 +116,6 @@ func (p *internalPort) Read(b []byte) (n int, err error) {
 }
 
 func (p *internalPort) Write(b []byte) (n int, err error) {
-	p.lock.Lock()
-	defer p.lock.Unlock()
 	if p.ReadWriteCloser == nil {
 		return 0, fmt.Errorf("port is closed")
 	}
@@ -116,8 +123,6 @@ func (p *internalPort) Write(b []byte) (n int, err error) {
 }
 
 func (p *internalPort) Close() error {
-	p.lock.Lock()
-	defer p.lock.Unlock()
 	return p.close()
 }
 
@@ -175,6 +180,10 @@ type Port interface {
 	ReopenWithBackoff() error
 	// Type returns the DeviceType of the port.
 	Type() DeviceType
+	// Lock locks the port for exclusive access.
+	Lock()
+	// Unlock unlocks the port.
+	Unlock()
 }
 
 // OpenPort opens a device.

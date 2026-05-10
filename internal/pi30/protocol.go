@@ -12,12 +12,16 @@ import (
 	"strconv"
 	"strings"
 
+	"wombatt/internal/common"
+
 	"github.com/howeyc/crc16"
 )
 
-func RunCommands(ctx context.Context, port io.ReadWriter, commands []string) ([]any, []error) {
+func RunCommands(ctx context.Context, port common.Port, commands []string) ([]any, []error) {
 	var result []any
 	var resultErr []error
+	port.Lock()
+	defer port.Unlock()
 	for _, cmd := range commands {
 		r, err := RunCommand(ctx, port, cmd)
 		result = append(result, r)
