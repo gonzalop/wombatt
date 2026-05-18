@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.6.4 - 2026-05-18
+
+### 🛠 Maintenance
+- **Fix Permissions**: Reverted non-root execution to resolve "Permission denied" errors when reading Home Assistant configuration files.
+
 ## 0.6.3 - 2026-04-28
 
 ### 🛠 Maintenance
