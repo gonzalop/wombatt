@@ -1,6 +1,6 @@
 module wombatt
 
-go 1.25.0
+go 1.26.0
 
 require (
 	github.com/alecthomas/kong v1.15.0
@@ -9,11 +9,10 @@ require (
 	github.com/gonzalop/mq v0.9.7
 	github.com/howeyc/crc16 v0.0.0-20171223171357-2b2a61e366a6
 	github.com/stretchr/testify v1.11.1
-	go.bug.st/serial v1.6.4
+	go.bug.st/serial v1.7.0
 )
 
 require (
-	github.com/creack/goselect v0.1.3 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
