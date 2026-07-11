@@ -88,8 +88,11 @@ func (c *Client) PublishMap(ctx context.Context, topic string, data map[string]a
 		opts = append(opts, mq.WithAlias())
 	}
 
-	token := c.client.Publish(ctx, topic, j, opts...)
-	return token.Wait(ctx)
+	pubCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
+	defer cancel()
+
+	token := c.client.Publish(pubCtx, topic, j, opts...)
+	return token.Wait(pubCtx)
 }
 
 // PublishDiscovery publishes a JSON encoded map to the given topic, compacting the keys.
