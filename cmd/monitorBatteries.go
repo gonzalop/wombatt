@@ -78,7 +78,13 @@ func (cmd *MonitorBatteriesCmd) Run(globals *Globals, ctx context.Context) error
 		log.Fatalf("need at least MQTT or web server argument to publish info to.\n")
 	}
 	ch := make(chan *batteryInfo, len(cmd.ID))
+	defer close(ch)
 	go func() {
+		defer func() {
+			if mqttChannel != nil {
+				close(mqttChannel)
+			}
+		}()
 		for {
 			select {
 			case <-ctx.Done():
