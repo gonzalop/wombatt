@@ -106,7 +106,8 @@ func TestRunCommands(t *testing.T) {
 
 	for ii, tt := range tests {
 		rw := newReadWriter([]byte(tt.response), tt.writeError)
-		results, errors := RunCommands(ctx, rw, tt.commands)
+		tp := common.NewTestPort(rw, rw, common.TestByteDevice)
+		results, errors := RunCommands(ctx, tp, tt.commands)
 		checkErrors(t, ii, errors, tt.errstr)
 		checkFields(t, ii, results, tt.nfields)
 	}
