@@ -23,6 +23,8 @@ import (
 //go:embed static
 var staticFiles embed.FS
 
+var metricNameSanitizer = regexp.MustCompile(`[^a-zA-Z0-9_]`)
+
 type page map[string]any
 
 type Server struct {
@@ -168,8 +170,6 @@ func (ls *Server) ServeMetrics(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/plain; charset=UTF-8")
 
-	re := regexp.MustCompile(`[^a-zA-Z0-9_]`)
-
 	for path, page := range ls.rawPages {
 		// Use full path as source so dashboard can find it
 		source := strings.ReplaceAll(path, "\"", "\\\"")
@@ -186,7 +186,7 @@ func (ls *Server) ServeMetrics(w http.ResponseWriter, r *http.Request) {
 				continue
 			}
 
-			metricName := "wombatt_" + strings.ToLower(re.ReplaceAllString(key, "_"))
+			metricName := "wombatt_" + strings.ToLower(metricNameSanitizer.ReplaceAllString(key, "_"))
 			fmt.Fprintf(w, "%s{source=\"%s\"} %v\n", metricName, source, floatVal)
 		}
 	}
