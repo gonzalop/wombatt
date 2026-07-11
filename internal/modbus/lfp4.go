@@ -82,8 +82,21 @@ func (t *LFP4) ReadResponse(id uint8) ([]byte, error) {
 }
 
 func (t *LFP4) readHeader() ([]byte, uint16, error) {
-	header := make([]byte, 13) // 1 byte for SOI; 2 for each of VER, ADR, CIR1, and RTN; 4 for LENGTH
-	if _, err := io.ReadFull(t.port, header); err != nil {
+	// Scan for the SOI (0x7e) character
+	soi := make([]byte, 1)
+	for {
+		if _, err := io.ReadFull(t.port, soi); err != nil {
+			return nil, 0, err
+		}
+		if soi[0] == 0x7e {
+			break
+		}
+	}
+
+	// Read the remaining 12 bytes of the header
+	header := make([]byte, 13)
+	header[0] = 0x7e
+	if _, err := io.ReadFull(t.port, header[1:]); err != nil {
 		return nil, 0, err
 	}
 	// Check RTN
