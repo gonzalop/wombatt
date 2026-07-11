@@ -249,11 +249,17 @@ func ReadRealtimeData(reader modbus.RegisterReader, id uint8) (*RealtimeData, er
 	if err != nil {
 		return nil, fmt.Errorf("failed to read input registers 0-39: %w", err)
 	}
+	if len(data1) < 80 {
+		return nil, fmt.Errorf("short read from input registers 0-39: got %d bytes, want 80", len(data1))
+	}
 
 	// Block 2: Registers 40-79
 	data2, err := reader.ReadInputRegisters(id, 40, 40)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read input registers 40-79: %w", err)
+	}
+	if len(data2) < 80 {
+		return nil, fmt.Errorf("short read from input registers 40-79: got %d bytes, want 80", len(data2))
 	}
 
 	// Block 3: Registers 80-119
@@ -261,17 +267,26 @@ func ReadRealtimeData(reader modbus.RegisterReader, id uint8) (*RealtimeData, er
 	if err != nil {
 		return nil, fmt.Errorf("failed to read input registers 80-119: %w", err)
 	}
+	if len(data3) < 80 {
+		return nil, fmt.Errorf("short read from input registers 80-119: got %d bytes, want 80", len(data3))
+	}
 
 	// Block 4: Registers 120-159
 	data4, err := reader.ReadInputRegisters(id, 120, 40)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read input registers 120-159: %w", err)
 	}
+	if len(data4) < 80 {
+		return nil, fmt.Errorf("short read from input registers 120-159: got %d bytes, want 80", len(data4))
+	}
 
 	// Block 5: Registers 160-199
 	data5, err := reader.ReadInputRegisters(id, 160, 40)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read input registers 160-199: %w", err)
+	}
+	if len(data5) < 80 {
+		return nil, fmt.Errorf("short read from input registers 160-199: got %d bytes, want 80", len(data5))
 	}
 
 	rtd := &RealtimeData{}

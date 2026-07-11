@@ -129,11 +129,17 @@ func ReadRealtimeData(reader modbus.RegisterReader, id uint8) (*RealtimeData, er
 	if err != nil {
 		return nil, fmt.Errorf("failed to read registers 60-64: %w", err)
 	}
+	if len(data1) < 10 {
+		return nil, fmt.Errorf("short read from registers 60-64: got %d bytes, want 10", len(data1))
+	}
 
 	// Block 2: Addr 79-91 (Grid Frequency, DC/DC Temp, IGBT Temp)
 	data2, err := reader.ReadHoldingRegisters(id, 79, 13) // 79-91
 	if err != nil {
 		return nil, fmt.Errorf("failed to read registers 79-91: %w", err)
+	}
+	if len(data2) < 26 {
+		return nil, fmt.Errorf("short read from registers 79-91: got %d bytes, want 26", len(data2))
 	}
 
 	// Block 3: Addr 103-112 (Fault Info, Batt Capacity, Daily PV, DC Volt/Current)
@@ -141,17 +147,26 @@ func ReadRealtimeData(reader modbus.RegisterReader, id uint8) (*RealtimeData, er
 	if err != nil {
 		return nil, fmt.Errorf("failed to read registers 103-112: %w", err)
 	}
+	if len(data3) < 20 {
+		return nil, fmt.Errorf("short read from registers 103-112: got %d bytes, want 20", len(data3))
+	}
 
 	// Block 4: Addr 150-184 (Various Voltages, Currents, Powers, Battery Info)
 	data4, err := reader.ReadHoldingRegisters(id, 150, 35) // 150-184
 	if err != nil {
 		return nil, fmt.Errorf("failed to read registers 150-184: %w", err)
 	}
+	if len(data4) < 70 {
+		return nil, fmt.Errorf("short read from registers 150-184: got %d bytes, want 70", len(data4))
+	}
 
 	// Block 5: Addr 186-196 (PV Power, Battery Output, Frequencies, Relay Status)
 	data5, err := reader.ReadHoldingRegisters(id, 186, 11) // 186-196
 	if err != nil {
 		return nil, fmt.Errorf("failed to read registers 186-196: %w", err)
+	}
+	if len(data5) < 22 {
+		return nil, fmt.Errorf("short read from registers 186-196: got %d bytes, want 22", len(data5))
 	}
 
 	rtd := &RealtimeData{}

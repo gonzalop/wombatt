@@ -191,17 +191,26 @@ func ReadRealtimeData(reader modbus.RegisterReader, id uint8) (*RealtimeData, er
 	if err != nil {
 		return nil, fmt.Errorf("failed to read input registers 0-68: %w", err)
 	}
+	if len(data1) < 138 {
+		return nil, fmt.Errorf("short read from input registers 0-68: got %d bytes, want 138", len(data1))
+	}
 
 	// Block 2: Registers 0x0045 to 0x0078 (69 to 120 decimal) - 52 registers
 	data2, err := reader.ReadInputRegisters(id, 69, 52) // 52 registers * 2 bytes/register = 104 bytes
 	if err != nil {
 		return nil, fmt.Errorf("failed to read input registers 69-120: %w", err)
 	}
+	if len(data2) < 104 {
+		return nil, fmt.Errorf("short read from input registers 69-120: got %d bytes, want 104", len(data2))
+	}
 
 	// Block 3: Registers 0x0079 to 0x0098 (121 to 152 decimal) - 32 registers
 	data3, err := reader.ReadInputRegisters(id, 121, 32) // 32 registers * 2 bytes/register = 64 bytes
 	if err != nil {
 		return nil, fmt.Errorf("failed to read input registers 121-152: %w", err)
+	}
+	if len(data3) < 64 {
+		return nil, fmt.Errorf("short read from input registers 121-152: got %d bytes, want 64", len(data3))
 	}
 
 	rtd := &RealtimeData{}
