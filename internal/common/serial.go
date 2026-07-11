@@ -105,10 +105,13 @@ func (p *internalPort) Unlock() {
 }
 
 func (p *internalPort) Read(b []byte) (n int, err error) {
-	if p.ReadWriteCloser == nil {
+	p.lock.Lock()
+	rwc := p.ReadWriteCloser
+	p.lock.Unlock()
+	if rwc == nil {
 		return 0, fmt.Errorf("port is closed")
 	}
-	n, err = p.ReadWriteCloser.Read(b)
+	n, err = rwc.Read(b)
 	if n == 0 && err == nil && len(b) > 0 {
 		return 0, fmt.Errorf("read timeout")
 	}
@@ -116,10 +119,13 @@ func (p *internalPort) Read(b []byte) (n int, err error) {
 }
 
 func (p *internalPort) Write(b []byte) (n int, err error) {
-	if p.ReadWriteCloser == nil {
+	p.lock.Lock()
+	rwc := p.ReadWriteCloser
+	p.lock.Unlock()
+	if rwc == nil {
 		return 0, fmt.Errorf("port is closed")
 	}
-	return p.ReadWriteCloser.Write(b)
+	return rwc.Write(b)
 }
 
 func (p *internalPort) Close() error {
