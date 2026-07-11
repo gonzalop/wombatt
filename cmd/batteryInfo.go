@@ -42,6 +42,7 @@ func (cmd *BatteryInfoCmd) Run(globals *Globals) error {
 	if err != nil {
 		return fmt.Errorf("failed to open port: %w", err)
 	}
+	defer port.Close()
 	reader, err := modbus.Reader(port, cmd.Protocol, string(cmd.BMSType))
 	if err != nil {
 		log.Fatal(err.Error())
