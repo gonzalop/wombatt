@@ -108,18 +108,32 @@ func (cmd *MonitorBatteriesCmd) Run(globals *Globals, ctx context.Context) error
 		Type:    common.DeviceTypeFromString[cmd.DeviceType],
 	}
 
+	var port common.Port
+	defer func() {
+		if port != nil {
+			port.Close()
+		}
+	}()
+
 	for {
 		select {
 		case <-ctx.Done():
 			return nil
 		default:
-			port, err := common.OpenPort(portOptions)
-			if err != nil {
-				slog.Error("failed to open port", "address", cmd.Address, "error", err)
-			} else {
-				monitorBatteries(ctx, ch, port, cmd, battery)
-				port.Close()
+			if port == nil {
+				var err error
+				port, err = common.OpenPort(portOptions)
+				if err != nil {
+					slog.Error("failed to open port", "address", cmd.Address, "error", err)
+					select {
+					case <-ctx.Done():
+						return nil
+					case <-time.After(cmd.PollInterval):
+					}
+					continue
+				}
 			}
+			monitorBatteries(ctx, ch, port, cmd, battery)
 			select {
 			case <-ctx.Done():
 				return nil
