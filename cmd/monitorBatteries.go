@@ -72,7 +72,7 @@ func (cmd *MonitorBatteriesCmd) Run(globals *Globals, ctx context.Context) error
 			log.Fatalf("error connecting to MQTT broker at %s: %v\n", cmd.MQTTBroker, err)
 		}
 		defer client.Disconnect(250)
-		go mqttPublish(client, mqttChannel, cmd, battery.InfoInstance())
+		go mqttPublish(ctx, client, mqttChannel, cmd, battery.InfoInstance())
 	}
 	if webServer == nil && mqttChannel == nil {
 		log.Fatalf("need at least MQTT or web server argument to publish info to.\n")
@@ -151,8 +151,8 @@ func monitorBatteries(ctx context.Context, ch chan *batteryInfo, port common.Por
 	slog.Info("published info for batteries", "battery-id", success)
 }
 
-func mqttPublish(client *mqttha.Client, ch chan *batteryInfo, cmd *MonitorBatteriesCmd, emptyInfo any) {
-	createDiscoveryConfig(client, cmd, emptyInfo)
+func mqttPublish(ctx context.Context, client *mqttha.Client, ch chan *batteryInfo, cmd *MonitorBatteriesCmd, emptyInfo any) {
+	createDiscoveryConfig(ctx, client, cmd, emptyInfo)
 	for bi := range ch {
 		config := make(map[string]any)
 		f := func(info map[string]string, value any) {
@@ -163,19 +163,19 @@ func mqttPublish(client *mqttha.Client, ch chan *batteryInfo, cmd *MonitorBatter
 			"identifiers": fmt.Sprintf("%s_battery%d", cmd.MQTTPrefix, bi.ID),
 		}
 		topic := fmt.Sprintf("%s/sensor/%s_battery%d_info/state", cmd.MQTTTopicPrefix, cmd.MQTTPrefix, bi.ID)
-		if err := client.PublishMap(topic, config, mqttha.NoRetain, mqttha.TopicAlias); err != nil {
+		if err := client.PublishMap(ctx, topic, config, mqttha.NoRetain, mqttha.TopicAlias); err != nil {
 			slog.Error("mqtt error publishing", "server", cmd.MQTTBroker, "error", err)
 		}
 	}
 }
 
-func createDiscoveryConfig(client *mqttha.Client, cmd *MonitorBatteriesCmd, emptyInfo any) {
+func createDiscoveryConfig(ctx context.Context, client *mqttha.Client, cmd *MonitorBatteriesCmd, emptyInfo any) {
 	for _, id := range cmd.ID {
-		addDiscoveryConfig(client, cmd, id, emptyInfo)
+		addDiscoveryConfig(ctx, client, cmd, id, emptyInfo)
 	}
 }
 
-func addDiscoveryConfig(client *mqttha.Client, cmd *MonitorBatteriesCmd, id uint, st any) {
+func addDiscoveryConfig(ctx context.Context, client *mqttha.Client, cmd *MonitorBatteriesCmd, id uint, st any) {
 	f := func(info map[string]string, value any) {
 		name := info["name"]
 		config := map[string]any{
@@ -214,7 +214,7 @@ func addDiscoveryConfig(client *mqttha.Client, cmd *MonitorBatteriesCmd, id uint
 		}
 
 		topic := fmt.Sprintf("%s/sensor/%s_battery%d_%s/config", cmd.MQTTTopicPrefix, cmd.MQTTPrefix, id, name)
-		if err := client.PublishDiscovery(topic, config); err != nil {
+		if err := client.PublishDiscovery(ctx, topic, config); err != nil {
 			slog.Error("mqtt error publishing", "server", cmd.MQTTBroker, "error", err)
 		}
 	}

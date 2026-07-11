@@ -93,7 +93,7 @@ type inverterMonitor struct {
 func runInverterMonitor(ctx context.Context, cmd *MonitorInvertersCmd, monitors []*inverterMonitor) error {
 	var wg sync.WaitGroup
 	if monitors[0].client != nil {
-		invertersDiscoveryConfig(cmd.MQTTTopicPrefix, monitors)
+		invertersDiscoveryConfig(ctx, cmd.MQTTTopicPrefix, monitors)
 	}
 	for {
 		select {
@@ -148,7 +148,7 @@ func runInverterMonitor(ctx context.Context, cmd *MonitorInvertersCmd, monitors 
 			wg.Wait()
 			for i, r := range responses {
 				r.ValidateResponses()
-				r.Publish(cmd.MQTTTopicPrefix, i)
+				r.Publish(ctx, cmd.MQTTTopicPrefix, i)
 			}
 			responses = nil
 			select {
@@ -179,7 +179,7 @@ func (r *cmdResponse) ValidateResponses() {
 	}
 }
 
-func (r *cmdResponse) Publish(topicPrefix string, cmdIndex int) {
+func (r *cmdResponse) Publish(ctx context.Context, topicPrefix string, cmdIndex int) {
 	m := r.monitor
 	for ic, ir := range r.Responses {
 		if r.Errors[ic] != nil {
@@ -192,7 +192,7 @@ func (r *cmdResponse) Publish(topicPrefix string, cmdIndex int) {
 	}
 
 	if m.client != nil {
-		m.publishToMQTT(topicPrefix, r.Responses, r.Errors)
+		m.publishToMQTT(ctx, topicPrefix, r.Responses, r.Errors)
 	}
 
 	if m.client == nil && m.webServer == nil {
@@ -211,7 +211,7 @@ func publishToStdout(im *inverterMonitor, results []any) {
 	}
 }
 
-func invertersDiscoveryConfig(mqttTopicPrefix string, monitors []*inverterMonitor) {
+func invertersDiscoveryConfig(ctx context.Context, mqttTopicPrefix string, monitors []*inverterMonitor) {
 	for _, m := range monitors {
 		for _, c := range m.Commands {
 			var st any
@@ -248,12 +248,12 @@ func invertersDiscoveryConfig(mqttTopicPrefix string, monitors []*inverterMonito
 			case *pi30.EmptyResponse:
 				continue
 			}
-			addStructDiscoveryConfig(m, st, mqttTopicPrefix)
+			addStructDiscoveryConfig(ctx, m, st, mqttTopicPrefix)
 		}
 	}
 }
 
-func addStructDiscoveryConfig(m *inverterMonitor, st any, topicPrefix string) {
+func addStructDiscoveryConfig(ctx context.Context, m *inverterMonitor, st any, topicPrefix string) {
 	client := m.client
 	tag := m.MQTTTag
 	f := func(info map[string]string, value any) {
@@ -287,14 +287,14 @@ func addStructDiscoveryConfig(m *inverterMonitor, st any, topicPrefix string) {
 		}
 
 		topic := fmt.Sprintf("%s/sensor/%s_%s/config", topicPrefix, tag, name)
-		if err := client.PublishDiscovery(topic, config); err != nil {
+		if err := client.PublishDiscovery(ctx, topic, config); err != nil {
 			slog.Error("mqtt error publishing", "error", err)
 		}
 	}
 	common.TraverseStruct(st, f)
 }
 
-func (im *inverterMonitor) publishToMQTT(mqttTopicPrefix string, results []any, errors []error) {
+func (im *inverterMonitor) publishToMQTT(ctx context.Context, mqttTopicPrefix string, results []any, errors []error) {
 	config := make(map[string]any)
 	f := func(info map[string]string, value any) {
 		config[info["name"]] = value
@@ -313,7 +313,7 @@ func (im *inverterMonitor) publishToMQTT(mqttTopicPrefix string, results []any, 
 		"identifiers": im.MQTTTag,
 	}
 	topic := fmt.Sprintf("%s/sensor/%s_info/state", mqttTopicPrefix, im.MQTTTag)
-	if err := im.client.PublishMap(topic, config, mqttha.NoRetain, mqttha.TopicAlias); err != nil {
+	if err := im.client.PublishMap(ctx, topic, config, mqttha.NoRetain, mqttha.TopicAlias); err != nil {
 		slog.Error("mqtt error publishing", "error", err)
 	}
 }

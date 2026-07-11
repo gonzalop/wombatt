@@ -76,7 +76,7 @@ func compactMap(data map[string]any) map[string]any {
 }
 
 // PublishMap will publish a JSON encoded map to the given topic.
-func (c *Client) PublishMap(topic string, data map[string]any, retain bool, useTopicAlias bool) error {
+func (c *Client) PublishMap(ctx context.Context, topic string, data map[string]any, retain bool, useTopicAlias bool) error {
 	j, err := json.Marshal(data)
 	if err != nil {
 		return err
@@ -88,14 +88,14 @@ func (c *Client) PublishMap(topic string, data map[string]any, retain bool, useT
 		opts = append(opts, mq.WithAlias())
 	}
 
-	token := c.client.Publish(topic, j, opts...)
-	return token.Wait(context.Background())
+	token := c.client.Publish(ctx, topic, j, opts...)
+	return token.Wait(ctx)
 }
 
 // PublishDiscovery publishes a JSON encoded map to the given topic, compacting the keys.
-func (c *Client) PublishDiscovery(topic string, data map[string]any) error {
+func (c *Client) PublishDiscovery(ctx context.Context, topic string, data map[string]any) error {
 	compactData := compactMap(data)
-	return c.PublishMap(topic, compactData, Retain, NoTopicAlias)
+	return c.PublishMap(ctx, topic, compactData, Retain, NoTopicAlias)
 }
 
 func (c *Client) Disconnect(ms time.Duration) {
