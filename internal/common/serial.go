@@ -93,7 +93,8 @@ type internalPort struct {
 	ReadWriteCloser io.ReadWriteCloser
 	*PortOptions
 
-	lock sync.Mutex
+	lock sync.Mutex // For high-level client locking (Lock/Unlock)
+	mu   sync.Mutex // For protecting ReadWriteCloser pointer access
 }
 
 func (p *internalPort) Lock() {
@@ -105,9 +106,9 @@ func (p *internalPort) Unlock() {
 }
 
 func (p *internalPort) Read(b []byte) (n int, err error) {
-	p.lock.Lock()
+	p.mu.Lock()
 	rwc := p.ReadWriteCloser
-	p.lock.Unlock()
+	p.mu.Unlock()
 	if rwc == nil {
 		return 0, fmt.Errorf("port is closed")
 	}
@@ -119,9 +120,9 @@ func (p *internalPort) Read(b []byte) (n int, err error) {
 }
 
 func (p *internalPort) Write(b []byte) (n int, err error) {
-	p.lock.Lock()
+	p.mu.Lock()
 	rwc := p.ReadWriteCloser
-	p.lock.Unlock()
+	p.mu.Unlock()
 	if rwc == nil {
 		return 0, fmt.Errorf("port is closed")
 	}
@@ -133,6 +134,8 @@ func (p *internalPort) Close() error {
 }
 
 func (p *internalPort) close() error {
+	p.mu.Lock()
+	defer p.mu.Unlock()
 	if p.ReadWriteCloser == nil {
 		return nil
 	}
@@ -240,6 +243,7 @@ func (p *internalPort) ReopenWithBackoff() error {
 	p.close()
 	port, err := OpenPortWithBackoff(p.PortOptions, 0)
 	if port != nil {
+		p.mu.Lock()
 		// OpenPortWithBackoff might return a Port interface.
 		// Since OpenPort returns an *internalPort, we need to extract the ReadWriteCloser from it.
 		if ip, ok := port.(*internalPort); ok {
@@ -247,6 +251,7 @@ func (p *internalPort) ReopenWithBackoff() error {
 		} else {
 			p.ReadWriteCloser = port
 		}
+		p.mu.Unlock()
 	}
 	return err
 }
