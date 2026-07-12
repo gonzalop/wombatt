@@ -1,6 +1,6 @@
 ARG BUILD_ARCH=amd64
 ARG BUILD_FROM=ghcr.io/home-assistant/${BUILD_ARCH}-base:latest
-ARG BUILD_VERSION=0.6.4
+ARG BUILD_VERSION=0.7.0
 
 FROM docker.io/gonzalomono/wombatt:v${BUILD_VERSION} AS source
 FROM ${BUILD_FROM}

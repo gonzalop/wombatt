@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.7.0 - 2026-07-12
+
+### 🚀 Improvements
+- **Robust Protocol Parsing**: LifePower4 (LFP4) protocol parsing is now more robust, scanning and aligning to the SOI byte (0x7e) first.
+- **Persistent Port Connections**: Monitor port connections are now kept persistent across polling cycles and will reconnect automatically on error.
+- **Improved MQTT Reliability**: Added a 15-second timeout to MQTT publish operations to prevent indefinite hangs.
+
+### 🐛 Bug Fixes
+- **Concurrency & Deadlock Fixes**: Resolved a deadlock in `internalPort` by separating high-level lock from the internal connection mutex, and fixed a data race panic during concurrent port reopening.
+- **Resource & Goroutine Leak Fixes**: Fixed a goroutine leak in battery monitoring and resource leaks by ensuring proper deferment of port closure in commands.
+- **Modbus Safety**: Fixed potential out-of-bounds panics on truncated Modbus blocks.
+
+### 🛠 Maintenance
+- **Performance Optimization**: Precompiled Prometheus metrics sanitizer regular expression at the package level.
+- **Dependency Updates**:
+  - Updated `github.com/gonzalop/mq` to v0.9.8.
+  - Bumped `go.bug.st/serial` to v1.7.1.
+
 ## 0.6.4 - 2026-05-18
 
 ### 🛠 Maintenance
