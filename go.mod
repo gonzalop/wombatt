@@ -9,7 +9,7 @@ require (
 	github.com/gonzalop/mq v0.9.8
 	github.com/howeyc/crc16 v0.0.0-20171223171357-2b2a61e366a6
 	github.com/stretchr/testify v1.11.1
-	go.bug.st/serial v1.7.1
+	go.bug.st/serial v1.8.0
 )
 
 require (
