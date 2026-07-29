@@ -37,6 +37,14 @@ func (*TestPort) ReopenWithBackoff() error {
 	return nil
 }
 
+func (*TestPort) ResetInputBuffer() error {
+	return nil
+}
+
+func (*TestPort) SetReadTimeout(time.Duration) error {
+	return nil
+}
+
 func (p *TestPort) Type() DeviceType {
 	return p.dtype
 
@@ -78,8 +86,9 @@ var DeviceTypeFromString = map[string]DeviceType{
 type PortOptions struct {
 	*serial.Mode // Mode contains serial port settings like BaudRate, DataBits, etc.
 
-	Type    DeviceType // Type specifies the kind of device (e.g., SerialDevice, TCPDevice).
-	Address string     // Address is the port name (e.g., "/dev/ttyUSB0") or network address (e.g., "192.168.1.1:8080").
+	Type        DeviceType    // Type specifies the kind of device (e.g., SerialDevice, TCPDevice).
+	Address     string        // Address is the port name (e.g., "/dev/ttyUSB0") or network address (e.g., "192.168.1.1:8080").
+	ReadTimeout time.Duration // ReadTimeout specifies the timeout when reading from the device.
 }
 
 var deviceOpen = map[DeviceType]func(*PortOptions) (Port, error){
@@ -150,7 +159,11 @@ func openSerial(opts *PortOptions) (Port, error) {
 	if err != nil {
 		return nil, err
 	}
-	_ = p.SetReadTimeout(5000) // 5 seconds
+	readTimeout := 5 * time.Second
+	if opts.ReadTimeout > 0 {
+		readTimeout = opts.ReadTimeout
+	}
+	_ = p.SetReadTimeout(readTimeout)
 	_ = p.ResetInputBuffer()
 	_ = p.ResetOutputBuffer()
 	o := *opts
@@ -187,6 +200,10 @@ type Port interface {
 	// ReopenWithBackoff attempts to close and then reopen the port with exponential backoff.
 	// It returns an error if the port cannot be reopened after multiple retries.
 	ReopenWithBackoff() error
+	// ResetInputBuffer flushes/clears any unread data in the input buffer.
+	ResetInputBuffer() error
+	// SetReadTimeout sets the timeout for reading operations on the underlying device connection.
+	SetReadTimeout(d time.Duration) error
 	// Type returns the DeviceType of the port.
 	Type() DeviceType
 	// Lock locks the port for exclusive access.
@@ -254,6 +271,35 @@ func (p *internalPort) ReopenWithBackoff() error {
 		p.mu.Unlock()
 	}
 	return err
+}
+
+func (p *internalPort) ResetInputBuffer() error {
+	p.mu.Lock()
+	rwc := p.ReadWriteCloser
+	p.mu.Unlock()
+	if rwc == nil {
+		return fmt.Errorf("port is closed")
+	}
+	if flusher, ok := rwc.(interface{ ResetInputBuffer() error }); ok {
+		return flusher.ResetInputBuffer()
+	}
+	return nil
+}
+
+func (p *internalPort) SetReadTimeout(d time.Duration) error {
+	p.mu.Lock()
+	rwc := p.ReadWriteCloser
+	p.mu.Unlock()
+	if rwc == nil {
+		return fmt.Errorf("port is closed")
+	}
+	if sp, ok := rwc.(serial.Port); ok {
+		return sp.SetReadTimeout(d)
+	}
+	if conn, ok := rwc.(net.Conn); ok {
+		return conn.SetReadDeadline(time.Now().Add(d))
+	}
+	return nil
 }
 
 // NewPort creates a new Port instance with the specified parameters.

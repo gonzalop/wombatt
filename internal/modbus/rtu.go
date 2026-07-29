@@ -229,6 +229,7 @@ func (r *RTU) ReadInputRegisters(id uint8, start uint16, count uint8) ([]byte, e
 }
 
 func (r *RTU) readRegisters(id uint8, functionCode RTUFunction, start uint16, count uint8) ([]byte, error) {
+	_ = r.port.ResetInputBuffer()
 	f := buildReadRequestRTUFrame(id, functionCode, start, uint16(count))
 	if _, err := r.port.Write(f); err != nil {
 		return nil, err

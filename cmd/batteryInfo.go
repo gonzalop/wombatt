@@ -27,9 +27,10 @@ type BatteryInfoCmd struct {
 
 func (cmd *BatteryInfoCmd) Run(globals *Globals) error {
 	portOptions := &common.PortOptions{
-		Address: cmd.Address,
-		Mode:    &serial.Mode{BaudRate: int(cmd.BaudRate)},
-		Type:    common.DeviceTypeFromString[cmd.DeviceType],
+		Address:     cmd.Address,
+		Mode:        &serial.Mode{BaudRate: int(cmd.BaudRate)},
+		Type:        common.DeviceTypeFromString[cmd.DeviceType],
+		ReadTimeout: cmd.ReadTimeout,
 	}
 	battery, err := bms.Instance(string(cmd.BMSType))
 	if err != nil {
@@ -71,6 +72,7 @@ func (cmd *BatteryInfoCmd) Run(globals *Globals) error {
 			writeBatteryInfo(extra)
 		}
 		fmt.Println()
+		time.Sleep(50 * time.Millisecond)
 	}
 	if failed != nil {
 		log.Fatal(failed)

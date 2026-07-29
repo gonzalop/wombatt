@@ -55,6 +55,8 @@ func TestInternalPortLockConcurrentIO(t *testing.T) {
 		buf := make([]byte, 10)
 		_, _ = p.Read(buf)
 		_, _ = p.Write(buf)
+		_ = p.ResetInputBuffer()
+		_ = p.SetReadTimeout(100 * time.Millisecond)
 		close(done)
 	}()
 

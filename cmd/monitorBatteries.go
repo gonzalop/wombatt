@@ -103,9 +103,10 @@ func (cmd *MonitorBatteriesCmd) Run(globals *Globals, ctx context.Context) error
 		}
 	}()
 	portOptions := &common.PortOptions{
-		Address: cmd.Address,
-		Mode:    &serial.Mode{BaudRate: int(cmd.BaudRate)},
-		Type:    common.DeviceTypeFromString[cmd.DeviceType],
+		Address:     cmd.Address,
+		Mode:        &serial.Mode{BaudRate: int(cmd.BaudRate)},
+		Type:        common.DeviceTypeFromString[cmd.DeviceType],
+		ReadTimeout: cmd.ReadTimeout,
 	}
 
 	for {
@@ -143,6 +144,7 @@ func monitorBatteries(ctx context.Context, ch chan *batteryInfo, port common.Por
 			if err := port.ReopenWithBackoff(); err != nil {
 				slog.Error("error reopening", "error", err)
 			}
+			time.Sleep(50 * time.Millisecond)
 			continue
 		}
 		if ch != nil {
@@ -153,6 +155,7 @@ func monitorBatteries(ctx context.Context, ch chan *batteryInfo, port common.Por
 			fmt.Println()
 		}
 		success = append(success, id)
+		time.Sleep(50 * time.Millisecond)
 	}
 	slog.Info("published info for batteries", "battery-id", success)
 }
