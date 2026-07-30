@@ -105,6 +105,9 @@ func runInverterMonitor(ctx context.Context, cmd *MonitorInvertersCmd, monitors 
 			for i, m := range monitors {
 				go func(i int, m *inverterMonitor) {
 					defer wg.Done()
+					if i > 0 {
+						time.Sleep(time.Duration(i*100) * time.Millisecond)
+					}
 					port, err := common.NewPort(m.Device, cmd.DeviceType, int(cmd.BaudRate), cmd.DataBits, cmd.StopBits, cmd.Parity)
 					if err != nil {
 						slog.Error("error opening device", "device", m.Device, "error", err)

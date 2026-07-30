@@ -11,6 +11,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 
 	"wombatt/internal/common"
 
@@ -22,7 +23,10 @@ func RunCommands(ctx context.Context, port common.Port, commands []string) ([]an
 	var resultErr []error
 	port.Lock()
 	defer port.Unlock()
-	for _, cmd := range commands {
+	for i, cmd := range commands {
+		if i > 0 {
+			time.Sleep(100 * time.Millisecond)
+		}
 		r, err := RunCommand(ctx, port, cmd)
 		result = append(result, r)
 		resultErr = append(resultErr, err)
@@ -31,50 +35,62 @@ func RunCommands(ctx context.Context, port common.Port, commands []string) ([]an
 }
 
 func RunCommand(ctx context.Context, port io.ReadWriter, cmd string) (any, error) {
-	type data struct {
-		strs []string
-		err  error
-	}
-	ch := make(chan *data, 1)
-	go func() {
-		err := sendCommand(port, cmd)
-		if err != nil {
-			err = fmt.Errorf("send error in %s: %v\n", cmd, err)
-			ch <- &data{nil, err}
-			return
+	var lastErr error
+	for attempt := 0; attempt < 3; attempt++ {
+		if attempt > 0 {
+			time.Sleep(150 * time.Millisecond)
 		}
-		resp, err := readResponse(port)
-		if err != nil {
-			err = fmt.Errorf("error reading response in %s: %v\n", cmd, err)
-			ch <- &data{nil, err}
-			return
+		type data struct {
+			strs []string
+			err  error
 		}
-		ch <- &data{resp, nil}
-	}()
+		ch := make(chan *data, 1)
+		go func() {
+			err := sendCommand(port, cmd)
+			if err != nil {
+				err = fmt.Errorf("send error in %s: %v\n", cmd, err)
+				ch <- &data{nil, err}
+				return
+			}
+			resp, err := readResponse(port)
+			if err != nil {
+				err = fmt.Errorf("error reading response in %s: %v\n", cmd, err)
+				ch <- &data{nil, err}
+				return
+			}
+			ch <- &data{resp, nil}
+		}()
 
-	var resp *data
-	select {
-	case <-ctx.Done():
-		return nil, fmt.Errorf("timed out sending %s", cmd)
-	case resp = <-ch:
-		if resp.strs == nil && resp.err != nil {
-			return nil, resp.err
+		var resp *data
+		select {
+		case <-ctx.Done():
+			return nil, fmt.Errorf("timed out sending %s", cmd)
+		case resp = <-ch:
+			if resp.strs == nil && resp.err != nil {
+				if attempt > 0 {
+					return nil, lastErr
+				}
+				return nil, resp.err
+			}
 		}
-	}
 
-	switch len(resp.strs) {
-	case 0:
-		return nil, fmt.Errorf("invalid response %s\n", cmd)
-	case 1:
-		if resp.strs[0] == "NAK" {
-			return nil, fmt.Errorf("NAK received")
+		switch len(resp.strs) {
+		case 0:
+			return nil, fmt.Errorf("invalid response %s\n", cmd)
+		case 1:
+			if resp.strs[0] == "NAK" {
+				lastErr = fmt.Errorf("NAK received")
+				continue
+			}
 		}
+		result := StructForCommand(cmd)
+		if err := decodeResponse(resp.strs, result); err != nil {
+			lastErr = fmt.Errorf("decode error for %s: %v\n", cmd, err)
+			continue
+		}
+		return result, nil
 	}
-	result := StructForCommand(cmd)
-	if err := decodeResponse(resp.strs, result); err != nil {
-		return nil, fmt.Errorf("decode error for %s: %v\n", cmd, err)
-	}
-	return result, nil
+	return nil, lastErr
 }
 
 func StructForCommand(cmd string) any {
@@ -99,6 +115,9 @@ func StructForCommand(cmd string) any {
 }
 
 func sendCommand(port io.Writer, command string) error {
+	if flusher, ok := port.(interface{ ResetInputBuffer() error }); ok {
+		_ = flusher.ResetInputBuffer()
+	}
 	var b bytes.Buffer
 	b.WriteString(command)
 	c := crc([]byte(command))

@@ -283,6 +283,21 @@ func (p *internalPort) ResetInputBuffer() error {
 	if flusher, ok := rwc.(interface{ ResetInputBuffer() error }); ok {
 		return flusher.ResetInputBuffer()
 	}
+	if conn, ok := rwc.(net.Conn); ok {
+		_ = conn.SetReadDeadline(time.Now().Add(5 * time.Millisecond))
+		buf := make([]byte, 256)
+		for {
+			n, err := conn.Read(buf)
+			if n == 0 || err != nil {
+				break
+			}
+		}
+		if p.PortOptions != nil && p.PortOptions.ReadTimeout > 0 {
+			_ = conn.SetReadDeadline(time.Now().Add(p.PortOptions.ReadTimeout))
+		} else {
+			_ = conn.SetReadDeadline(time.Time{})
+		}
+	}
 	return nil
 }
 
