@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.7.1 - 2026-07-29
+
+### 🚀 Improvements
+- **PI30 Transient NAK Retry**: Implemented automatic command retries (up to 3 attempts with 150ms delay) in `pi30.RunCommand` to recover seamlessly when inverters are busy with internal parallel synchronization (fixes #74).
+- **Fast TCP Dial Timeout**: Replaced 10-second default TCP dialing timeout with `opts.ReadTimeout` (3s max) so connection attempts fail fast when target bridges or devices are powered off.
+- **Immediate Context Cancellation**: Added context error checks in `monitorBatteries` and `monitorInverters` loops to ensure immediate Ctrl-C exit without hanging.
+
+### 🐛 Bug Fixes
+- **TCP Socket Buffer Flushing**: Extended `ResetInputBuffer` to non-blocking TCP socket connections to purge stale pending bytes prior to command execution.
+- **Goroutine Staggering & Safety**: Added a 100ms stagger between inverter monitoring tasks and added safety guards against nil response pointers during context cancellation.
+
 ## 0.7.0 - 2026-07-12
 
 ### 🚀 Improvements
