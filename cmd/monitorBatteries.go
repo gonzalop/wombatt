@@ -139,8 +139,14 @@ func monitorBatteries(ctx context.Context, ch chan *batteryInfo, port common.Por
 	slog.Info("fetching info from batteries", "battery-id", cmd.ID)
 	success := []uint{}
 	for _, id := range cmd.ID {
+		if ctx.Err() != nil {
+			return
+		}
 		info, err := battery.ReadInfo(reader, uint8(id), cmd.ReadTimeout)
 		if err != nil {
+			if ctx.Err() != nil {
+				return
+			}
 			if err := port.ReopenWithBackoff(); err != nil {
 				slog.Error("error reopening", "error", err)
 			}

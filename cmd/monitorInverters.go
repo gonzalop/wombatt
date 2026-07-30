@@ -106,7 +106,14 @@ func runInverterMonitor(ctx context.Context, cmd *MonitorInvertersCmd, monitors 
 				go func(i int, m *inverterMonitor) {
 					defer wg.Done()
 					if i > 0 {
-						time.Sleep(time.Duration(i*100) * time.Millisecond)
+						select {
+						case <-ctx.Done():
+							return
+						case <-time.After(time.Duration(i*100) * time.Millisecond):
+						}
+					}
+					if ctx.Err() != nil {
+						return
 					}
 					port, err := common.NewPort(m.Device, cmd.DeviceType, int(cmd.BaudRate), cmd.DataBits, cmd.StopBits, cmd.Parity)
 					if err != nil {
@@ -137,6 +144,10 @@ func runInverterMonitor(ctx context.Context, cmd *MonitorInvertersCmd, monitors 
 						errors = append(errors, fmt.Errorf("unknown inverter type: %s", m.InverterType))
 					}
 
+					if ctx.Err() != nil {
+						return
+					}
+
 					responses[i] = &cmdResponse{results, errors, m}
 
 					okCommands := []string{}
@@ -150,7 +161,13 @@ func runInverterMonitor(ctx context.Context, cmd *MonitorInvertersCmd, monitors 
 				}(i, m)
 			}
 			wg.Wait()
+			if ctx.Err() != nil {
+				return nil
+			}
 			for i, r := range responses {
+				if r == nil {
+					continue
+				}
 				r.ValidateResponses()
 				r.Publish(ctx, cmd.MQTTTopicPrefix, i)
 			}

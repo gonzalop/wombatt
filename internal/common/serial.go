@@ -185,7 +185,11 @@ func openHidRaw(opts *PortOptions) (Port, error) {
 // openTCP opens a TCP connection based on the provided options.
 func openTCP(opts *PortOptions) (Port, error) {
 	slog.Debug("dialing TCP server", "address", opts.Address)
-	conn, err := net.DialTimeout("tcp", opts.Address, 10*time.Second)
+	timeout := 3 * time.Second
+	if opts.ReadTimeout > 0 {
+		timeout = opts.ReadTimeout
+	}
+	conn, err := net.DialTimeout("tcp", opts.Address, timeout)
 	if err != nil {
 		return nil, err
 	}
