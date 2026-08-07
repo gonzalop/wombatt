@@ -282,9 +282,10 @@ func addStructDiscoveryConfig(ctx context.Context, m *inverterMonitor, st any, t
 		config := map[string]any{
 			// "expire_after":?
 			// "force_update":   true,
+			"has_entity_name":   true,
 			"state_topic":       fmt.Sprintf("%s/sensor/%s_info/state", topicPrefix, tag),
-			"name":              fmt.Sprintf("Inverter %s %s", strings.TrimSpace(strings.ReplaceAll(tag, "_", " ")), name),
-			"default_entity_id": fmt.Sprintf("%s_%s", tag, name),
+			"name":              strings.ReplaceAll(name, "_", " "),
+			"default_entity_id": fmt.Sprintf("sensor.%s_%s", tag, name),
 			"value_template":    fmt.Sprintf("{{ value_json.%s }}", name),
 			"device": map[string]any{
 				"identifiers": []string{tag},
@@ -292,7 +293,7 @@ func addStructDiscoveryConfig(ctx context.Context, m *inverterMonitor, st any, t
 				"model":       m.InverterType,
 			},
 		}
-		config["unique_id"] = config["default_entity_id"]
+		config["unique_id"] = fmt.Sprintf("%s_%s", tag, name)
 		dclass := info["dclass"]
 		unit := info["unit"]
 		icon := info["icon"]

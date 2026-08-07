@@ -39,7 +39,6 @@ func Connect(host, user, password string) (*Client, error) {
 // haAliases contains the short abbreviations for Home Assistant discovery keys.
 // This map only includes the keys that are actually used by Wombatt.
 var haAliases = map[string]string{
-	"default_entity_id":           "def_ent_id",
 	"device":                      "dev",
 	"device_class":                "dev_cla",
 	"icon":                        "ic",
