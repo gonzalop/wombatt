@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.7.2 - 2026-08-07
+
+### 🐛 Bug Fixes
+- **Home Assistant MQTT Entity Naming**: Fixed MQTT entity naming for recent Home Assistant versions by setting `has_entity_name: true`, stripping redundant device name prefixes from entity names in discovery payloads, and ensuring `default_entity_id` includes the required `sensor.` domain prefix in long-form.
+
 ## 0.7.1 - 2026-07-29
 
 ### 🚀 Improvements
