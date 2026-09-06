@@ -10,7 +10,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cenkalti/backoff/v4"
 	"go.bug.st/serial"
 )
 
@@ -231,25 +230,24 @@ func OpenPort(opts *PortOptions) (Port, error) {
 
 // OpenPortWithBackoff will keep trying to successfully open a new port for up to the specified duration.
 func OpenPortWithBackoff(opts *PortOptions, d time.Duration) (Port, error) {
-	f := func() (Port, error) {
-		return OpenPort(opts)
-	}
-	n := func(err error, d time.Duration) {
-		slog.Debug("backing off after error", "address", opts.Address, "error", err, "elapsed", d)
-	}
-
-	b := backoff.NewExponentialBackOff()
 	if d == 0 {
-		b.MaxElapsedTime = DefaultMaxBackoffInterval * 2 // Ensure at least one retry
-	} else {
-		b.MaxElapsedTime = d
+		d = DefaultMaxBackoffInterval * 2
 	}
-	b.MaxInterval = DefaultMaxBackoffInterval
-	port, err := backoff.RetryNotifyWithData[Port](f, b, n)
-	if err != nil {
-		return port, err
+	start := time.Now()
+	delay := 500 * time.Millisecond
+	for {
+		port, err := OpenPort(opts)
+		if err == nil {
+			return port, nil
+		}
+		elapsed := time.Since(start)
+		if elapsed >= d {
+			return nil, err
+		}
+		slog.Debug("backing off after error", "address", opts.Address, "error", err, "elapsed", elapsed)
+		time.Sleep(min(delay, d-elapsed))
+		delay = min(delay*2, DefaultMaxBackoffInterval)
 	}
-	return port, nil
 }
 
 func (p *internalPort) Type() DeviceType {
