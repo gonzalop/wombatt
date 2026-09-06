@@ -10,48 +10,16 @@ import (
 )
 
 func RunCommands(ctx context.Context, port common.Port, protocol string, id uint8, commands []string) ([]any, []error) {
-	reader, err := modbus.Reader(port, protocol, "")
-	if err != nil {
-		var errors []error
-		for range commands {
-			errors = append(errors, err)
+	return modbus.RunCommands(ctx, port, protocol, id, commands, func(reader modbus.RegisterReader, id uint8, cmd string) (any, error) {
+		switch cmd {
+		case "RealtimeData":
+			return ReadRealtimeData(reader, id)
+		case "IntrinsicAttributes":
+			return ReadIntrinsicAttributes(reader, id)
+		default:
+			return nil, fmt.Errorf("unknown solark command: %s", cmd)
 		}
-		return nil, errors
-	}
-	var results []any
-	var errors []error
-
-	for _, cmd := range commands {
-		type data struct {
-			res any
-			err error
-		}
-		ch := make(chan *data, 1)
-
-		go func(cmd string) {
-			var res any
-			var err error
-			switch cmd {
-			case "RealtimeData":
-				res, err = ReadRealtimeData(reader, id)
-			case "IntrinsicAttributes":
-				res, err = ReadIntrinsicAttributes(reader, id)
-			default:
-				err = fmt.Errorf("unknown solark command: %s", cmd)
-			}
-			ch <- &data{res, err}
-		}(cmd)
-
-		select {
-		case <-ctx.Done():
-			results = append(results, nil)
-			errors = append(errors, ctx.Err())
-		case d := <-ch:
-			results = append(results, d.res)
-			errors = append(errors, d.err)
-		}
-	}
-	return results, errors
+	})
 }
 
 // RealtimeData holds the values from the "Real-time Running Data" table.

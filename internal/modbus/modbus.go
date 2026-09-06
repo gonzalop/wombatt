@@ -5,10 +5,48 @@ package modbus
 // function to create appropriate Modbus readers.
 
 import (
+	"context"
 	"fmt"
 
 	"wombatt/internal/common"
 )
+
+// RunCommands is a generic runner for Modbus register-reading commands across inverters.
+func RunCommands(ctx context.Context, port common.Port, protocol string, id uint8, commands []string, runCmd func(reader RegisterReader, id uint8, cmd string) (any, error)) ([]any, []error) {
+	reader, err := Reader(port, protocol, "")
+	if err != nil {
+		var errors []error
+		for range commands {
+			errors = append(errors, err)
+		}
+		return nil, errors
+	}
+	var results []any
+	var errors []error
+
+	for _, cmd := range commands {
+		type data struct {
+			res any
+			err error
+		}
+		ch := make(chan *data, 1)
+
+		go func(cmd string) {
+			res, err := runCmd(reader, id, cmd)
+			ch <- &data{res, err}
+		}(cmd)
+
+		select {
+		case <-ctx.Done():
+			results = append(results, nil)
+			errors = append(errors, ctx.Err())
+		case d := <-ch:
+			results = append(results, d.res)
+			errors = append(errors, d.err)
+		}
+	}
+	return results, errors
+}
 
 const (
 	RTUProtocol        = "ModbusRTU"
