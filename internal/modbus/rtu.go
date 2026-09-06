@@ -178,36 +178,6 @@ func CRC(data []byte) uint16 {
 	return crc16
 }
 
-// readRTURequest reads an entire RTUFrame for a request.
-func readRTURequest(port io.Reader) (*RTUFrame, error) {
-	b := make([]byte, MaxRTUFrameLength)
-	// Reading 8 works for all request types.
-	if n, err := io.ReadFull(port, b[0:8]); err != nil {
-		if err == io.ErrUnexpectedEOF {
-			return nil, fmt.Errorf("short frame: got %d, want at least 8 bytes", n)
-		}
-		return nil, err
-	}
-	pending := expectedRequestLength(RTUFunction(b[1]), uint16(b[5])*256+uint16(b[6]))
-	if pending == -1 {
-		return nil, fmt.Errorf("invalid function code: %02x\n", b[1])
-	}
-	pending += 2 // Add 2 CRC bytes
-	pending -= 6 // Subtract 6 bytes of the response already read (not including ID and function).
-	if n, err := io.ReadFull(port, b[8:8+pending]); err != nil {
-		if err == io.ErrUnexpectedEOF {
-			return nil, fmt.Errorf("short frame: got %d, want at least 8 bytes", n)
-		}
-		return nil, fmt.Errorf("error reading frame data: %w", err)
-	}
-	checksum := CRC(b[0 : 8+pending-2])
-	frame := NewRTUFrame(b[0 : 8+pending])
-	if checksum != frame.CRC() {
-		return frame, fmt.Errorf("invalid crc: got %x, want %x", frame.CRC(), checksum)
-	}
-	return frame, nil
-}
-
 type RTU struct {
 	port common.Port
 }
@@ -259,17 +229,6 @@ func expectedResponseLength(functionCode RTUFunction, receivedLength uint8) int 
 		}
 		return -1
 	}
-}
-
-func expectedRequestLength(functionCode RTUFunction, count uint16) int {
-	switch functionCode {
-	case ReadCoils, ReadInputRegisters, ReadHoldingRegisters, ReadDiscreteInputs, WriteSingleCoil, WriteSingleRegister:
-		return 4
-	case WriteMultipleCoil, WriteMultipleRegisters:
-		// count is at byte 6 in the request. ID+function code excluded, that results in 5 bytes in the response data already.
-		return 5 + int(count)
-	}
-	return -1
 }
 
 func protocolError(code uint8) error {
