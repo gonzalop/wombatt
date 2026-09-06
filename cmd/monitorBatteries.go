@@ -77,31 +77,9 @@ func (cmd *MonitorBatteriesCmd) Run(globals *Globals, ctx context.Context) error
 	if webServer == nil && mqttChannel == nil {
 		log.Fatalf("need at least MQTT or web server argument to publish info to.\n")
 	}
-	ch := make(chan *batteryInfo, len(cmd.ID))
-	defer close(ch)
-	go func() {
-		defer func() {
-			if mqttChannel != nil {
-				close(mqttChannel)
-			}
-		}()
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			case bi, ok := <-ch:
-				if !ok {
-					return
-				}
-				if mqttChannel != nil {
-					mqttChannel <- bi
-				}
-				if webServer != nil {
-					webServer.Publish(fmt.Sprintf("%d", bi.ID), bi.Info)
-				}
-			}
-		}
-	}()
+	if mqttChannel != nil {
+		defer close(mqttChannel)
+	}
 	portOptions := &common.PortOptions{
 		Address:     cmd.Address,
 		Mode:        &serial.Mode{BaudRate: int(cmd.BaudRate)},
@@ -118,7 +96,7 @@ func (cmd *MonitorBatteriesCmd) Run(globals *Globals, ctx context.Context) error
 			if err != nil {
 				slog.Error("failed to open port", "address", cmd.Address, "error", err)
 			} else {
-				monitorBatteries(ctx, ch, port, cmd, battery)
+				monitorBatteries(ctx, mqttChannel, webServer, port, cmd, battery)
 				port.Close()
 			}
 			select {
@@ -130,7 +108,7 @@ func (cmd *MonitorBatteriesCmd) Run(globals *Globals, ctx context.Context) error
 	}
 }
 
-func monitorBatteries(ctx context.Context, ch chan *batteryInfo, port common.Port, cmd *MonitorBatteriesCmd, battery bms.BMS) {
+func monitorBatteries(ctx context.Context, mqttChannel chan *batteryInfo, webServer *web.Server, port common.Port, cmd *MonitorBatteriesCmd, battery bms.BMS) {
 	reader, err := modbus.Reader(port, cmd.Protocol, string(cmd.BMSType))
 	if err != nil {
 		slog.Error("error creating modbus reader", "error", err)
@@ -153,9 +131,13 @@ func monitorBatteries(ctx context.Context, ch chan *batteryInfo, port common.Por
 			time.Sleep(50 * time.Millisecond)
 			continue
 		}
-		if ch != nil {
-			ch <- &batteryInfo{uint8(id), info}
-		} else {
+		if mqttChannel != nil {
+			mqttChannel <- &batteryInfo{uint8(id), info}
+		}
+		if webServer != nil {
+			webServer.Publish(fmt.Sprintf("%d", id), info)
+		}
+		if mqttChannel == nil && webServer == nil {
 			fmt.Printf("Battery #%d\n===========\n", id)
 			writeBatteryInfo(info)
 			fmt.Println()
