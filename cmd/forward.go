@@ -21,49 +21,35 @@ type ForwardCmd struct {
 }
 
 func (cmd *ForwardCmd) Run(globals *Globals) error {
-	f := NewForward(cmd)
-	if err := f.Init(); err != nil {
+	controller, subordinate, err := cmd.openPorts()
+	if err != nil {
 		log.Fatalf("error initializing: %v\n", err)
 	}
-	f.RunForever()
+	cmd.runForever(controller, subordinate)
 	return nil
 }
 
-type Forward struct {
-	ForwardCmd
-
-	controller  common.Port
-	subordinate common.Port
-}
-
-func NewForward(cmd *ForwardCmd) *Forward {
-	return &Forward{ForwardCmd: *cmd}
-}
-
-func (f *Forward) Init() error {
+func (cmd *ForwardCmd) openPorts() (common.Port, common.Port, error) {
 	opts := &common.PortOptions{
-		Address: f.Controller,
-		Mode:    &serial.Mode{BaudRate: int(f.BaudRate)},
-		Type:    common.DeviceTypeFromString[f.DeviceType],
+		Address: cmd.Controller,
+		Mode:    &serial.Mode{BaudRate: int(cmd.BaudRate)},
+		Type:    common.DeviceTypeFromString[cmd.DeviceType],
 	}
-	opts.Address = f.Controller
-	port, err := common.OpenPort(opts)
+	controller, err := common.OpenPort(opts)
 	if err != nil {
-		return err
+		return nil, nil, err
 	}
-	f.controller = port
 
-	opts.Address = f.Subordinate
-	port, err = common.OpenPort(opts)
+	opts.Address = cmd.Subordinate
+	subordinate, err := common.OpenPort(opts)
 	if err != nil {
-		f.controller.Close()
-		return err
+		controller.Close()
+		return nil, nil, err
 	}
-	f.subordinate = port
-	return nil
+	return controller, subordinate, nil
 }
 
-func (f *Forward) RunForever() {
+func (cmd *ForwardCmd) runForever(controller, subordinate common.Port) {
 	read := func(p common.Port) ([]byte, error) {
 		b := make([]byte, 128)
 		n, err := p.Read(b)
@@ -94,11 +80,11 @@ func (f *Forward) RunForever() {
 
 	go func() {
 		for {
-			readWrite(f.controller, f.subordinate, filepath.Base(f.Controller), f.Subordinate)
+			readWrite(controller, subordinate, filepath.Base(cmd.Controller), cmd.Subordinate)
 		}
 	}()
 
 	for {
-		readWrite(f.subordinate, f.controller, filepath.Base(f.Subordinate), f.Controller)
+		readWrite(subordinate, controller, filepath.Base(cmd.Subordinate), cmd.Controller)
 	}
 }
