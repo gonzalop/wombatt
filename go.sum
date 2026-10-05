@@ -9,8 +9,8 @@ github.com/alecthomas/repr v0.5.2/go.mod h1:Fr0507jx4eOXV7AlPV6AVZLYrLIuIeSOWtW5
 github.com/cenkalti/backoff/v4 v4.3.0 h1:MyRJ/UdXutAwSAT+s3wNd7MfTIcy71VQueUuFK343L8=
 github.com/cenkalti/backoff/v4 v4.3.0/go.mod h1:Y3VNntkOUPxTVeUxJ/G5vcM//AlwfmyYozVcomhLiZE=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
-github.com/gonzalop/mq v0.9.10 h1:7uaSKq/m/n0ElV3SJtXQTZnI5HyHtgoNIL/ufsxFU+8=
-github.com/gonzalop/mq v0.9.10/go.mod h1:chaGtxnueekistsTKhDnLOoNdJPKEI6vadlUBRQS2ok=
+github.com/gonzalop/mq v0.9.11 h1:cKdoCT3dgiz3kV53QKUDqtcdDHCpMHS8nXrxVhqt3gE=
+github.com/gonzalop/mq v0.9.11/go.mod h1:QVPtaf408IuhzPJO4w2Q0sjzM+nP6FWHyfyXUjvY/PQ=
 github.com/hexops/gotextdiff v1.0.3 h1:gitA9+qJrrTCsiCl7+kh75nPqQt1cx4ZkudSTLoUqJM=
 github.com/hexops/gotextdiff v1.0.3/go.mod h1:pSWU5MAI3yDq+fZBTazCSJysOMbxWL1BSow5/V2vxeg=
 github.com/howeyc/crc16 v0.0.0-20171223171357-2b2a61e366a6 h1:IIVxLyDUYErC950b8kecjoqDet8P5S4lcVRUOM6rdkU=
