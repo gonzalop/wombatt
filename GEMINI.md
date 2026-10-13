@@ -1,17 +1,40 @@
-- This is a git repository.
-- It contains a Go application used to query and monitor inverters and batteries.
-- The main entrypoint is `main.go`, and commands are defined in the `cmd/` directory.
-- The core logic is in the `internal/` directory, with packages for different protocols and devices (e.g., `bms`, `eg4_18kpv`, `solark`).
-- The project uses a `Makefile` for build and release tasks. Check the `Makefile` for common targets like `build`, `test`, etc.
-- The `extras/` directory contains supplementary materials, including a bash completion script (`wombatt-completion.sh`) and configurations for Home Assistant integration.
-- Don't do anything with untracked files that you have not created.
-- Don't send commit messages with unescaped backticks.
-- Do not push the changes upstream.
-- The documentation for some or all of the protocols is under the `docs/ref` directory. Specific documents include:
-    - `EG4_LifePower4_Communication_Protocol.pdf`
-    - `EG4-18KPV-12LV-Modbus-Protocol.pdf`
-    - `EG4-LL-MODBUS-Communication-Protocol_ENG-correct-1.pdf`
-    - `PACE-BMS-Modbus-Protocol-for-RS485-V1.3-20170627.pdf`
-    - `PI30MAX.Communication.Protocol20210217.pdf`
-    - `solark-modbus-1.1.pdf`
+# Wombatt - Project Instructions
+
+Go application for querying and monitoring solar inverters and battery management systems (BMS).
+
+## Repository & Architecture
+
+- **Entrypoint & Commands**: `main.go` and `cmd/`.
+- **Core Logic**: `internal/` (protocols and hardware drivers, e.g., `bms`, `eg4_18kpv`, `solark`).
+- **Protocol Documentation**: Reference PDFs are located under `docs/ref/`.
+- **Build & Tasks**: Defined in `Makefile` (`make build`, `make test`, `make lint`).
+
+## Workflow & Safety Rules
+
+- Do not modify or touch untracked files not created by you.
+- Do not push changes upstream.
+- Ensure commit messages do not contain unescaped backticks.
+
+## Important Rules
+
+### Code Navigation & Search Rules (`gograph` & `git grep`)
+- Check `gograph stale` before navigating Go symbols. If exit code is non-zero or `.gograph/graph.json` is missing, rebuild with `gograph build .`.
+- **NEVER use raw `grep` or `grep -r`**.
+- For Go symbols, definitions, structs, and call graphs, **ALWAYS use `gograph`**:
+  - `gograph node <Symbol>`: locate symbol declaration (file + line).
+  - `gograph context <Symbol>`: inspect symbol source, callers, callees, and tests.
+  - `gograph fields <Struct>`: inspect struct fields, types, and tags.
+  - `gograph callers <Func>`: trace call hierarchy.
+- For raw text, strings, or non-Go files, **ALWAYS use `git grep`** (`git grep -n "pattern"`).
+
+### Formatting & Edit Integrity
+- Write standard Go code with tab indentation matching `gofmt` conventions so formatting produces 0 diffs.
+- Do NOT run bare `make` (or `make all`, `make fmt`, `gofmt -w .`) inside iterative edit-test loops to prevent line-number drift and tool edit failures caused by background file mutations.
+- During edit loops, ALWAYS invoke specific targets (`make test`, `make lint`, `make build`) which do not run `fmt`. Run `make fmt` or bare `make` only as a final check right before committing.
+
+### Token Economy & Output Discipline
+- Overview first: use `git status -s` and `git diff --stat` before deep inspections.
+- Targeted reads: use slice ranges (`StartLine`/`EndLine` in `view_file`) instead of dumping full 500+ line files.
+- Surgical edits: use `replace_file_content` with small chunks over full-file overwrites.
+- Output brevity: provide concise 1-sentence confirmations after edits; do not re-summarize code changes or print multi-paragraph essays in chat.
 

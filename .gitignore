@@ -1,4 +1,5 @@
 build/
+.gograph/
 release/
 test/
 wombatt
