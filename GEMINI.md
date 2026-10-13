@@ -20,10 +20,10 @@ Go application for querying and monitoring solar inverters and battery managemen
 ### Code Navigation & Search Rules (`gograph` & `git grep`)
 - Check `gograph stale` before navigating Go symbols. If exit code is non-zero or `.gograph/graph.json` is missing, rebuild with `gograph build .`.
 - **NEVER use raw `grep` or `grep -r`**.
-- For Go symbols, definitions, structs, and call graphs, **ALWAYS use `gograph`**:
+- **ALWAYS use `gograph` for Go symbol inspection** — NEVER use `view_file` to read Go symbol implementations or hunt down types/methods:
   - `gograph node <Symbol>`: locate symbol declaration (file + line).
-  - `gograph context <Symbol>`: inspect symbol source, callers, callees, and tests.
-  - `gograph fields <Struct>`: inspect struct fields, types, and tags.
+  - `gograph context <Symbol>`: inspect symbol source, callers, callees, and tests without dumping the whole file.
+  - `gograph fields <Struct>`: inspect struct fields, types, and tags directly.
   - `gograph callers <Func>`: trace call hierarchy.
 - For raw text, strings, or non-Go files, **ALWAYS use `git grep`** (`git grep -n "pattern"`).
 
