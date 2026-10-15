@@ -64,7 +64,7 @@ func TestPaceBMS_ReadInfo(t *testing.T) {
 
 	client.On("ReadHoldingRegisters", uint8(0x01), uint16(0x0000), uint8(len(response)/2)).Return(response, nil)
 
-	info, err := bms.ReadInfo(client, 0x01, 1*time.Second)
+	info, err := bms.ReadInfo(t.Context(), client, 0x01, 1*time.Second)
 	assert.NoError(t, err)
 	assert.NotNil(t, info)
 
@@ -118,7 +118,7 @@ func TestPaceBMS_ReadExtraInfo(t *testing.T) {
 
 	client.On("ReadHoldingRegisters", uint8(0x01), uint16(150), uint8(30)).Return(response, nil)
 
-	extraInfo, err := bms.ReadExtraInfo(client, 0x01, 1*time.Second)
+	extraInfo, err := bms.ReadExtraInfo(t.Context(), client, 0x01, 1*time.Second)
 	assert.NoError(t, err)
 	assert.NotNil(t, extraInfo)
 

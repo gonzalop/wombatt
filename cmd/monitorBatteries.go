@@ -120,7 +120,7 @@ func monitorBatteries(ctx context.Context, mqttChannel chan *batteryInfo, webSer
 		if ctx.Err() != nil {
 			return
 		}
-		info, err := battery.ReadInfo(reader, uint8(id), cmd.ReadTimeout)
+		info, err := battery.ReadInfo(ctx, reader, uint8(id), cmd.ReadTimeout)
 		if err != nil {
 			if ctx.Err() != nil {
 				return
@@ -128,8 +128,15 @@ func monitorBatteries(ctx context.Context, mqttChannel chan *batteryInfo, webSer
 			if err := port.ReopenWithBackoff(); err != nil {
 				slog.Error("error reopening", "error", err)
 			}
-			time.Sleep(50 * time.Millisecond)
+			select {
+			case <-ctx.Done():
+				return
+			case <-time.After(50 * time.Millisecond):
+			}
 			continue
+		}
+		if ctx.Err() != nil {
+			return
 		}
 		if mqttChannel != nil {
 			mqttChannel <- &batteryInfo{uint8(id), info}
@@ -143,7 +150,14 @@ func monitorBatteries(ctx context.Context, mqttChannel chan *batteryInfo, webSer
 			fmt.Println()
 		}
 		success = append(success, id)
-		time.Sleep(50 * time.Millisecond)
+		select {
+		case <-ctx.Done():
+			return
+		case <-time.After(50 * time.Millisecond):
+		}
+	}
+	if ctx.Err() != nil {
+		return
 	}
 	slog.Info("published info for batteries", "battery-id", success)
 }

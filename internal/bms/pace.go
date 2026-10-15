@@ -1,6 +1,7 @@
 package bms
 
 import (
+	"context"
 	"encoding/hex"
 	"fmt"
 	"log/slog"
@@ -37,8 +38,8 @@ func (*Pace) DefaultProtocol(deviceType string) string {
 	}
 }
 
-func (e *Pace) readAndValidatePaceModbusInfo(result any, reader modbus.RegisterReader, id uint8, timeout time.Duration, address uint16, count uint8) error {
-	data, err := readIntoStruct(result, reader, timeout, id, address, count)
+func (e *Pace) readAndValidatePaceModbusInfo(ctx context.Context, result any, reader modbus.RegisterReader, id uint8, timeout time.Duration, address uint16, count uint8) error {
+	data, err := readIntoStruct(ctx, result, reader, timeout, id, address, count)
 	if err != nil {
 		return err
 	}
@@ -50,9 +51,9 @@ func (e *Pace) readAndValidatePaceModbusInfo(result any, reader modbus.RegisterR
 	return nil
 }
 
-func (e *Pace) ReadInfo(reader modbus.RegisterReader, id uint8, timeout time.Duration) (any, error) {
+func (e *Pace) ReadInfo(ctx context.Context, reader modbus.RegisterReader, id uint8, timeout time.Duration) (any, error) {
 	var info PaceModbusBatteryInfo
-	if err := e.readAndValidatePaceModbusInfo(&info, reader, id, timeout, paceBasicInfoAddress, paceBasicInfoRegisterCount); err != nil {
+	if err := e.readAndValidatePaceModbusInfo(ctx, &info, reader, id, timeout, paceBasicInfoAddress, paceBasicInfoRegisterCount); err != nil {
 		return nil, err
 	}
 	result := PaceBatteryInfo{PaceModbusBatteryInfo: info}
@@ -60,9 +61,9 @@ func (e *Pace) ReadInfo(reader modbus.RegisterReader, id uint8, timeout time.Dur
 	return &result, nil
 }
 
-func (e *Pace) ReadExtraInfo(reader modbus.RegisterReader, id uint8, timeout time.Duration) (any, error) {
+func (e *Pace) ReadExtraInfo(ctx context.Context, reader modbus.RegisterReader, id uint8, timeout time.Duration) (any, error) {
 	var extra PaceModbusExtraBatteryInfo
-	if err := e.readAndValidatePaceModbusInfo(&extra, reader, id, timeout, paceExtraInfoAddress, paceExtraInfoRegisterCount); err != nil {
+	if err := e.readAndValidatePaceModbusInfo(ctx, &extra, reader, id, timeout, paceExtraInfoAddress, paceExtraInfoRegisterCount); err != nil {
 		return nil, err
 	}
 	return &extra, nil

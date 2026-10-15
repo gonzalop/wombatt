@@ -5,6 +5,7 @@ package bms
 
 import (
 	"bytes"
+	"context"
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
@@ -28,13 +29,13 @@ const (
 // BMS defines the interface for interacting with different Battery Management Systems.
 type BMS interface {
 	// ReadInfo reads primary battery information from the BMS.
-	// It takes a modbus.RegisterReader, battery ID, and a timeout.
+	// It takes a context.Context, modbus.RegisterReader, battery ID, and a timeout.
 	// It returns a struct containing the battery information or an error.
-	ReadInfo(modbus.RegisterReader, uint8, time.Duration) (any, error)
+	ReadInfo(context.Context, modbus.RegisterReader, uint8, time.Duration) (any, error)
 	// ReadExtraInfo reads additional, less frequently accessed battery information from the BMS.
-	// It takes a modbus.RegisterReader, battery ID, and a timeout.
+	// It takes a context.Context, modbus.RegisterReader, battery ID, and a timeout.
 	// It returns a struct containing the extra battery information or an error.
-	ReadExtraInfo(modbus.RegisterReader, uint8, time.Duration) (any, error)
+	ReadExtraInfo(context.Context, modbus.RegisterReader, uint8, time.Duration) (any, error)
 	// InfoInstance returns an empty instance of the primary battery info struct
 	// that this BMS implementation uses. This is useful for reflection-based operations.
 	InfoInstance() any
@@ -99,8 +100,8 @@ func updateVoltageStats(cellVoltage [16]uint16, vs *VoltageStats) {
 // The `quantityOrCommand` parameter serves a dual purpose:
 // - For standard Modbus protocols (RTU, TCP), it represents the number of registers to read.
 // - For the Lifepower4 protocol, it represents a command code.
-func readIntoStruct(result any, reader modbus.RegisterReader, timeout time.Duration, id uint8, address uint16, quantityOrCommand uint8) ([]byte, error) {
-	data, err := readWithTimeout(reader, timeout, id, address, quantityOrCommand)
+func readIntoStruct(ctx context.Context, result any, reader modbus.RegisterReader, timeout time.Duration, id uint8, address uint16, quantityOrCommand uint8) ([]byte, error) {
+	data, err := readWithTimeout(ctx, reader, timeout, id, address, quantityOrCommand)
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +113,7 @@ func readIntoStruct(result any, reader modbus.RegisterReader, timeout time.Durat
 	return data, nil
 }
 
-func readWithTimeout(reader modbus.RegisterReader, timeout time.Duration, id uint8, start uint16, quantityOrCommand uint8) ([]byte, error) {
+func readWithTimeout(ctx context.Context, reader modbus.RegisterReader, timeout time.Duration, id uint8, start uint16, quantityOrCommand uint8) ([]byte, error) {
 	var data []byte
 	var err error
 	result := make(chan struct{}, 1)
@@ -121,6 +122,8 @@ func readWithTimeout(reader modbus.RegisterReader, timeout time.Duration, id uin
 		result <- struct{}{}
 	}()
 	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
 	case <-time.After(timeout):
 		return nil, fmt.Errorf("timed out")
 	case <-result:

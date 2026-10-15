@@ -1,6 +1,7 @@
 package bms
 
 import (
+	"context"
 	"time"
 
 	"wombatt/internal/modbus"
@@ -26,17 +27,17 @@ func (*LFP4) DefaultProtocol(_ string) string {
 	return "lifepower4"
 }
 
-func (*LFP4) ReadInfo(reader modbus.RegisterReader, id uint8, timeout time.Duration) (any, error) {
+func (*LFP4) ReadInfo(ctx context.Context, reader modbus.RegisterReader, id uint8, timeout time.Duration) (any, error) {
 	var result LFP4AnalogValueBatteryInfo
-	if _, err := readIntoStruct(&result, reader, timeout, id, 0, analogValueCommand); err != nil {
+	if _, err := readIntoStruct(ctx, &result, reader, timeout, id, 0, analogValueCommand); err != nil {
 		return nil, err
 	}
 	return &result, nil
 }
 
-func (*LFP4) ReadExtraInfo(reader modbus.RegisterReader, id uint8, timeout time.Duration) (any, error) {
+func (*LFP4) ReadExtraInfo(ctx context.Context, reader modbus.RegisterReader, id uint8, timeout time.Duration) (any, error) {
 	var extra LFP4AlarmInfo
-	if _, err := readIntoStruct(&extra, reader, timeout, id, 0, alarmInfoCommand); err != nil {
+	if _, err := readIntoStruct(ctx, &extra, reader, timeout, id, 0, alarmInfoCommand); err != nil {
 		return nil, err
 	}
 	return &extra, nil

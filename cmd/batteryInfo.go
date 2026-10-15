@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -25,7 +26,7 @@ type BatteryInfoCmd struct {
 	DeviceType  string        `short:"T" default:"serial" enum:"${device_types}" help:"One of ${device_types}"`
 }
 
-func (cmd *BatteryInfoCmd) Run(globals *Globals) error {
+func (cmd *BatteryInfoCmd) Run(globals *Globals, ctx context.Context) error {
 	portOptions := &common.PortOptions{
 		Address:     cmd.Address,
 		Mode:        &serial.Mode{BaudRate: int(cmd.BaudRate)},
@@ -50,21 +51,36 @@ func (cmd *BatteryInfoCmd) Run(globals *Globals) error {
 	}
 	var failed error
 	for _, id := range cmd.IDs {
-		binfo, err := battery.ReadInfo(reader, uint8(id), cmd.ReadTimeout)
+		if ctx.Err() != nil {
+			return nil
+		}
+		binfo, err := battery.ReadInfo(ctx, reader, uint8(id), cmd.ReadTimeout)
 		if err != nil {
+			if ctx.Err() != nil {
+				return nil
+			}
 			failed = errors.Join(failed, fmt.Errorf("error getting info of ID#%d: %w", id, err))
 			if err := port.ReopenWithBackoff(); err != nil {
 				slog.Error("failed reopening port", "port", portOptions.Address, "error", err)
 			}
 			continue
 		}
-		extra, err := battery.ReadExtraInfo(reader, uint8(id), cmd.ReadTimeout)
+		if ctx.Err() != nil {
+			return nil
+		}
+		extra, err := battery.ReadExtraInfo(ctx, reader, uint8(id), cmd.ReadTimeout)
 		if err != nil {
+			if ctx.Err() != nil {
+				return nil
+			}
 			failed = errors.Join(failed, fmt.Errorf("error getting extra info of ID#%d: %w", id, err))
 			if err := port.ReopenWithBackoff(); err != nil {
 				slog.Error("failed reopening port (extra)", "port", portOptions.Address, "error", err)
 			}
 			continue
+		}
+		if ctx.Err() != nil {
+			return nil
 		}
 		fmt.Printf("Battery #%d\n===========\n", id)
 		writeBatteryInfo(binfo)
@@ -72,7 +88,11 @@ func (cmd *BatteryInfoCmd) Run(globals *Globals) error {
 			writeBatteryInfo(extra)
 		}
 		fmt.Println()
-		time.Sleep(50 * time.Millisecond)
+		select {
+		case <-ctx.Done():
+			return nil
+		case <-time.After(50 * time.Millisecond):
+		}
 	}
 	if failed != nil {
 		log.Fatal(failed)

@@ -2,7 +2,9 @@ package bms
 
 import (
 	"bytes"
+	"context"
 	"encoding/hex"
+	"errors"
 	"io"
 	"reflect"
 	"testing"
@@ -185,9 +187,9 @@ func TestBatteryInfo(t *testing.T) {
 			if reflect.TypeOf(inst.InfoInstance()) != reflect.TypeOf(tt.value) {
 				t.Errorf("wrong instance type (%d). want %v; got %v", tid, reflect.TypeOf(bat), reflect.TypeOf(tt.value))
 			}
-			bat, err = inst.ReadInfo(reader, 2, 1*time.Second)
+			bat, err = inst.ReadInfo(t.Context(), reader, 2, 1*time.Second)
 		} else {
-			bat, err = inst.ReadExtraInfo(reader, 2, 1*time.Second)
+			bat, err = inst.ReadExtraInfo(t.Context(), reader, 2, 1*time.Second)
 		}
 		if err != nil {
 			t.Fatalf("error reading battery info (%d): %v", tid, err)
@@ -196,5 +198,31 @@ func TestBatteryInfo(t *testing.T) {
 		if !reflect.DeepEqual(bat, tt.value) {
 			t.Errorf("structs not equal (%d). got %v; want %v", tid, bat, tt.value)
 		}
+	}
+}
+
+type blockingReader struct {
+	modbus.RegisterReader
+}
+
+func (b *blockingReader) ReadHoldingRegisters(id uint8, start uint16, count uint8) ([]byte, error) {
+	time.Sleep(1 * time.Second)
+	return nil, nil
+}
+
+func TestReadWithTimeout_ContextCancellation(t *testing.T) {
+	ctx, cancel := context.WithCancel(t.Context())
+	cancel()
+
+	reader := &blockingReader{}
+	start := time.Now()
+	_, err := readWithTimeout(ctx, reader, 5*time.Second, 1, 0, 10)
+	duration := time.Since(start)
+
+	if !errors.Is(err, context.Canceled) {
+		t.Fatalf("expected context.Canceled, got: %v", err)
+	}
+	if duration >= 500*time.Millisecond {
+		t.Fatalf("expected readWithTimeout to return immediately on context cancellation, took %v", duration)
 	}
 }
