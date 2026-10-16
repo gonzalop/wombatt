@@ -89,7 +89,7 @@ type QPIRIResponse struct {
 	OutputSourcePriority        int8    `name:"output_source_priority" desc:"Output source priority" values:"0:USB,1:SUB,2:SBU"`
 	ChargerSourcePriority       int8    `name:"charger_source_priority" desc:"Charger source priority" values:"1:Solar first,2:Solar + utility,3:Only solar"`
 	ParallelMaxNum              int8    `name:"parallel_max_num" desc:"Parallel max num"`
-	MachineType                 int8    `name:"machine_type" desc:"Machine type" values:"00:grid-tie,01:off-grid,02:hybrid"`
+	MachineType                 int8    `name:"machine_type" desc:"Machine type" values:"0:grid-tie,1:off-grid,2:hybrid"`
 	Topology                    int8    `name:"topology" desc:"Topology" values:"0:transformerless,1:transformer"`
 	OutputMode                  int8    `name:"output_mode" desc:"Output mode" values:"0:Single machine,1:Parallel output,2:Phase 1 of 3 phase output,3:Phase 2 of 3 phase output,4:Phase 3 of 3 phase output,5:Phase 1 of 2 phase output,6:Phase 2 of 2 phase output (120°),7:Phase 2 of 2 phase output (180°)"`
 	BatteryRedischargeVoltage   float32 `name:"battery_redischarge_voltage" desc:"Battery redischarge voltage" unit:"V"`

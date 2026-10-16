@@ -82,7 +82,7 @@ type PaceModbusBatteryInfo struct {
 	DesignCapacity    uint16     `name:"design_capacity" unit:"Ah" multiplier:"0.01" precision:"2"`
 	CycleCounts       uint16     `name:"cycle_counts" icon:"mdi:battery-sync"`
 	_                 int16      // Reserved
-	WarningFlag       uint16     `name:"warning_flag" flags:"SOC low,MOSFET high temp,environment low temp,discharging low temp,charging low temp,discharging high temp,discharging low temp,0x80,0x40,discharging overcurrent,charging overcurrent,pack low voltage,pack overvoltage,cell low voltage,cell overvoltage"`
+	WarningFlag       uint16     `name:"warning_flag" flags:"SOC low,MOSFET high temp,environment low temp,environment high temp,discharging low temp,charging low temp,discharging high temp,charging high temp,0x80,0x40,discharging overcurrent,charging overcurrent,pack low voltage,pack overvoltage,cell low voltage,cell overvoltage"`
 	ProtectionFlag    uint16     `name:"protection_flag" flags:"0x8000,environment low temp,environment high temp,MOSFET high temp,discharging low temp,charging low temp,discharging high temp,charging high temp,charger overvoltage,short circuit,discharging over current,charging over current,pack low voltage,pack overvoltage,cell low voltage,cell overvoltage"`
 	StatusFlag        uint16     `name:"status_flag" flags:"heater,charger inversed,0x2000,charging limiter,discharging MOSFET,charging MOSFET,discharge,charge,0x0080,0x0040,front end sampling comms fault,battery cell fault,0x0008,temp sensor fault,discharging MOSFET fault,charging MOSTFET fault"`
 	BalanceStatus     uint16     `name:"balance_status"`
