@@ -27,7 +27,7 @@ type RealtimeData struct {
 	Vpv2                  uint16 `modbus:"2" name:"PV2 Voltage" unit:"V" multiplier:"0.1" precision:"1"`
 	Vpv3                  uint16 `modbus:"3" name:"PV3 Voltage" unit:"V" multiplier:"0.1" precision:"1"`
 	Vbat                  uint16 `modbus:"4" name:"Battery Voltage" unit:"V" multiplier:"0.1" precision:"1"`
-	SOC                   uint16 `modbus:"5" name:"Battery Capacity" unit:"%"`
+	SOC                   uint16 `modbus:"5" name:"State of Charge" unit:"%"`
 	SOH                   uint16 `modbus:"6" name:"State of Health" unit:"%"`
 	InternalFault         uint16 `modbus:"7" name:"Internal Fault"`
 	Ppv1                  uint16 `modbus:"8" name:"PV1 Power" unit:"W"`
