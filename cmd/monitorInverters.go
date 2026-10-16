@@ -275,41 +275,18 @@ func invertersDiscoveryConfig(ctx context.Context, mqttTopicPrefix string, monit
 }
 
 func addStructDiscoveryConfig(ctx context.Context, m *inverterMonitor, st any, topicPrefix string) {
-	client := m.client
 	tag := m.MQTTTag
-	f := func(info map[string]string, value any) {
+	stateTopic := fmt.Sprintf("%s/sensor/%s_info/state", topicPrefix, tag)
+	device := map[string]any{
+		"identifiers": []string{tag},
+		"name":        fmt.Sprintf("Inverter %s", tag),
+		"model":       m.InverterType,
+	}
+	f := func(info map[string]string, _ any) {
 		name := info["name"]
-		config := map[string]any{
-			// "expire_after":?
-			// "force_update":   true,
-			"has_entity_name":   true,
-			"state_topic":       fmt.Sprintf("%s/sensor/%s_info/state", topicPrefix, tag),
-			"name":              strings.ReplaceAll(name, "_", " "),
-			"default_entity_id": fmt.Sprintf("sensor.%s_%s", tag, name),
-			"value_template":    fmt.Sprintf("{{ value_json.%s }}", name),
-			"device": map[string]any{
-				"identifiers": []string{tag},
-				"name":        fmt.Sprintf("Inverter %s", tag),
-				"model":       m.InverterType,
-			},
-		}
-		config["unique_id"] = fmt.Sprintf("%s_%s", tag, name)
-		dclass := info["dclass"]
-		unit := info["unit"]
-		icon := info["icon"]
-		if dclass != "" {
-			config["device_class"] = dclass
-		}
-		if unit != "" {
-			config["unit_of_measurement"] = unit
-			config["state_class"] = "measurement"
-		}
-		if icon != "" {
-			config["icon"] = icon
-		}
-
+		config := mqttha.DiscoveryConfig(info, stateTopic, fmt.Sprintf("%s_%s", tag, name), device)
 		topic := fmt.Sprintf("%s/sensor/%s_%s/config", topicPrefix, tag, name)
-		if err := client.PublishDiscovery(ctx, topic, config); err != nil {
+		if err := m.client.PublishDiscovery(ctx, topic, config); err != nil {
 			slog.Error("mqtt error publishing", "error", err)
 		}
 	}

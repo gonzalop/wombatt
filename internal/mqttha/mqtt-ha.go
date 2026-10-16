@@ -3,7 +3,10 @@ package mqttha
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log/slog"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gonzalop/mq"
@@ -92,6 +95,35 @@ func (c *Client) PublishMap(ctx context.Context, topic string, data map[string]a
 
 	token := c.client.Publish(pubCtx, topic, j, opts...)
 	return token.Wait(pubCtx)
+}
+
+// DiscoveryConfig returns the Home Assistant discovery config for one struct
+// field, as described by the field info from common.TraverseStruct.
+func DiscoveryConfig(info map[string]string, stateTopic, uniqueID string, device map[string]any) map[string]any {
+	name := info["name"]
+	config := map[string]any{
+		"has_entity_name":   true,
+		"state_topic":       stateTopic,
+		"name":              strings.ReplaceAll(name, "_", " "),
+		"default_entity_id": "sensor." + uniqueID,
+		"unique_id":         uniqueID,
+		"value_template":    fmt.Sprintf("{{ value_json.%s }}", name),
+		"device":            device,
+	}
+	if dclass := info["dclass"]; dclass != "" {
+		config["device_class"] = dclass
+	}
+	if unit := info["unit"]; unit != "" {
+		config["unit_of_measurement"] = unit
+		config["state_class"] = "measurement"
+	}
+	if icon := info["icon"]; icon != "" {
+		config["icon"] = icon
+	}
+	if num, err := strconv.Atoi(info["precision"]); err == nil {
+		config["suggested_display_precision"] = num
+	}
+	return config
 }
 
 // PublishDiscovery publishes a JSON encoded map to the given topic, compacting the keys.

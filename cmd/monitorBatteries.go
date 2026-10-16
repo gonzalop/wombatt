@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"log"
 	"log/slog"
-	"strconv"
-	"strings"
 	"time"
 
 	"wombatt/internal/bms"
@@ -187,44 +185,16 @@ func createDiscoveryConfig(ctx context.Context, client *mqttha.Client, cmd *Moni
 }
 
 func addDiscoveryConfig(ctx context.Context, client *mqttha.Client, cmd *MonitorBatteriesCmd, id uint, st any) {
-	f := func(info map[string]string, value any) {
+	stateTopic := fmt.Sprintf("%s/sensor/%s_battery%d_info/state", cmd.MQTTTopicPrefix, cmd.MQTTPrefix, id)
+	device := map[string]any{
+		"identifiers": []string{fmt.Sprintf("%s_battery%d", cmd.MQTTPrefix, id)},
+		"name":        fmt.Sprintf("Battery %d", id),
+		"model":       cmd.BMSType,
+	}
+	f := func(info map[string]string, _ any) {
 		name := info["name"]
-		config := map[string]any{
-			// "expire_after":?
-			// "force_update":   true,
-			"has_entity_name":   true,
-			"state_topic":       fmt.Sprintf("%s/sensor/%s_battery%d_info/state", cmd.MQTTTopicPrefix, cmd.MQTTPrefix, id),
-			"name":              strings.ReplaceAll(name, "_", " "),
-			"default_entity_id": fmt.Sprintf("sensor.%s_battery_%d_%s", cmd.MQTTPrefix, id, name),
-			"value_template":    fmt.Sprintf("{{ value_json.%s }}", name),
-			"device": map[string]any{
-				"identifiers": []string{fmt.Sprintf("%s_battery%d", cmd.MQTTPrefix, id)},
-				"name":        fmt.Sprintf("Battery %d", id),
-				"model":       cmd.BMSType,
-			},
-		}
-		config["unique_id"] = fmt.Sprintf("%s_battery_%d_%s", cmd.MQTTPrefix, id, name)
-		dclass := info["dclass"]
-		if dclass != "" {
-			config["device_class"] = dclass
-		}
-		unit := info["unit"]
-		if unit != "" {
-			config["unit_of_measurement"] = unit
-			config["state_class"] = "measurement"
-		}
-		icon := info["icon"]
-		if icon != "" {
-			config["icon"] = icon
-		}
-		precision := info["precision"]
-		if precision != "" {
-			num, err := strconv.Atoi(precision)
-			if err == nil {
-				config["suggested_display_precision"] = num
-			}
-		}
-
+		uniqueID := fmt.Sprintf("%s_battery_%d_%s", cmd.MQTTPrefix, id, name)
+		config := mqttha.DiscoveryConfig(info, stateTopic, uniqueID, device)
 		topic := fmt.Sprintf("%s/sensor/%s_battery%d_%s/config", cmd.MQTTTopicPrefix, cmd.MQTTPrefix, id, name)
 		if err := client.PublishDiscovery(ctx, topic, config); err != nil {
 			slog.Error("mqtt error publishing", "server", cmd.MQTTBroker, "error", err)
