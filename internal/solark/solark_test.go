@@ -150,7 +150,16 @@ func TestReadIntrinsicAttributes(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, ia)
 
-	assert.Equal(t, "AH12345678", ia.SerialNumber())
+	assert.Equal(t, "AH12345678", string(ia.SerialNumber[:]))
 
 	mockReader.AssertExpectations(t)
+}
+
+func TestReadIntrinsicAttributesShortRead(t *testing.T) {
+	mockReader := new(MockRegisterReader)
+	mockReader.On("ReadHoldingRegisters", uint8(1), uint16(3), uint8(5)).Return([]byte{}, nil).Once()
+
+	ia, err := ReadIntrinsicAttributes(mockReader, 1)
+	assert.Error(t, err)
+	assert.Nil(t, ia)
 }

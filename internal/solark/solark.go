@@ -218,50 +218,21 @@ func (r *RealtimeData) TotalActivePowerWh() uint32 {
 
 // IntrinsicAttributes holds the values from the "Intrinsic Attribute Table".
 type IntrinsicAttributes struct {
-	SNByte01 uint16 `modbus:"3"`
-	SNByte02 uint16 `modbus:"4"`
-	SNByte03 uint16 `modbus:"5"`
-	SNByte04 uint16 `modbus:"6"`
-	SNByte05 uint16 `modbus:"7"`
+	// The serial number is ten ASCII characters, two per register (registers 3-7).
+	SerialNumber [10]byte `modbus:"3" name:"serial_number" type:"string"`
 }
 
 // ReadIntrinsicAttributes reads the intrinsic attributes from the Solark inverter.
 func ReadIntrinsicAttributes(reader modbus.RegisterReader, id uint8) (*IntrinsicAttributes, error) {
-	// The serial number is spread across registers 3-7.
 	data, err := reader.ReadHoldingRegisters(id, 3, 5) // Registers 3, 4, 5, 6, 7
 	if err != nil {
 		return nil, fmt.Errorf("failed to read registers 3-7: %w", err)
 	}
+	if len(data) < 10 {
+		return nil, fmt.Errorf("short read from registers 3-7: got %d bytes, want 10", len(data))
+	}
 
 	ia := &IntrinsicAttributes{}
-	ia.SNByte01 = binary.BigEndian.Uint16(data[0:2])
-	ia.SNByte02 = binary.BigEndian.Uint16(data[2:4])
-	ia.SNByte03 = binary.BigEndian.Uint16(data[4:6])
-	ia.SNByte04 = binary.BigEndian.Uint16(data[6:8])
-	ia.SNByte05 = binary.BigEndian.Uint16(data[8:10])
-
+	copy(ia.SerialNumber[:], data)
 	return ia, nil
-}
-
-// SerialNumber combines the SN bytes into a single string.
-func (ia *IntrinsicAttributes) SerialNumber() string {
-	// The serial number is ten ASCII characters, two per register.
-	// Each register holds two ASCII characters, so we need to convert uint16 to two bytes.
-	// The PDF says "SN byte 01", "SN byte 02" etc. which implies individual bytes.
-	// However, Modbus registers are 16-bit. Assuming each register holds two ASCII characters.
-	// The example "AH12345678" implies 10 characters.
-	// Register 3: SN byte 01, SN byte 02
-	// Register 4: SN byte 03, SN byte 04
-	// Register 5: SN byte 05, SN byte 06
-	// Register 6: SN byte 07, SN byte 08
-	// Register 7: SN byte 09, SN byte 10
-
-	snBytes := make([]byte, 0, 10)
-	snBytes = append(snBytes, byte(ia.SNByte01>>8), byte(ia.SNByte01&0xFF))
-	snBytes = append(snBytes, byte(ia.SNByte02>>8), byte(ia.SNByte02&0xFF))
-	snBytes = append(snBytes, byte(ia.SNByte03>>8), byte(ia.SNByte03&0xFF))
-	snBytes = append(snBytes, byte(ia.SNByte04>>8), byte(ia.SNByte04&0xFF))
-	snBytes = append(snBytes, byte(ia.SNByte05>>8), byte(ia.SNByte05&0xFF))
-
-	return string(snBytes)
 }
