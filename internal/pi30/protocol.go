@@ -32,7 +32,7 @@ func RunCommands(ctx context.Context, port common.Port, commands []string) ([]an
 
 func RunCommand(ctx context.Context, port io.ReadWriter, cmd string) (any, error) {
 	var lastErr error
-	for attempt := 0; attempt < 3; attempt++ {
+	for attempt := range 3 {
 		if attempt > 0 {
 			time.Sleep(150 * time.Millisecond)
 		}
