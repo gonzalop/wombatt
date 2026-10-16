@@ -149,7 +149,7 @@ func readRTUResponse(port io.Reader) (*RTUFrame, error) {
 	// CRC error or protocol error also return the frame.
 	var err error
 	if (b[1] & 0x80) == 0x80 {
-		err = protocolError(b[1])
+		err = protocolError(b[2])
 	}
 	if checksum != frame.CRC() {
 		if err == nil {
@@ -224,7 +224,7 @@ func expectedResponseLength(functionCode RTUFunction, receivedLength uint8) int 
 			switch f {
 			case ReadCoils, ReadInputRegisters, ReadHoldingRegisters, ReadDiscreteInputs, WriteSingleCoil,
 				WriteSingleRegister, WriteMultipleCoil, WriteMultipleRegisters:
-				return 1 // 1 byte in the response data contains the error code.
+				return 0 // The only data byte is the error code, already read.
 			}
 		}
 		return -1

@@ -50,12 +50,16 @@ func TestReadRTUResponse(t *testing.T) {
 			errstr: "EOF",
 		},
 		{
-			resp:   "018320012830",
+			resp:   "018302c0f1",
+			errstr: "illegal data address", // error 2
+		},
+		{
+			resp:   "0183030131",
 			errstr: "illegal data value", // error 3
 		},
 		{
-			resp:   "018320012831",
-			errstr: "in addition, invalid crc", // illegal data value + crc error
+			resp:   "018302c0f2",
+			errstr: "in addition, invalid crc", // illegal data address + crc error
 		},
 	}
 
