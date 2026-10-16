@@ -2,7 +2,10 @@ package common_test
 
 import (
 	"bytes"
+	"context"
+	"net"
 	"testing"
+	"time"
 
 	"wombatt/internal/common"
 
@@ -101,4 +104,22 @@ func TestNewPort_TCPDeviceFails(t *testing.T) {
 	_, err := common.NewPort("localhost:12345", "tcp", 9600, 8, 1, "N")
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "error opening 'localhost:12345':")
+}
+
+func TestOpenPortWithBackoffStopsOnCancel(t *testing.T) {
+	// Grab a free port and close it so dialing it fails right away.
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	addr := ln.Addr().String()
+	ln.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 200*time.Millisecond)
+	defer cancel()
+	start := time.Now()
+	port, err := common.OpenPortWithBackoff(ctx, &common.PortOptions{Type: common.TCPDevice, Address: addr}, 0)
+	assert.Nil(t, port)
+	assert.ErrorIs(t, err, context.DeadlineExceeded)
+	assert.Less(t, time.Since(start), 2*time.Second)
 }

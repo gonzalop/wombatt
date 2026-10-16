@@ -127,7 +127,7 @@ func monitorBatteries(ctx context.Context, mqttChannel chan *batteryInfo, webSer
 			if webServer != nil {
 				webServer.Publish(fmt.Sprintf("%d", id), nil) // Don't keep serving stale data.
 			}
-			if err := port.ReopenWithBackoff(); err != nil {
+			if err := port.ReopenWithBackoff(ctx); err != nil {
 				slog.Error("error reopening", "error", err)
 			}
 			select {

@@ -60,7 +60,7 @@ func (cmd *BatteryInfoCmd) Run(globals *Globals, ctx context.Context) error {
 				return nil
 			}
 			failed = errors.Join(failed, fmt.Errorf("error getting info of ID#%d: %w", id, err))
-			if err := port.ReopenWithBackoff(); err != nil {
+			if err := port.ReopenWithBackoff(ctx); err != nil {
 				slog.Error("failed reopening port", "port", portOptions.Address, "error", err)
 			}
 			continue
@@ -74,7 +74,7 @@ func (cmd *BatteryInfoCmd) Run(globals *Globals, ctx context.Context) error {
 				return nil
 			}
 			failed = errors.Join(failed, fmt.Errorf("error getting extra info of ID#%d: %w", id, err))
-			if err := port.ReopenWithBackoff(); err != nil {
+			if err := port.ReopenWithBackoff(ctx); err != nil {
 				slog.Error("failed reopening port (extra)", "port", portOptions.Address, "error", err)
 			}
 			continue

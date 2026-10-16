@@ -1,6 +1,7 @@
 package common
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"log/slog"
@@ -32,7 +33,7 @@ func (tp *TestPort) Write(b []byte) (n int, err error) {
 	return tp.writer.Write(b)
 }
 
-func (*TestPort) ReopenWithBackoff() error {
+func (*TestPort) ReopenWithBackoff(context.Context) error {
 	return nil
 }
 
@@ -201,8 +202,9 @@ func openTCP(opts *PortOptions) (Port, error) {
 type Port interface {
 	io.ReadWriteCloser
 	// ReopenWithBackoff attempts to close and then reopen the port with exponential backoff.
-	// It returns an error if the port cannot be reopened after multiple retries.
-	ReopenWithBackoff() error
+	// It returns an error if the port cannot be reopened after multiple retries
+	// or ctx is canceled.
+	ReopenWithBackoff(ctx context.Context) error
 	// ResetInputBuffer flushes/clears any unread data in the input buffer.
 	ResetInputBuffer() error
 	// SetReadTimeout sets the timeout for reading operations on the underlying device connection.
@@ -228,8 +230,9 @@ func OpenPort(opts *PortOptions) (Port, error) {
 	return c, nil
 }
 
-// OpenPortWithBackoff will keep trying to successfully open a new port for up to the specified duration.
-func OpenPortWithBackoff(opts *PortOptions, d time.Duration) (Port, error) {
+// OpenPortWithBackoff will keep trying to successfully open a new port for up to the specified duration,
+// or until ctx is canceled.
+func OpenPortWithBackoff(ctx context.Context, opts *PortOptions, d time.Duration) (Port, error) {
 	if d == 0 {
 		d = DefaultMaxBackoffInterval * 2
 	}
@@ -245,7 +248,11 @@ func OpenPortWithBackoff(opts *PortOptions, d time.Duration) (Port, error) {
 			return nil, err
 		}
 		slog.Debug("backing off after error", "address", opts.Address, "error", err, "elapsed", elapsed)
-		time.Sleep(min(delay, d-elapsed))
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		case <-time.After(min(delay, d-elapsed)):
+		}
 		delay = min(delay*2, DefaultMaxBackoffInterval)
 	}
 }
@@ -256,11 +263,11 @@ func (p *internalPort) Type() DeviceType {
 
 // ReopenWithBackoff attempts to close the current port and then re-open it
 // with an exponential backoff strategy until it succeeds.
-func (p *internalPort) ReopenWithBackoff() error {
+func (p *internalPort) ReopenWithBackoff(ctx context.Context) error {
 	p.lock.Lock()
 	defer p.lock.Unlock()
 	p.close()
-	port, err := OpenPortWithBackoff(p.PortOptions, 0)
+	port, err := OpenPortWithBackoff(ctx, p.PortOptions, 0)
 	if port != nil {
 		p.mu.Lock()
 		// OpenPortWithBackoff might return a Port interface.

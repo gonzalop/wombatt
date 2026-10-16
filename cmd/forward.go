@@ -67,7 +67,7 @@ func (cmd *ForwardCmd) run(ctx context.Context, controller, subordinate common.P
 			return
 		}
 		slog.Error(fmt.Sprintf("error %s", op), "error", err, "file", d)
-		if err := p.ReopenWithBackoff(); err != nil {
+		if err := p.ReopenWithBackoff(ctx); err != nil {
 			slog.Error("error reopening", "error", err)
 		}
 		time.Sleep(500 * time.Millisecond)
