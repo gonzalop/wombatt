@@ -61,6 +61,7 @@ func TestServer(t *testing.T) {
 		t.Errorf("got: '%v'", obj.Hola)
 	}
 	srv.Publish("hola", nil)
+	_ = f("http://127.0.0.1:5000/test/hola", http.StatusNotFound)
 
 	// Test Metrics
 	srv.Publish("metrics_test", &struct {

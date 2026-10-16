@@ -102,6 +102,7 @@ func (ls *Server) Publish(name string, data any) {
 	if !ls.IsRunning() {
 		return
 	}
+	name = ls.root + name
 	if data == nil {
 		ls.pagesLock.Lock()
 		delete(ls.pages, name)
@@ -117,7 +118,6 @@ func (ls *Server) Publish(name string, data any) {
 		rawConfig[info["name"]] = value
 	}
 	common.TraverseStruct(data, f)
-	name = fmt.Sprintf("%s%s", ls.root, name)
 	config["last_updated"] = time.Now().Format(time.RFC3339Nano)
 	ls.pagesLock.Lock()
 	ls.pages[name] = config

@@ -205,7 +205,7 @@ func (r *cmdResponse) Publish(ctx context.Context, topicPrefix string, cmdIndex 
 	for ic, ir := range r.Responses {
 		if r.Errors[ic] != nil {
 			slog.Error("error running command", "command", m.Commands[ic], "device", m.Device, "error", r.Errors[ic])
-			continue
+			ir = nil // Don't keep serving stale data.
 		}
 		if m.webServer != nil {
 			m.webServer.Publish(fmt.Sprintf("%d/%s", cmdIndex+1, m.Commands[ic]), ir)
