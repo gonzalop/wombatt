@@ -69,7 +69,7 @@ func (cmd *MonitorBatteriesCmd) Run(globals *Globals, ctx context.Context) error
 		if err != nil {
 			log.Fatalf("error connecting to MQTT broker at %s: %v\n", cmd.MQTTBroker, err)
 		}
-		defer client.Disconnect(250)
+		defer client.Disconnect(250 * time.Millisecond)
 		go mqttPublish(ctx, client, mqttChannel, cmd, battery.InfoInstance())
 	}
 	if webServer == nil && mqttChannel == nil {

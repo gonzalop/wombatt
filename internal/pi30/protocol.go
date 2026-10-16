@@ -5,6 +5,7 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -63,10 +64,7 @@ func RunCommand(ctx context.Context, port io.ReadWriter, cmd string) (any, error
 			return nil, fmt.Errorf("timed out sending %s", cmd)
 		case resp = <-ch:
 			if resp.strs == nil && resp.err != nil {
-				if attempt > 0 {
-					return nil, lastErr
-				}
-				return nil, resp.err
+				return nil, errors.Join(lastErr, resp.err)
 			}
 		}
 

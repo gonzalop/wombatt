@@ -12,6 +12,7 @@ import (
 	"log/slog"
 	"reflect"
 	"slices"
+	"sync"
 	"time"
 
 	"wombatt/internal/modbus"
@@ -113,11 +114,17 @@ func readIntoStruct(ctx context.Context, result any, reader modbus.RegisterReade
 	return data, nil
 }
 
+// readMu serializes reads so a read abandoned on timeout finishes before the
+// next one touches the shared port. The port's own read timeout bounds the wait.
+var readMu sync.Mutex
+
 func readWithTimeout(ctx context.Context, reader modbus.RegisterReader, timeout time.Duration, id uint8, start uint16, quantityOrCommand uint8) ([]byte, error) {
 	var data []byte
 	var err error
 	result := make(chan struct{}, 1)
 	go func() {
+		readMu.Lock()
+		defer readMu.Unlock()
 		data, err = reader.ReadHoldingRegisters(id, start, quantityOrCommand)
 		result <- struct{}{}
 	}()

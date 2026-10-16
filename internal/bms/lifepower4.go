@@ -96,5 +96,4 @@ type LFP4AlarmInfo struct {
 	FETStatusCode          uint8     `name:"fet_status_code" flags:"0x80,0x40,0x20,0x10,heater,charge current limiter,charge MOS,discharge MOS"`
 	SystemStatusCode       uint8     `name:"system_status_code" flags:"0x80,0x40,0x20,0x10,standby,0x04,charging,discharging"`
 	BalanceStatusCode      uint32    `name:"balance_status_code" flags:"0x80000000,0x40000000,0x20000000,0x10000000,0x08000000,0x04000000,0x02000000,0x01000000,0x00800000,0x00400000,0x00200000,0x00100000,0x00080000,0x00040000,0x00020000,0x00010000,cell 16 equalization on,cell 15 equalization on,cell 14 equalization on,cell 13 equalization on,cell 12 equalization on,cell 11 equalization on,cell 10 equalization on,cell 9 equalization on,cell 8 equalization on,cell 7 equalization on,cell 6 equalization on,cell 5 equalization on,cell 4 equalization on,cell 3 equalization on,cell 2 equalization on,cell 1 equalization on"`
-	_                      uint8     `skip:"1"`
 }

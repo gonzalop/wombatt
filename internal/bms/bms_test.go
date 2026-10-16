@@ -206,7 +206,7 @@ type blockingReader struct {
 }
 
 func (b *blockingReader) ReadHoldingRegisters(id uint8, start uint16, count uint8) ([]byte, error) {
-	time.Sleep(1 * time.Second)
+	time.Sleep(100 * time.Millisecond)
 	return nil, nil
 }
 

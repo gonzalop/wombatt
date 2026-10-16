@@ -57,7 +57,7 @@ func (t *LFP4) readRegisters(id uint8, _ uint16, cid2 uint8) ([]byte, error) {
 		return nil, err
 	}
 	// Remove header info, crc and EOI.
-	data, err := hex.DecodeString(string(ascii[13 : len(ascii)-3]))
+	data, err := hex.DecodeString(string(ascii[13 : len(ascii)-5]))
 	if err != nil {
 		return nil, fmt.Errorf("error decoding ascii data: %w", err)
 	}
@@ -69,7 +69,7 @@ func (t *LFP4) ReadResponse(id uint8) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	ascii := make([]byte, 13+length+5) // 13 for the header, 3 for CHKSUM + EOI
+	ascii := make([]byte, 13+length+5) // 13 for the header, 5 for CHKSUM + EOI
 	copy(ascii[0:13], header)
 	if _, err := io.ReadFull(t.port, ascii[13:]); err != nil {
 		return nil, err

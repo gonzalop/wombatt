@@ -25,6 +25,12 @@ func RunCommands(ctx context.Context, port common.Port, protocol string, id uint
 	var errors []error
 
 	for _, cmd := range commands {
+		// Don't start more commands on the shared port once cancelled.
+		if err := ctx.Err(); err != nil {
+			results = append(results, nil)
+			errors = append(errors, err)
+			continue
+		}
 		type data struct {
 			res any
 			err error

@@ -22,7 +22,7 @@ func RunCommands(ctx context.Context, port common.Port, protocol string, id uint
 
 // RealtimeData holds the values from the "Register Mapping Table" (Input Registers) from 6kXP-Modbus-20231028.pdf.
 type RealtimeData struct {
-	State                 uint16 `modbus:"0" name:"State" values:"0x00:Standby;0x01:Fault;0x02:Programming;0x04:PV connected to grid;0x08:PV charging;0x0C:PV charging connected to the grid;0x10:The battery is connected to the grid;0x14:(PV+ battery) connected to the grid;0x20:AC charging;0x28:(PV+AC) charging;0x40:The battery is off-grid;0x60:Off-grid + battery charging;0x80:PV off-grid;0xC0:(PV+ battery) off-grid;0x88:PV charging + off-grid"`
+	State                 uint16 `modbus:"0" name:"State" values:"0:Standby,1:Fault,2:Programming,4:PV connected to grid,8:PV charging,12:PV charging connected to the grid,16:The battery is connected to the grid,20:(PV+ battery) connected to the grid,32:AC charging,40:(PV+AC) charging,64:The battery is off-grid,96:Off-grid + battery charging,128:PV off-grid,192:(PV+ battery) off-grid,136:PV charging + off-grid"`
 	Vpv1                  uint16 `modbus:"1" name:"PV1 Voltage" unit:"V" multiplier:"0.1" precision:"1"`
 	Vpv2                  uint16 `modbus:"2" name:"PV2 Voltage" unit:"V" multiplier:"0.1" precision:"1"`
 	Vpv3                  uint16 `modbus:"3" name:"PV3 Voltage" unit:"V" multiplier:"0.1" precision:"1"`

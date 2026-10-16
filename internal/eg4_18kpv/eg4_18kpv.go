@@ -22,7 +22,7 @@ func RunCommands(ctx context.Context, port common.Port, protocol string, id uint
 
 // RealtimeData holds the values from the "Register Mapping Table" (Input Registers) from EG4-18KPV-12LV-Modbus-Protocol-input-registers.csv.
 type RealtimeData struct {
-	State                 uint16 `modbus:"0" name:"State" values:"0x00:Standby;0x01:Fault;0x02:Programming;0x04:PV on-grid mode;0x08:PV Charge mode;0x0C:PV Charge+on-grid mode;0x10:Battery on-grid mode;0x14:PV+Battery on-grid mode;0x20:AC Charge mode;0x28:PV+AC charge mode;0x40:Battery off-grid mode;0x80:PV off-grid mode;0xC0:PV+battery off-grid mode;0x88:PV charge +off-grid mode"`
+	State                 uint16 `modbus:"0" name:"State" values:"0:Standby,1:Fault,2:Programming,4:PV on-grid mode,8:PV Charge mode,12:PV Charge+on-grid mode,16:Battery on-grid mode,20:PV+Battery on-grid mode,32:AC Charge mode,40:PV+AC charge mode,64:Battery off-grid mode,128:PV off-grid mode,192:PV+battery off-grid mode,136:PV charge +off-grid mode"`
 	Vpv1                  uint16 `modbus:"1" name:"PV1 Voltage" unit:"V" multiplier:"0.1" precision:"1"`
 	Vpv2                  uint16 `modbus:"2" name:"PV2 Voltage" unit:"V" multiplier:"0.1" precision:"1"`
 	Vpv3                  uint16 `modbus:"3" name:"PV3 Voltage" unit:"V" multiplier:"0.1" precision:"1"`

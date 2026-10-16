@@ -23,6 +23,14 @@ import (
 //go:embed static
 var staticFiles embed.FS
 
+var staticHandler = func() http.Handler {
+	fsys, err := fs.Sub(staticFiles, "static")
+	if err != nil {
+		panic(err) // "static" is embedded above, so this can't fail.
+	}
+	return http.FileServer(http.FS(fsys))
+}()
+
 var metricNameSanitizer = regexp.MustCompile(`[^a-zA-Z0-9_]`)
 
 type page map[string]any
@@ -121,13 +129,7 @@ func (ls *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ls.pagesLock.RUnlock()
 	if !ok {
 		// Serve static files
-		fsys, err := fs.Sub(staticFiles, "static")
-		if err != nil {
-			slog.Error("error in fs.Sub", "error", err)
-			http.Error(w, "500 server error", http.StatusInternalServerError)
-			return
-		}
-		http.FileServer(http.FS(fsys)).ServeHTTP(w, r)
+		staticHandler.ServeHTTP(w, r)
 		return
 	}
 	query := r.URL.Query()

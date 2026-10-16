@@ -141,8 +141,8 @@ func (c *Client) PublishDiscovery(ctx context.Context, topic string, data map[st
 	return c.PublishMap(ctx, topic, compactData, Retain, NoTopicAlias)
 }
 
-func (c *Client) Disconnect(ms time.Duration) {
-	ctx, cancel := context.WithTimeout(context.Background(), ms)
+func (c *Client) Disconnect(timeout time.Duration) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 	_ = c.client.Disconnect(ctx)
 }

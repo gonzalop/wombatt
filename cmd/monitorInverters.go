@@ -58,7 +58,7 @@ func (cmd *MonitorInvertersCmd) Run(globals *Globals, ctx context.Context) error
 			log.Fatalf("error connecting to MQTT broker at %s: %v\n", cmd.MQTTBroker, err)
 
 		}
-		defer client.Disconnect(250)
+		defer client.Disconnect(250 * time.Millisecond)
 	}
 	var webServer *web.Server
 	if len(cmd.WebServerAddress) > 0 {
