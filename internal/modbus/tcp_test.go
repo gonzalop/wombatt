@@ -53,6 +53,14 @@ func TestTCPReadHoldingRegisters(t *testing.T) {
 			fcode:      3,
 			nregisters: 23,
 		},
+		{
+			resp:   "000800000000", // length 0
+			errstr: "invalid frame length: 0",
+		},
+		{
+			resp:   "000900000003018302", // exception: illegal data address
+			errstr: "protocol error: illegal data address",
+		},
 	}
 
 	tid.Store(0) // Reset the transaction counter in tcp.go so we get predictable TIDs

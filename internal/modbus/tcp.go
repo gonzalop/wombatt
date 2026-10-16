@@ -79,12 +79,18 @@ func (t *TCP) ReadTCPResponse(tid uint16, unitID uint8) ([]byte, error) {
 	if header.TID != tid {
 		return nil, fmt.Errorf("unexpected transaction ID: got 0x%04x; want 0x%04x", header.TID, tid)
 	}
+	if header.Length < 3 { // Unit ID, function code, and at least one byte of data.
+		return nil, fmt.Errorf("invalid frame length: %d", header.Length)
+	}
 	rtu := make([]byte, header.Length+2) // Add 2 more bytes because RTUFrame expects a CRC there.
 	if n, err := io.ReadFull(t.port, rtu[0:len(rtu)-2]); err != nil {
 		if err == io.ErrUnexpectedEOF {
 			return nil, fmt.Errorf("short frame: read %d, want at least %d bytes", n, header.Length)
 		}
 		return nil, err
+	}
+	if rtu[1]&0x80 != 0 {
+		return nil, protocolError(rtu[2])
 	}
 	return rtu, nil
 }
