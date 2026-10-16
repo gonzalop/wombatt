@@ -190,7 +190,7 @@ func handleBitgroupsTag(bgroups string, val string) string {
 		}
 		values := val[groupIdx : groupIdx+len(descriptions)]
 		groupIdx += len(descriptions)
-		v, _ := strconv.ParseUint(string(values), 16, 32)
+		v, _ := strconv.ParseUint(string(values), 2, 32)
 		var strs []string
 		gi := 0
 		for m := 7; m >= 0; m-- {

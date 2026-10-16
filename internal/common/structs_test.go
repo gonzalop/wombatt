@@ -105,6 +105,8 @@ func TestTraverseStruct(t *testing.T) {
 		{st: &bitGroup{Fld: ""}},
 		{st: &bitGroup{Fld: "0"}},
 		{st: &bitGroup{Fld: "1100000"}, values: []any{"SCC OK, AC charging"}},
+		{st: &bitGroup{Fld: "00010000"}, values: []any{"Battery over voltage"}},
+		{st: &bitGroup{Fld: "00001000"}, values: []any{"Battery under voltage"}},
 	}
 
 	var fieldCount int
