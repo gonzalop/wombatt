@@ -192,7 +192,7 @@ func addDiscoveryConfig(ctx context.Context, client *mqttha.Client, cmd *Monitor
 		"model":       cmd.BMSType,
 	}
 	f := func(info map[string]string, _ any) {
-		name := info["name"]
+		name := mqttha.Key(info["name"])
 		uniqueID := fmt.Sprintf("%s_battery_%d_%s", cmd.MQTTPrefix, id, name)
 		config := mqttha.DiscoveryConfig(info, stateTopic, uniqueID, device)
 		topic := fmt.Sprintf("%s/sensor/%s_battery%d_%s/config", cmd.MQTTTopicPrefix, cmd.MQTTPrefix, id, name)

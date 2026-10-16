@@ -283,7 +283,7 @@ func addStructDiscoveryConfig(ctx context.Context, m *inverterMonitor, st any, t
 		"model":       m.InverterType,
 	}
 	f := func(info map[string]string, _ any) {
-		name := info["name"]
+		name := mqttha.Key(info["name"])
 		config := mqttha.DiscoveryConfig(info, stateTopic, fmt.Sprintf("%s_%s", tag, name), device)
 		topic := fmt.Sprintf("%s/sensor/%s_%s/config", topicPrefix, tag, name)
 		if err := m.client.PublishDiscovery(ctx, topic, config); err != nil {

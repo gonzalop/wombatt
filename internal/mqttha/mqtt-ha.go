@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -97,6 +98,14 @@ func (c *Client) PublishMap(ctx context.Context, topic string, data map[string]a
 	return token.Wait(pubCtx)
 }
 
+var invalidKeyChars = regexp.MustCompile(`[^A-Za-z0-9_]+`)
+
+// Key turns a field name into a key usable in MQTT topics and unique ids,
+// e.g. "DC/DC Temperature (C)" -> "DC_DC_Temperature_C".
+func Key(name string) string {
+	return strings.Trim(invalidKeyChars.ReplaceAllString(name, "_"), "_")
+}
+
 // DiscoveryConfig returns the Home Assistant discovery config for one struct
 // field, as described by the field info from common.TraverseStruct.
 func DiscoveryConfig(info map[string]string, stateTopic, uniqueID string, device map[string]any) map[string]any {
@@ -105,9 +114,9 @@ func DiscoveryConfig(info map[string]string, stateTopic, uniqueID string, device
 		"has_entity_name":   true,
 		"state_topic":       stateTopic,
 		"name":              strings.ReplaceAll(name, "_", " "),
-		"default_entity_id": "sensor." + uniqueID,
+		"default_entity_id": "sensor." + strings.ToLower(uniqueID),
 		"unique_id":         uniqueID,
-		"value_template":    fmt.Sprintf("{{ value_json.%s }}", name),
+		"value_template":    fmt.Sprintf("{{ value_json['%s'] }}", name),
 		"device":            device,
 	}
 	if dclass := info["dclass"]; dclass != "" {
