@@ -23,7 +23,7 @@ type ModbusReadCmd struct {
 	ID               uint8  `required:"" help:"Device ID"`
 	Start            uint16 `required:"" help:"Start address of the first register to read"`
 	Count            uint8  `required:"" help:"Number of registers to read"`
-	RegisterType     string `default:"holding" help:"valid values are 'input' or 'holding'"`
+	RegisterType     string `default:"holding" enum:"holding,input" help:"valid values are 'input' or 'holding'"`
 	BaudRate         uint   `short:"B" default:"9600" help:"Baud rate"`
 	Protocol         string `default:"auto" enum:"${protocols}" help:"One of ${protocols}"`
 	DeviceType       string `short:"T" default:"serial" enum:"${device_types}" help:"One of ${device_types}"`
@@ -244,6 +244,9 @@ func parseFieldType(fieldType string) (reflect.Type, error) {
 	parts := strings.SplitN(fieldType, "[", 2)
 	if len(parts) == 2 {
 		p := strings.SplitN(parts[1], "]", 2)
+		if len(p) != 2 {
+			return nil, fmt.Errorf("missing ']' in type '%s'", fieldType)
+		}
 		return parseArrayType(p[1], p[0])
 	}
 	return parseSingleType(fieldType)
