@@ -40,10 +40,12 @@ type InverterQueryCmd struct {
 	ModbusID     int           `short:"i" default:"1" help:"Modbus slave ID"`
 }
 
-func (cmd *InverterQueryCmd) Run(globals *Globals) error {
-	ctx := context.Background()
+func (cmd *InverterQueryCmd) Run(globals *Globals, ctx context.Context) error {
 	var failed error
 	for _, dev := range cmd.Address {
+		if ctx.Err() != nil {
+			return nil
+		}
 		err := func(dev string) error {
 			port, err := common.NewPort(dev, cmd.DeviceType, int(cmd.BaudRate), cmd.DataBits, cmd.StopBits, cmd.Parity)
 			if err != nil {

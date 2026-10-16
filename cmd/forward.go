@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"encoding/hex"
 	"fmt"
 	"log"
@@ -20,12 +21,17 @@ type ForwardCmd struct {
 	DeviceType  string `short:"T" default:"serial" enum:"${device_types}" help:"One of ${device_types}"`
 }
 
-func (cmd *ForwardCmd) Run(globals *Globals) error {
+func (cmd *ForwardCmd) Run(globals *Globals, ctx context.Context) error {
 	controller, subordinate, err := cmd.openPorts()
 	if err != nil {
 		log.Fatalf("error initializing: %v\n", err)
 	}
-	cmd.runForever(controller, subordinate)
+	// Closing the ports unblocks any pending read once we are asked to stop.
+	context.AfterFunc(ctx, func() {
+		controller.Close()
+		subordinate.Close()
+	})
+	cmd.run(ctx, controller, subordinate)
 	return nil
 }
 
@@ -49,7 +55,7 @@ func (cmd *ForwardCmd) openPorts() (common.Port, common.Port, error) {
 	return controller, subordinate, nil
 }
 
-func (cmd *ForwardCmd) runForever(controller, subordinate common.Port) {
+func (cmd *ForwardCmd) run(ctx context.Context, controller, subordinate common.Port) {
 	read := func(p common.Port) ([]byte, error) {
 		b := make([]byte, 128)
 		n, err := p.Read(b)
@@ -57,6 +63,9 @@ func (cmd *ForwardCmd) runForever(controller, subordinate common.Port) {
 	}
 
 	reopenOnError := func(err error, p common.Port, d, op string) {
+		if ctx.Err() != nil {
+			return
+		}
 		slog.Error(fmt.Sprintf("error %s", op), "error", err, "file", d)
 		if err := p.ReopenWithBackoff(); err != nil {
 			slog.Error("error reopening", "error", err)
@@ -79,12 +88,12 @@ func (cmd *ForwardCmd) runForever(controller, subordinate common.Port) {
 	}
 
 	go func() {
-		for {
+		for ctx.Err() == nil {
 			readWrite(controller, subordinate, filepath.Base(cmd.Controller), cmd.Subordinate)
 		}
 	}()
 
-	for {
+	for ctx.Err() == nil {
 		readWrite(subordinate, controller, filepath.Base(cmd.Subordinate), cmd.Controller)
 	}
 }

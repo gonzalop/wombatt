@@ -45,6 +45,9 @@ func main() {
 	// Create a context that is canceled on SIGINT or SIGTERM
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
+	// After the first signal, restore the default behavior so a second
+	// Ctrl-C kills a command that is stuck and not watching ctx.
+	context.AfterFunc(ctx, stop)
 
 	kctx := kong.Parse(&cli,
 		kong.Name("wombatt"),
