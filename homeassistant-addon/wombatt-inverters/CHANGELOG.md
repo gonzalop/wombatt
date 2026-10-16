@@ -1,9 +1,33 @@
 # Changelog
 
-## Unreleased
+## 0.8.0 - 2026-10-16
 
 ### ⚠️ Breaking Changes
 - **Solark Lifetime Energy**: The `Total Active Power Low` and `Total Active Power High` fields were replaced by a single `Total Active Power` field. The two halves of the 32-bit counter were published as separate kWh values, which was wrong. Update dashboards or Prometheus queries that used `wombatt_total_active_power_low`/`_high` to use `wombatt_total_active_power`.
+- **EG4 State of Charge**: On EG4 18kPV and 6000XP, the SOC field (register 5, %) is now named `State of Charge`. Before, it shared the name `Battery Capacity` with the Ah capacity (register 97), which overwrote it, so the state of charge never appeared in the web UI, MQTT or metrics.
+- **Solark Serial Number**: The five unnamed serial number byte fields were replaced by a single `serial_number` field. They used to be published under an empty key.
+
+### 🚀 Improvements
+- **Home Assistant Discovery for Solark and EG4**: Field names with spaces, slashes or parentheses (e.g. `PV1 Voltage`, `DC/DC Transformer Temperature`) are now made safe for discovery topics and unique ids, and value templates use the `value_json['...']` form. Before this, Home Assistant rejected these configs and none of the Solark, EG4 18kPV or EG4 6000XP sensors showed up. The MQTT state payload keys did not change, and PI30 topics and unique ids are unchanged.
+- **Inverter Display Precision**: `suggested_display_precision` is now sent in discovery configs for inverter sensors. It used to be dropped.
+- **Clean Shutdown**: Port reconnect backoff now stops as soon as the add-on is stopped. If a USB adapter or TCP gateway was gone, the monitor used to stay in a reconnect loop for up to 40 seconds until it was killed.
+- **Stale Data Removal**: When an inverter stops responding, its readings are removed from the web page and `/metrics`, so Prometheus alerts can fire.
+
+### 🐛 Bug Fixes
+- **PI30 Battery Over Voltage**: Status bit groups are now parsed as binary instead of hex, so "Battery over voltage" is reported.
+- **Solark Crash on Empty Reply**: A short or empty reply to the intrinsic attributes read no longer panics and stops the monitor.
+- **Modbus RTU Exceptions**: Exception replies are parsed correctly, with the right exception code. Before, they ended in a read timeout and a "short frame data" error.
+- **Modbus RTU Reply Checks**: Replies with the wrong device id or function code are dropped with a warning instead of being used as data.
+- **Modbus TCP Robustness**: Short TCP frames no longer panic and stop the monitor, and exception replies now return the device's error instead of "short read".
+
+### 🛠 Maintenance
+- Removed the `cenkalti/backoff` and `howeyc/crc16` dependencies. The PI30 checksum (CRC-16/XMODEM) is now computed in place.
+- Removed dead code and shared the Modbus register-reading code across inverters.
+- Added tests for MQTT key validity and uniqueness across all inverter structs.
+- **Dependency Updates**:
+  - Updated `github.com/gonzalop/mq` to v0.10.0.
+  - Bumped `github.com/alecthomas/kong` to v1.16.1.
+  - Bumped `github.com/stretchr/testify` to v1.12.1.
 
 ## 0.7.2 - 2026-08-07
 

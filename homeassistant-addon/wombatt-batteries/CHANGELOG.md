@@ -1,9 +1,24 @@
 # Changelog
 
-## Unreleased
+## 0.8.0 - 2026-10-16
 
-### ⚠️ Breaking Changes
-- **Solark Lifetime Energy**: The `Total Active Power Low` and `Total Active Power High` fields were replaced by a single `Total Active Power` field. The two halves of the 32-bit counter were published as separate kWh values, which was wrong. Update dashboards or Prometheus queries that used `wombatt_total_active_power_low`/`_high` to use `wombatt_total_active_power`.
+### 🚀 Improvements
+- **Clean Shutdown**: Battery reads and port reconnect backoff now stop as soon as the add-on is stopped. If a USB adapter or TCP gateway was gone, the monitor used to stay in a reconnect loop for up to 40 seconds until it was killed.
+- **Stale Data Removal**: When a battery stops responding, its readings are removed from the web page and `/metrics`, so Prometheus alerts can fire. Battery read errors are now logged.
+
+### 🐛 Bug Fixes
+- **Modbus RTU Shared Bus**: Replies with the wrong device id or function code are dropped with a warning. A late reply from one battery on a shared RS485 bus could be shown as another battery's data.
+- **Modbus RTU Exceptions**: Exception replies are parsed correctly, with the right exception code. Before, they ended in a read timeout and a "short frame data" error.
+- **Modbus TCP Robustness**: Short TCP frames no longer panic and stop the monitor, and exception replies now return the device's error instead of "short read".
+
+### 🛠 Maintenance
+- Removed the `cenkalti/backoff` dependency.
+- Removed dead code and simplified the battery monitor. Battery and inverter monitors now share the Home Assistant discovery code; battery topics and unique ids are unchanged.
+- Added tests for MQTT key validity and uniqueness across all BMS structs.
+- **Dependency Updates**:
+  - Updated `github.com/gonzalop/mq` to v0.10.0.
+  - Bumped `github.com/alecthomas/kong` to v1.16.1.
+  - Bumped `github.com/stretchr/testify` to v1.12.1.
 
 ## 0.7.2 - 2026-08-07
 
