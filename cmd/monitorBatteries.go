@@ -146,11 +146,6 @@ func monitorBatteries(ctx context.Context, mqttChannel chan *batteryInfo, webSer
 		if webServer != nil {
 			webServer.Publish(fmt.Sprintf("%d", id), info)
 		}
-		if mqttChannel == nil && webServer == nil {
-			fmt.Printf("Battery #%d\n===========\n", id)
-			writeBatteryInfo(info)
-			fmt.Println()
-		}
 		success = append(success, id)
 		select {
 		case <-ctx.Done():
