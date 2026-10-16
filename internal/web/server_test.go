@@ -18,10 +18,6 @@ func TestServer(t *testing.T) {
 	defer func() {
 		_ = srv.Shutdown(context.Background())
 	}()
-	// Create a channel to signal server start
-
-	// Publish before Start is a no-op
-	srv.Publish("hola", &Example{Hola: "this is a test"})
 	if err := srv.Start(); err != nil {
 		t.Fatalf("%v", err)
 	}

@@ -28,9 +28,7 @@ var metricNameSanitizer = regexp.MustCompile(`[^a-zA-Z0-9_]`)
 type page map[string]any
 
 type Server struct {
-	root    string
-	started bool
-	err     error
+	root string
 
 	pages     map[string]page
 	rawPages  map[string]map[string]any
@@ -80,13 +78,10 @@ func (ls *Server) Start() error {
 
 	go func() {
 		fmt.Printf("Listening on %v\n", ln.Addr())
-		err := ls.server.Serve(ln)
-		ls.err = err
-		if err != nil && err != http.ErrServerClosed {
+		if err := ls.server.Serve(ln); err != nil && err != http.ErrServerClosed {
 			slog.Error("error calling TCP Serve", "error", err)
 		}
 	}()
-	ls.started = true
 	return nil
 }
 
@@ -94,14 +89,7 @@ func (ls *Server) Shutdown(ctx context.Context) error {
 	return ls.server.Shutdown(ctx)
 }
 
-func (ls *Server) IsRunning() bool {
-	return ls.started && ls.err == nil
-}
-
 func (ls *Server) Publish(name string, data any) {
-	if !ls.IsRunning() {
-		return
-	}
 	name = ls.root + name
 	if data == nil {
 		ls.pagesLock.Lock()
