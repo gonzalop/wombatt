@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+### ⚠️ Breaking Changes
+- **Solark Lifetime Energy**: The `Total Active Power Low` and `Total Active Power High` fields were replaced by a single `Total Active Power` field. The two halves of the 32-bit counter were published as separate kWh values, which was wrong. Update dashboards or Prometheus queries that used `wombatt_total_active_power_low`/`_high` to use `wombatt_total_active_power`.
+
 ## 0.7.2 - 2026-08-07
 
 ### 🐛 Bug Fixes

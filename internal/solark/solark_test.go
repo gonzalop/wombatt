@@ -30,11 +30,11 @@ func TestReadRealtimeData(t *testing.T) {
 	// Block 1: Addr 60-64 (Day Active Power Wh, Total Active Power Wh)
 	// DayActivePowerWh: 100 (0x0064)
 	// TotalActivePowerWhLow: 1000 (0x03E8)
-	// TotalActivePowerWhHigh: 0 (0x0000)
+	// TotalActivePowerWhHigh: 1 (0x0001)
 	data1 := make([]byte, 10)
 	binary.BigEndian.PutUint16(data1[0:2], 100)  // DayActivePowerWh
 	binary.BigEndian.PutUint16(data1[6:8], 1000) // TotalActivePowerWhLow
-	binary.BigEndian.PutUint16(data1[8:10], 0)   // TotalActivePowerWhHigh
+	binary.BigEndian.PutUint16(data1[8:10], 1)   // TotalActivePowerWhHigh
 
 	// Block 2: Addr 79-91 (Grid Frequency, DC/DC Temp, IGBT Temp)
 	// GridFrequency: 5000 (50.00 Hz) (0x1388)
@@ -105,7 +105,7 @@ func TestReadRealtimeData(t *testing.T) {
 	assert.NotNil(t, rtd)
 
 	assert.Equal(t, int16(100), rtd.DayActivePowerWh)
-	assert.Equal(t, uint32(1000), rtd.TotalActivePowerWh())
+	assert.Equal(t, uint32(1<<16+1000), rtd.TotalActivePowerWh)
 	assert.Equal(t, uint16(5000), rtd.GridFrequency)
 	assert.Equal(t, int16(250), rtd.DCDCTemp)
 	assert.Equal(t, int16(300), rtd.IGBTHSCTemp)

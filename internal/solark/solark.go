@@ -24,22 +24,21 @@ func RunCommands(ctx context.Context, port common.Port, protocol string, id uint
 
 // RealtimeData holds the values from the "Real-time Running Data" table.
 type RealtimeData struct {
-	DayActivePowerWh       int16  `modbus:"60" name:"Day Active Power" unit:"kWh" multiplier:"0.1" precision:"1"`
-	TotalActivePowerWhLow  uint16 `modbus:"63" name:"Total Active Power Low" unit:"kWh" multiplier:"0.1" precision:"1"`
-	TotalActivePowerWhHigh uint16 `modbus:"64" name:"Total Active Power High" unit:"kWh" multiplier:"0.1" precision:"1"`
-	GridFrequency          uint16 `modbus:"79" name:"Grid Frequency" unit:"Hz" multiplier:"0.01" precision:"2"`
-	DCDCTemp               int16  `modbus:"90" name:"DC/DC Transformer Temperature" unit:"°C" multiplier:"0.1" precision:"1"`
-	IGBTHSCTemp            int16  `modbus:"91" name:"IGBT Heat Sink Temperature" unit:"°C" multiplier:"0.1" precision:"1"`
-	FaultInfoWord1         uint16 `modbus:"103" name:"Fault Information Word 1" flags:"unknown0,unknown1,unknown2,unknown3,unknown4,unknown5,unknown6,GFDI_Relay_Failure,unknown8,unknown9,unknown10,unknown11,Grid_Mode_changed,DC_OverCurr_Fault,SW_AC_OverCurr_Fault,GFCI_Failure"`
-	FaultInfoWord2         uint16 `modbus:"104" name:"Fault Information Word 2" flags:"unknown16,HW_Ac_OverCurr_Fault,unknown18,Tz_Dc_OverCurr_Fault,unknown20,Tz_EmergStop_Fault,Tz_GFCI_OC_Fault,DC_Insulation_ISO_Fault,unknown24,BusUnbalance_Fault,unknown26,unknown27,Parallel_Fault1,Parallel_Fault2,Parallel_Fault3,Parallel_Fault4"`
-	FaultInfoWord3         uint16 `modbus:"105" name:"Fault Information Word 3" flags:"AC_OverCurr_Fault,AC_Overload_Fault,unknown34,unknown35,unknown36,unknown37,unknown38,unknown39,AC_WU_OverVolt_Fault,unknown41,AC_VW_OverVolt_Fault,unknown43,AC_UV_OverVolt_Fault,Parallel_Aux_Fault,AC_OverFreq_Fault,AC_UnderFreq_Fault"`
-	FaultInfoWord4         uint16 `modbus:"106" name:"Fault Information Word 4" flags:"unknown48,unknown49,unknown50,unknown51,unknown52,unknown53,DC_VoltHigh_Fault,DC_VoltLow_Fault,unknown56,AC_U_GridCurr_High_Fault,unknown58,unknown59,Button_Manual_OFF,AC_B_InductCurr_High_Fault,Arc_Fault,Heatsink_HighTemp_Fault"`
-	CorrectedBattCapacity  uint16 `modbus:"107" name:"Corrected Battery Capacity" unit:"Ah"`
-	DailyPVPow             uint16 `modbus:"108" name:"Daily PV Power" unit:"kWh" multiplier:"0.1" precision:"1"`
-	DCVoltage1             uint16 `modbus:"109" name:"DC Voltage 1" unit:"V" multiplier:"0.1" precision:"1"`
-	DCCurrent1             uint16 `modbus:"110" name:"DC Current 1" unit:"A" multiplier:"0.1" precision:"1"`
-	DCVoltage2             uint16 `modbus:"111" name:"DC Voltage 2" unit:"V" multiplier:"0.1" precision:"1"`
-	DCCurrent2             uint16 `modbus:"112" name:"DC Current 2" unit:"A" multiplier:"0.1" precision:"1"`
+	DayActivePowerWh      int16  `modbus:"60" name:"Day Active Power" unit:"kWh" multiplier:"0.1" precision:"1"`
+	TotalActivePowerWh    uint32 `modbus:"63" name:"Total Active Power" unit:"kWh" multiplier:"0.1" precision:"1"` // Registers 63 (low) and 64 (high)
+	GridFrequency         uint16 `modbus:"79" name:"Grid Frequency" unit:"Hz" multiplier:"0.01" precision:"2"`
+	DCDCTemp              int16  `modbus:"90" name:"DC/DC Transformer Temperature" unit:"°C" multiplier:"0.1" precision:"1"`
+	IGBTHSCTemp           int16  `modbus:"91" name:"IGBT Heat Sink Temperature" unit:"°C" multiplier:"0.1" precision:"1"`
+	FaultInfoWord1        uint16 `modbus:"103" name:"Fault Information Word 1" flags:"unknown0,unknown1,unknown2,unknown3,unknown4,unknown5,unknown6,GFDI_Relay_Failure,unknown8,unknown9,unknown10,unknown11,Grid_Mode_changed,DC_OverCurr_Fault,SW_AC_OverCurr_Fault,GFCI_Failure"`
+	FaultInfoWord2        uint16 `modbus:"104" name:"Fault Information Word 2" flags:"unknown16,HW_Ac_OverCurr_Fault,unknown18,Tz_Dc_OverCurr_Fault,unknown20,Tz_EmergStop_Fault,Tz_GFCI_OC_Fault,DC_Insulation_ISO_Fault,unknown24,BusUnbalance_Fault,unknown26,unknown27,Parallel_Fault1,Parallel_Fault2,Parallel_Fault3,Parallel_Fault4"`
+	FaultInfoWord3        uint16 `modbus:"105" name:"Fault Information Word 3" flags:"AC_OverCurr_Fault,AC_Overload_Fault,unknown34,unknown35,unknown36,unknown37,unknown38,unknown39,AC_WU_OverVolt_Fault,unknown41,AC_VW_OverVolt_Fault,unknown43,AC_UV_OverVolt_Fault,Parallel_Aux_Fault,AC_OverFreq_Fault,AC_UnderFreq_Fault"`
+	FaultInfoWord4        uint16 `modbus:"106" name:"Fault Information Word 4" flags:"unknown48,unknown49,unknown50,unknown51,unknown52,unknown53,DC_VoltHigh_Fault,DC_VoltLow_Fault,unknown56,AC_U_GridCurr_High_Fault,unknown58,unknown59,Button_Manual_OFF,AC_B_InductCurr_High_Fault,Arc_Fault,Heatsink_HighTemp_Fault"`
+	CorrectedBattCapacity uint16 `modbus:"107" name:"Corrected Battery Capacity" unit:"Ah"`
+	DailyPVPow            uint16 `modbus:"108" name:"Daily PV Power" unit:"kWh" multiplier:"0.1" precision:"1"`
+	DCVoltage1            uint16 `modbus:"109" name:"DC Voltage 1" unit:"V" multiplier:"0.1" precision:"1"`
+	DCCurrent1            uint16 `modbus:"110" name:"DC Current 1" unit:"A" multiplier:"0.1" precision:"1"`
+	DCVoltage2            uint16 `modbus:"111" name:"DC Voltage 2" unit:"V" multiplier:"0.1" precision:"1"`
+	DCCurrent2            uint16 `modbus:"112" name:"DC Current 2" unit:"A" multiplier:"0.1" precision:"1"`
 
 	GridSideVoltageL1N           uint16 `modbus:"150" name:"Grid Side Voltage L1-N" unit:"V" multiplier:"0.1" precision:"1"`
 	GridSideVoltageL2N           uint16 `modbus:"151" name:"Grid Side Voltage L2-N" unit:"V" multiplier:"0.1" precision:"1"`
@@ -141,8 +140,7 @@ func ReadRealtimeData(reader modbus.RegisterReader, id uint8) (*RealtimeData, er
 
 	// Populate rtd from data1
 	rtd.DayActivePowerWh = int16(binary.BigEndian.Uint16(data1[0:2]))
-	rtd.TotalActivePowerWhLow = binary.BigEndian.Uint16(data1[6:8])
-	rtd.TotalActivePowerWhHigh = binary.BigEndian.Uint16(data1[8:10])
+	rtd.TotalActivePowerWh = uint32(binary.BigEndian.Uint16(data1[8:10]))<<16 | uint32(binary.BigEndian.Uint16(data1[6:8]))
 
 	// Populate rtd from data2
 	rtd.GridFrequency = binary.BigEndian.Uint16(data2[0:2])
@@ -209,11 +207,6 @@ func ReadRealtimeData(reader modbus.RegisterReader, id uint8) (*RealtimeData, er
 	rtd.GeneratorRelayFrequency = binary.BigEndian.Uint16(data5[20:22])
 
 	return rtd, nil
-}
-
-// TotalActivePowerWh combines the low and high words into a single uint32.
-func (r *RealtimeData) TotalActivePowerWh() uint32 {
-	return uint32(r.TotalActivePowerWhHigh)<<16 | uint32(r.TotalActivePowerWhLow)
 }
 
 // IntrinsicAttributes holds the values from the "Intrinsic Attribute Table".
