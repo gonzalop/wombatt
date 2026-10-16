@@ -21,8 +21,6 @@ import (
 func RunCommands(ctx context.Context, port common.Port, commands []string) ([]any, []error) {
 	var result []any
 	var resultErr []error
-	port.Lock()
-	defer port.Unlock()
 	for i, cmd := range commands {
 		if i > 0 {
 			time.Sleep(100 * time.Millisecond)
