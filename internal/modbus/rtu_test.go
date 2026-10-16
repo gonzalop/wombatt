@@ -2,6 +2,7 @@ package modbus
 
 import (
 	"bytes"
+	"cmp"
 	"encoding/hex"
 	"fmt"
 	"io"
@@ -104,6 +105,7 @@ func TestRTUReadHoldingRegisters(t *testing.T) {
 		fcode      RTUFunction
 		nregisters uint8
 		crc        uint16
+		reqID      uint8 // ID used in the request; defaults to id, or 1.
 	}{
 		{
 			resp:   "0103",
@@ -127,6 +129,11 @@ func TestRTUReadHoldingRegisters(t *testing.T) {
 			crc:        0xf564,
 			nregisters: 23,
 		},
+		{
+			resp:   "03032e4c46502d35312e325631303041682d56312e3000000000005a3032543034323032322d31302d323600000000000064f5",
+			reqID:  1, // Reply from device 3 while waiting for device 1.
+			errstr: "mismatched reply: got id 3 function 03; want id 1 function 03",
+		},
 	}
 
 	for _, tt := range tests {
@@ -136,7 +143,8 @@ func TestRTUReadHoldingRegisters(t *testing.T) {
 		}
 		port := common.NewTestPort(bytes.NewReader(resp), io.Discard, 0)
 		rtu, _ := Reader(port, RTUProtocol, "")
-		data, err := rtu.ReadHoldingRegisters(1, 1, tt.nregisters)
+		reqID := cmp.Or(tt.reqID, tt.id, 1)
+		data, err := rtu.ReadHoldingRegisters(reqID, 1, tt.nregisters)
 		if err != nil && tt.errstr == "" {
 			t.Errorf("read response failed(%s): got %v; want no error", tt.resp, err)
 			continue

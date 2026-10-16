@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
+	"log/slog"
 
 	"wombatt/internal/common"
 )
@@ -207,6 +208,11 @@ func (r *RTU) readRegisters(id uint8, functionCode RTUFunction, start uint16, co
 	frame, err := readRTUResponse(r.port)
 	if err != nil {
 		return nil, err
+	}
+	// A late reply from another device on the bus can arrive with a valid CRC.
+	if frame.ID() != id || frame.Function() != functionCode {
+		slog.Warn("dropping mismatched RTU reply", "got-id", frame.ID(), "got-function", frame.Function(), "want-id", id, "want-function", functionCode)
+		return nil, fmt.Errorf("mismatched reply: got id %d function %02x; want id %d function %02x", frame.ID(), frame.Function(), id, functionCode)
 	}
 	return frame.Data(), nil
 }
