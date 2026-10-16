@@ -193,3 +193,10 @@ func TestValid(t *testing.T) {
 		}
 	}
 }
+
+func TestXmodemCRC(t *testing.T) {
+	// Standard CRC-16/XMODEM check value.
+	if got := xmodemCRC([]byte("123456789")); got != 0x31c3 {
+		t.Errorf("got %04x; want 31c3", got)
+	}
+}
