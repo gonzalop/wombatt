@@ -101,7 +101,15 @@ func getProcessedValue(f reflect.StructField, v reflect.Value) any {
 
 func handleArrayField(f reflect.StructField, v reflect.Value, info map[string]string, mult, name string, cb TraverseStructCallback) {
 	if f.Tag.Get("type") == "string" {
-		cb(info, string(v.Bytes()))
+		if v.Kind() == reflect.Slice || v.CanAddr() {
+			cb(info, string(v.Bytes()))
+			return
+		}
+		buf := make([]byte, v.Len())
+		for k := range v.Len() {
+			buf[k] = byte(v.Index(k).Uint())
+		}
+		cb(info, string(buf))
 		return
 	}
 	aValue := reflect.ValueOf(v.Interface()) // Use v.Interface() to get the underlying array

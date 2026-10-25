@@ -7,6 +7,7 @@ import (
 	"log"
 	"log/slog"
 	"path/filepath"
+	"sync"
 	"time"
 
 	"wombatt/internal/common"
@@ -87,13 +88,22 @@ func (cmd *ForwardCmd) run(ctx context.Context, controller, subordinate common.P
 		}
 	}
 
+	var wg sync.WaitGroup
+	wg.Add(2)
+
 	go func() {
+		defer wg.Done()
 		for ctx.Err() == nil {
 			readWrite(controller, subordinate, filepath.Base(cmd.Controller), cmd.Subordinate)
 		}
 	}()
 
-	for ctx.Err() == nil {
-		readWrite(subordinate, controller, filepath.Base(cmd.Subordinate), cmd.Controller)
-	}
+	go func() {
+		defer wg.Done()
+		for ctx.Err() == nil {
+			readWrite(subordinate, controller, filepath.Base(cmd.Subordinate), cmd.Controller)
+		}
+	}()
+
+	wg.Wait()
 }

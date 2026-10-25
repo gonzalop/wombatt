@@ -56,6 +56,10 @@ type byteArrayStruct struct {
 	Fld [5]byte `type:"string"`
 }
 
+type nestedByteArrayStruct struct {
+	Inner byteArrayStruct
+}
+
 type int16ArrayStruct struct {
 	Fld [3]int16 `multiplier:"5"`
 }
@@ -99,6 +103,7 @@ func TestTraverseStruct(t *testing.T) {
 		{st: &oneFieldArray{Fld: []uint16{1, 2}}, values: []any{1.5, 3.0}},
 		{st: &embeddedStruct{OneFieldFlags: OneFieldFlags{1}, Fld2: 2}, values: []any{"h", 3.0}, nfields: 2},
 		{st: &byteArrayStruct{Fld: [5]byte{'H', 'e', 'l', 'l', 'o'}}, values: []any{"Hello"}},
+		{st: &nestedByteArrayStruct{Inner: byteArrayStruct{Fld: [5]byte{'H', 'e', 'l', 'l', 'o'}}}, values: []any{"Hello"}},
 		{st: &int16ArrayStruct{Fld: [3]int16{10, 15, 42}}, values: []any{50.0, 75.0, 210.0}},
 		{st: &badMultiplier{Fld: [3]int16{1, 2, 3}}, nfields: 0},
 		{st: &emptyMultiplier{Fld: [3]int16{1, 2, 3}}, values: []any{int16(1), int16(2), int16(3)}, nfields: 3},
