@@ -8,6 +8,17 @@ function formatNumber(val, decimals = 1) {
     return num.toFixed(decimals);
 }
 
+// Helper to escape HTML characters and prevent DOM XSS
+function escapeHTML(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 // Function to fetch all metrics
 async function fetchData() {
     try {
@@ -217,6 +228,9 @@ function renderDashboard(devices) {
 
         // 1. Header
         const lastUpdated = meta.lastUpdated ? new Date(meta.lastUpdated).toLocaleTimeString() : 'Unknown';
+        const deviceName = escapeHTML(device.name.replace('/', ''));
+        const safeType = escapeHTML(type);
+        const safeLastUpdated = escapeHTML(lastUpdated);
 
         const headerHtml = `
             <div class="card-header">
@@ -225,9 +239,9 @@ function renderDashboard(devices) {
                         <rect x="2" y="7" width="16" height="10" rx="2" ry="2"></rect>
                         <line x1="22" y1="11" x2="22" y2="13"></line>
                     </svg>
-                    ${device.name.replace('/', '')} <small style="opacity:0.6; font-size:0.8em">(${type})</small>
+                    ${deviceName} <small style="opacity:0.6; font-size:0.8em">(${safeType})</small>
                 </span>
-                <span class="card-timestamp">${lastUpdated}</span>
+                <span class="card-timestamp">${safeLastUpdated}</span>
             </div>
         `;
 
@@ -332,8 +346,8 @@ function renderDashboard(devices) {
             })
             .map(([k, v]) => `
                 <div class="data-row">
-                    <span class="data-key">${k}</span>
-                    <span class="data-val">${v}</span>
+                    <span class="data-key">${escapeHTML(k)}</span>
+                    <span class="data-val">${escapeHTML(v)}</span>
                 </div>
             `).join('');
 
@@ -347,8 +361,16 @@ function renderDashboard(devices) {
     });
 }
 
-// Initial fetch
-fetchData();
+let pollTimer = null;
 
-// Poll every 2 seconds for snappier updates
-setInterval(fetchData, 2000);
+async function poll() {
+    clearTimeout(pollTimer);
+    try {
+        await fetchData();
+    } finally {
+        pollTimer = setTimeout(poll, 2000);
+    }
+}
+
+// Initial fetch and start polling loop
+poll();
