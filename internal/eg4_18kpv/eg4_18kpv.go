@@ -149,41 +149,57 @@ type RealtimeData struct {
 	AFCIMaxArcCH4         uint16 `modbus:"152" name:"AFCI Max Arc CH4"`
 }
 
+func decodeUint32LH(b []byte) uint32 {
+	low := binary.BigEndian.Uint16(b[0:2])
+	high := binary.BigEndian.Uint16(b[2:4])
+	return (uint32(high) << 16) | uint32(low)
+}
+
 // ReadRealtimeData reads the real-time running data from the EG4 18kPV inverter.
 func ReadRealtimeData(reader modbus.RegisterReader, id uint8) (*RealtimeData, error) {
 	// The EG4 18kPV protocol document indicates that registers are read using function code 0x04 (Read Input Registers).
-	// We'll read in multiple blocks to avoid reading too many registers in a single call.
+	// Per protocol specification §2.9, registers are queried in groups of up to 40 registers aligned to group boundaries
+	// (0-39, 40-79, 80-119, 120-152). Queries must not cross group boundaries.
 
-	// Block 1: Registers 0x0000 to 0x0044 (0 to 68 decimal) - 69 registers
-	data1, err := reader.ReadInputRegisters(id, 0, 69) // 69 registers * 2 bytes/register = 138 bytes
+	// Group 0: Registers 0 to 39 - 40 registers (80 bytes)
+	data1, err := reader.ReadInputRegisters(id, 0, 40)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read input registers 0-68: %w", err)
+		return nil, fmt.Errorf("failed to read input registers 0-39: %w", err)
 	}
-	if len(data1) < 138 {
-		return nil, fmt.Errorf("short read from input registers 0-68: got %d bytes, want 138", len(data1))
-	}
-
-	// Block 2: Registers 0x0045 to 0x0078 (69 to 120 decimal) - 52 registers
-	data2, err := reader.ReadInputRegisters(id, 69, 52) // 52 registers * 2 bytes/register = 104 bytes
-	if err != nil {
-		return nil, fmt.Errorf("failed to read input registers 69-120: %w", err)
-	}
-	if len(data2) < 104 {
-		return nil, fmt.Errorf("short read from input registers 69-120: got %d bytes, want 104", len(data2))
+	if len(data1) < 80 {
+		return nil, fmt.Errorf("short read from input registers 0-39: got %d bytes, want 80", len(data1))
 	}
 
-	// Block 3: Registers 0x0079 to 0x0098 (121 to 152 decimal) - 32 registers
-	data3, err := reader.ReadInputRegisters(id, 121, 32) // 32 registers * 2 bytes/register = 64 bytes
+	// Group 1: Registers 40 to 79 - 40 registers (80 bytes)
+	data2, err := reader.ReadInputRegisters(id, 40, 40)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read input registers 121-152: %w", err)
+		return nil, fmt.Errorf("failed to read input registers 40-79: %w", err)
 	}
-	if len(data3) < 64 {
-		return nil, fmt.Errorf("short read from input registers 121-152: got %d bytes, want 64", len(data3))
+	if len(data2) < 80 {
+		return nil, fmt.Errorf("short read from input registers 40-79: got %d bytes, want 80", len(data2))
+	}
+
+	// Group 2: Registers 80 to 119 - 40 registers (80 bytes)
+	data3, err := reader.ReadInputRegisters(id, 80, 40)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read input registers 80-119: %w", err)
+	}
+	if len(data3) < 80 {
+		return nil, fmt.Errorf("short read from input registers 80-119: got %d bytes, want 80", len(data3))
+	}
+
+	// Group 3: Registers 120 to 152 - 33 registers (66 bytes)
+	data4, err := reader.ReadInputRegisters(id, 120, 33)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read input registers 120-152: %w", err)
+	}
+	if len(data4) < 66 {
+		return nil, fmt.Errorf("short read from input registers 120-152: got %d bytes, want 66", len(data4))
 	}
 
 	rtd := &RealtimeData{}
 
-	// Populate rtd from data1
+	// Populate rtd from Group 0 (registers 0-39, data1)
 	rtd.State = binary.BigEndian.Uint16(data1[0:2])
 	rtd.Vpv1 = binary.BigEndian.Uint16(data1[2:4])
 	rtd.Vpv2 = binary.BigEndian.Uint16(data1[4:6])
@@ -224,95 +240,98 @@ func ReadRealtimeData(reader modbus.RegisterReader, id uint8) (*RealtimeData, er
 	rtd.EtouserDay = binary.BigEndian.Uint16(data1[74:76])
 	rtd.Vbus1 = binary.BigEndian.Uint16(data1[76:78])
 	rtd.Vbus2 = binary.BigEndian.Uint16(data1[78:80])
-	rtd.Epv1All = binary.BigEndian.Uint32(data1[80:84])
-	rtd.Epv2All = binary.BigEndian.Uint32(data1[84:88])
-	rtd.Epv3All = binary.BigEndian.Uint32(data1[88:92])
-	rtd.EinvAll = binary.BigEndian.Uint32(data1[92:96])
-	rtd.ErecAll = binary.BigEndian.Uint32(data1[96:100])
-	rtd.EchgAll = binary.BigEndian.Uint32(data1[100:104])
-	rtd.EdischgAll = binary.BigEndian.Uint32(data1[104:108])
-	rtd.EepsAll = binary.BigEndian.Uint32(data1[108:112])
-	rtd.EtogridAll = binary.BigEndian.Uint32(data1[112:116])
-	rtd.EtouserAll = binary.BigEndian.Uint32(data1[116:120])
-	rtd.FaultCode = binary.BigEndian.Uint32(data1[120:124])
-	rtd.WarningCode = binary.BigEndian.Uint32(data1[124:128])
-	rtd.Tinner = binary.BigEndian.Uint16(data1[128:130])
-	rtd.Tradiator1 = binary.BigEndian.Uint16(data1[130:132])
-	rtd.Tradiator2 = binary.BigEndian.Uint16(data1[132:134])
-	rtd.Tbat = binary.BigEndian.Uint16(data1[134:136])
 
-	// Populate rtd from data2
-	rtd.RunningTime = binary.BigEndian.Uint32(data2[0:4])
-	rtd.AutoTest = binary.BigEndian.Uint16(data2[4:6])
-	rtd.WAutoTestLimit = binary.BigEndian.Uint16(data2[6:8])
-	rtd.UwAutoTestDefaultTime = binary.BigEndian.Uint16(data2[8:10])
-	rtd.UwAutoTestTripValue = binary.BigEndian.Uint16(data2[10:12])
-	rtd.UwAutoTestTripTime = binary.BigEndian.Uint16(data2[12:14])
-	rtd.ACInputType = binary.BigEndian.Uint16(data2[16:18])
-	rtd.MaxChgCurr = binary.BigEndian.Uint16(data2[24:26])
-	rtd.MaxDischgCurr = binary.BigEndian.Uint16(data2[26:28])
-	rtd.ChargeVoltRef = binary.BigEndian.Uint16(data2[28:30])
-	rtd.DischgCutVolt = binary.BigEndian.Uint16(data2[30:32])
-	rtd.BatStatus0BMS = binary.BigEndian.Uint16(data2[32:34])
-	rtd.BatStatus1BMS = binary.BigEndian.Uint16(data2[34:36])
-	rtd.BatStatus2BMS = binary.BigEndian.Uint16(data2[36:38])
-	rtd.BatStatus3BMS = binary.BigEndian.Uint16(data2[38:40])
-	rtd.BatStatus4BMS = binary.BigEndian.Uint16(data2[40:42])
-	rtd.BatStatus5BMS = binary.BigEndian.Uint16(data2[42:44])
-	rtd.BatStatus6BMS = binary.BigEndian.Uint16(data2[44:46])
-	rtd.BatStatus7BMS = binary.BigEndian.Uint16(data2[46:48])
-	rtd.BatStatus8BMS = binary.BigEndian.Uint16(data2[48:50])
-	rtd.BatStatus9BMS = binary.BigEndian.Uint16(data2[50:52])
-	rtd.BatStatusINV = binary.BigEndian.Uint16(data2[52:54])
-	rtd.BatParallelNum = binary.BigEndian.Uint16(data2[54:56])
-	rtd.BatCapacity = binary.BigEndian.Uint16(data2[56:58])
-	rtd.BatCurrentBMS = int16(binary.BigEndian.Uint16(data2[58:60]))
-	rtd.FaultCodeBMS = binary.BigEndian.Uint16(data2[60:62])
-	rtd.WarningCodeBMS = binary.BigEndian.Uint16(data2[62:64])
-	rtd.MaxCellVoltBMS = binary.BigEndian.Uint16(data2[64:66])
-	rtd.MinCellVoltBMS = binary.BigEndian.Uint16(data2[66:68])
-	rtd.MaxCellTempBMS = int16(binary.BigEndian.Uint16(data2[68:70]))
-	rtd.MinCellTempBMS = int16(binary.BigEndian.Uint16(data2[70:72]))
-	rtd.BMSFWUpdateState = binary.BigEndian.Uint16(data2[72:74])
-	rtd.CycleCntBMS = binary.BigEndian.Uint16(data2[74:76])
-	rtd.BatVoltSampleINV = binary.BigEndian.Uint16(data2[76:78])
-	rtd.T1 = binary.BigEndian.Uint16(data2[78:80])
-	rtd.T2 = binary.BigEndian.Uint16(data2[80:82])
-	rtd.T3 = binary.BigEndian.Uint16(data2[82:84])
-	rtd.T4 = binary.BigEndian.Uint16(data2[84:86])
-	rtd.T5 = binary.BigEndian.Uint16(data2[86:88])
-	rtd.ParallelInfo = binary.BigEndian.Uint16(data2[88:90])
-	rtd.VBusP = binary.BigEndian.Uint16(data2[102:104])
+	// Populate rtd from Group 1 (registers 40-79, data2)
+	// 32-bit registers are decoded Low word first, High word second per protocol doc §2.8
+	rtd.Epv1All = decodeUint32LH(data2[0:4])
+	rtd.Epv2All = decodeUint32LH(data2[4:8])
+	rtd.Epv3All = decodeUint32LH(data2[8:12])
+	rtd.EinvAll = decodeUint32LH(data2[12:16])
+	rtd.ErecAll = decodeUint32LH(data2[16:20])
+	rtd.EchgAll = decodeUint32LH(data2[20:24])
+	rtd.EdischgAll = decodeUint32LH(data2[24:28])
+	rtd.EepsAll = decodeUint32LH(data2[28:32])
+	rtd.EtogridAll = decodeUint32LH(data2[32:36])
+	rtd.EtouserAll = decodeUint32LH(data2[36:40])
+	rtd.FaultCode = decodeUint32LH(data2[40:44])
+	rtd.WarningCode = decodeUint32LH(data2[44:48])
+	rtd.Tinner = binary.BigEndian.Uint16(data2[48:50])
+	rtd.Tradiator1 = binary.BigEndian.Uint16(data2[50:52])
+	rtd.Tradiator2 = binary.BigEndian.Uint16(data2[52:54])
+	rtd.Tbat = binary.BigEndian.Uint16(data2[54:56])
+	rtd.RunningTime = decodeUint32LH(data2[58:62])
+	rtd.AutoTest = binary.BigEndian.Uint16(data2[62:64])
+	rtd.WAutoTestLimit = binary.BigEndian.Uint16(data2[64:66])
+	rtd.UwAutoTestDefaultTime = binary.BigEndian.Uint16(data2[66:68])
+	rtd.UwAutoTestTripValue = binary.BigEndian.Uint16(data2[68:70])
+	rtd.UwAutoTestTripTime = binary.BigEndian.Uint16(data2[70:72])
+	rtd.ACInputType = binary.BigEndian.Uint16(data2[74:76])
 
-	// Populate rtd from data3
-	rtd.GenVolt = binary.BigEndian.Uint16(data3[0:2])
-	rtd.GenFreq = binary.BigEndian.Uint16(data3[2:4])
-	rtd.GenPower = binary.BigEndian.Uint16(data3[4:6])
-	rtd.EgenDay = binary.BigEndian.Uint16(data3[6:8])
-	rtd.EgenAll = binary.BigEndian.Uint32(data3[8:12])
-	rtd.EPSVoltL1N = binary.BigEndian.Uint16(data3[12:14])
-	rtd.EPSVoltL2N = binary.BigEndian.Uint16(data3[14:16])
-	rtd.PepsL1N = binary.BigEndian.Uint16(data3[16:18])
-	rtd.PepsL2N = binary.BigEndian.Uint16(data3[18:20])
-	rtd.SepsL1N = binary.BigEndian.Uint16(data3[20:22])
-	rtd.SepsL2N = binary.BigEndian.Uint16(data3[22:24])
-	rtd.EepsL1NDay = binary.BigEndian.Uint16(data3[24:26])
-	rtd.EepsL2NDay = binary.BigEndian.Uint16(data3[26:28])
-	rtd.EepsL1NAll = binary.BigEndian.Uint32(data3[28:32])
-	rtd.EepsL2NAll = binary.BigEndian.Uint32(data3[32:36])
-	rtd.AFCICurrCH1 = binary.BigEndian.Uint16(data3[38:40])
-	rtd.AFCICurrCH2 = binary.BigEndian.Uint16(data3[40:42])
-	rtd.AFCICurrCH3 = binary.BigEndian.Uint16(data3[42:44])
-	rtd.AFCICurrCH4 = binary.BigEndian.Uint16(data3[44:46])
-	rtd.AFCIFlag = binary.BigEndian.Uint16(data3[46:48])
-	rtd.AFCIArcCH1 = binary.BigEndian.Uint16(data3[48:50])
-	rtd.AFCIArcCH2 = binary.BigEndian.Uint16(data3[50:52])
-	rtd.AFCIArcCH3 = binary.BigEndian.Uint16(data3[52:54])
-	rtd.AFCIArcCH4 = binary.BigEndian.Uint16(data3[54:56])
-	rtd.AFCIMaxArcCH1 = binary.BigEndian.Uint16(data3[56:58])
-	rtd.AFCIMaxArcCH2 = binary.BigEndian.Uint16(data3[58:60])
-	rtd.AFCIMaxArcCH3 = binary.BigEndian.Uint16(data3[60:62])
-	rtd.AFCIMaxArcCH4 = binary.BigEndian.Uint16(data3[62:64])
+	// Populate rtd from Group 2 (registers 80-119, data3)
+	rtd.MaxChgCurr = binary.BigEndian.Uint16(data3[2:4])
+	rtd.MaxDischgCurr = binary.BigEndian.Uint16(data3[4:6])
+	rtd.ChargeVoltRef = binary.BigEndian.Uint16(data3[6:8])
+	rtd.DischgCutVolt = binary.BigEndian.Uint16(data3[8:10])
+	rtd.BatStatus0BMS = binary.BigEndian.Uint16(data3[10:12])
+	rtd.BatStatus1BMS = binary.BigEndian.Uint16(data3[12:14])
+	rtd.BatStatus2BMS = binary.BigEndian.Uint16(data3[14:16])
+	rtd.BatStatus3BMS = binary.BigEndian.Uint16(data3[16:18])
+	rtd.BatStatus4BMS = binary.BigEndian.Uint16(data3[18:20])
+	rtd.BatStatus5BMS = binary.BigEndian.Uint16(data3[20:22])
+	rtd.BatStatus6BMS = binary.BigEndian.Uint16(data3[22:24])
+	rtd.BatStatus7BMS = binary.BigEndian.Uint16(data3[24:26])
+	rtd.BatStatus8BMS = binary.BigEndian.Uint16(data3[26:28])
+	rtd.BatStatus9BMS = binary.BigEndian.Uint16(data3[28:30])
+	rtd.BatStatusINV = binary.BigEndian.Uint16(data3[30:32])
+	rtd.BatParallelNum = binary.BigEndian.Uint16(data3[32:34])
+	rtd.BatCapacity = binary.BigEndian.Uint16(data3[34:36])
+	rtd.BatCurrentBMS = int16(binary.BigEndian.Uint16(data3[36:38]))
+	rtd.FaultCodeBMS = binary.BigEndian.Uint16(data3[38:40])
+	rtd.WarningCodeBMS = binary.BigEndian.Uint16(data3[40:42])
+	rtd.MaxCellVoltBMS = binary.BigEndian.Uint16(data3[42:44])
+	rtd.MinCellVoltBMS = binary.BigEndian.Uint16(data3[44:46])
+	rtd.MaxCellTempBMS = int16(binary.BigEndian.Uint16(data3[46:48]))
+	rtd.MinCellTempBMS = int16(binary.BigEndian.Uint16(data3[48:50]))
+	rtd.BMSFWUpdateState = binary.BigEndian.Uint16(data3[50:52])
+	rtd.CycleCntBMS = binary.BigEndian.Uint16(data3[52:54])
+	rtd.BatVoltSampleINV = binary.BigEndian.Uint16(data3[54:56])
+	rtd.T1 = binary.BigEndian.Uint16(data3[56:58])
+	rtd.T2 = binary.BigEndian.Uint16(data3[58:60])
+	rtd.T3 = binary.BigEndian.Uint16(data3[60:62])
+	rtd.T4 = binary.BigEndian.Uint16(data3[62:64])
+	rtd.T5 = binary.BigEndian.Uint16(data3[64:66])
+	rtd.ParallelInfo = binary.BigEndian.Uint16(data3[66:68])
+
+	// Populate rtd from Group 3 (registers 120-152, data4)
+	rtd.VBusP = binary.BigEndian.Uint16(data4[0:2])
+	rtd.GenVolt = binary.BigEndian.Uint16(data4[2:4])
+	rtd.GenFreq = binary.BigEndian.Uint16(data4[4:6])
+	rtd.GenPower = binary.BigEndian.Uint16(data4[6:8])
+	rtd.EgenDay = binary.BigEndian.Uint16(data4[8:10])
+	rtd.EgenAll = decodeUint32LH(data4[10:14])
+	rtd.EPSVoltL1N = binary.BigEndian.Uint16(data4[14:16])
+	rtd.EPSVoltL2N = binary.BigEndian.Uint16(data4[16:18])
+	rtd.PepsL1N = binary.BigEndian.Uint16(data4[18:20])
+	rtd.PepsL2N = binary.BigEndian.Uint16(data4[20:22])
+	rtd.SepsL1N = binary.BigEndian.Uint16(data4[22:24])
+	rtd.SepsL2N = binary.BigEndian.Uint16(data4[24:26])
+	rtd.EepsL1NDay = binary.BigEndian.Uint16(data4[26:28])
+	rtd.EepsL2NDay = binary.BigEndian.Uint16(data4[28:30])
+	rtd.EepsL1NAll = decodeUint32LH(data4[30:34])
+	rtd.EepsL2NAll = decodeUint32LH(data4[34:38])
+	rtd.AFCICurrCH1 = binary.BigEndian.Uint16(data4[40:42])
+	rtd.AFCICurrCH2 = binary.BigEndian.Uint16(data4[42:44])
+	rtd.AFCICurrCH3 = binary.BigEndian.Uint16(data4[44:46])
+	rtd.AFCICurrCH4 = binary.BigEndian.Uint16(data4[46:48])
+	rtd.AFCIFlag = binary.BigEndian.Uint16(data4[48:50])
+	rtd.AFCIArcCH1 = binary.BigEndian.Uint16(data4[50:52])
+	rtd.AFCIArcCH2 = binary.BigEndian.Uint16(data4[52:54])
+	rtd.AFCIArcCH3 = binary.BigEndian.Uint16(data4[54:56])
+	rtd.AFCIArcCH4 = binary.BigEndian.Uint16(data4[56:58])
+	rtd.AFCIMaxArcCH1 = binary.BigEndian.Uint16(data4[58:60])
+	rtd.AFCIMaxArcCH2 = binary.BigEndian.Uint16(data4[60:62])
+	rtd.AFCIMaxArcCH3 = binary.BigEndian.Uint16(data4[62:64])
+	rtd.AFCIMaxArcCH4 = binary.BigEndian.Uint16(data4[64:66])
 
 	return rtd, nil
 }
