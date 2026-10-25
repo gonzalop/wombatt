@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"wombatt/internal/common"
 )
@@ -198,5 +199,38 @@ func TestXmodemCRC(t *testing.T) {
 	// Standard CRC-16/XMODEM check value.
 	if got := xmodemCRC([]byte("123456789")); got != 0x31c3 {
 		t.Errorf("got %04x; want 31c3", got)
+	}
+}
+
+type blockingReadWriter struct {
+	readDelay time.Duration
+}
+
+func (b *blockingReadWriter) Read(p []byte) (n int, err error) {
+	time.Sleep(b.readDelay)
+	return 0, fmt.Errorf("read timeout")
+}
+
+func (b *blockingReadWriter) Write(p []byte) (n int, err error) {
+	return len(p), nil
+}
+
+func TestRunCommand_ContextCancellation(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
+	defer cancel()
+
+	rw := &blockingReadWriter{readDelay: 80 * time.Millisecond}
+	start := time.Now()
+	_, err := RunCommand(ctx, rw, "QPIGS")
+	elapsed := time.Since(start)
+
+	if err == nil {
+		t.Fatal("expected error on context timeout")
+	}
+	if !strings.Contains(err.Error(), "timed out") {
+		t.Errorf("expected timeout error, got: %v", err)
+	}
+	if elapsed < 70*time.Millisecond {
+		t.Errorf("expected RunCommand to wait for worker goroutine, elapsed: %v", elapsed)
 	}
 }

@@ -21,8 +21,19 @@ func RunCommands(ctx context.Context, port common.Port, commands []string) ([]an
 	var result []any
 	var resultErr []error
 	for i, cmd := range commands {
+		if ctx.Err() != nil {
+			result = append(result, nil)
+			resultErr = append(resultErr, ctx.Err())
+			continue
+		}
 		if i > 0 {
-			time.Sleep(100 * time.Millisecond)
+			select {
+			case <-ctx.Done():
+				result = append(result, nil)
+				resultErr = append(resultErr, ctx.Err())
+				continue
+			case <-time.After(100 * time.Millisecond):
+			}
 		}
 		r, err := RunCommand(ctx, port, cmd)
 		result = append(result, r)
@@ -34,8 +45,15 @@ func RunCommands(ctx context.Context, port common.Port, commands []string) ([]an
 func RunCommand(ctx context.Context, port io.ReadWriter, cmd string) (any, error) {
 	var lastErr error
 	for attempt := range 3 {
+		if ctx.Err() != nil {
+			return nil, ctx.Err()
+		}
 		if attempt > 0 {
-			time.Sleep(150 * time.Millisecond)
+			select {
+			case <-ctx.Done():
+				return nil, ctx.Err()
+			case <-time.After(150 * time.Millisecond):
+			}
 		}
 		type data struct {
 			strs []string
@@ -45,13 +63,13 @@ func RunCommand(ctx context.Context, port io.ReadWriter, cmd string) (any, error
 		go func() {
 			err := sendCommand(port, cmd)
 			if err != nil {
-				err = fmt.Errorf("send error in %s: %v\n", cmd, err)
+				err = fmt.Errorf("send error in %s: %v", cmd, err)
 				ch <- &data{nil, err}
 				return
 			}
 			resp, err := readResponse(port)
 			if err != nil {
-				err = fmt.Errorf("error reading response in %s: %v\n", cmd, err)
+				err = fmt.Errorf("error reading response in %s: %v", cmd, err)
 				ch <- &data{nil, err}
 				return
 			}
@@ -61,7 +79,8 @@ func RunCommand(ctx context.Context, port io.ReadWriter, cmd string) (any, error
 		var resp *data
 		select {
 		case <-ctx.Done():
-			return nil, fmt.Errorf("timed out sending %s", cmd)
+			<-ch
+			return nil, fmt.Errorf("timed out sending %s: %w", cmd, ctx.Err())
 		case resp = <-ch:
 			if resp.strs == nil && resp.err != nil {
 				return nil, errors.Join(lastErr, resp.err)
@@ -70,7 +89,7 @@ func RunCommand(ctx context.Context, port io.ReadWriter, cmd string) (any, error
 
 		switch len(resp.strs) {
 		case 0:
-			return nil, fmt.Errorf("invalid response %s\n", cmd)
+			return nil, fmt.Errorf("invalid response %s", cmd)
 		case 1:
 			if resp.strs[0] == "NAK" {
 				lastErr = fmt.Errorf("NAK received")
@@ -79,7 +98,7 @@ func RunCommand(ctx context.Context, port io.ReadWriter, cmd string) (any, error
 		}
 		result := StructForCommand(cmd)
 		if err := decodeResponse(resp.strs, result); err != nil {
-			lastErr = fmt.Errorf("decode error for %s: %v\n", cmd, err)
+			lastErr = fmt.Errorf("decode error for %s: %v", cmd, err)
 			continue
 		}
 		return result, nil
@@ -142,7 +161,7 @@ func readResponse(port io.Reader) ([]string, error) {
 	received := uint16(b[len(b)-3])*256 + uint16(b[len(b)-2])
 	if received != computed {
 		slog.Error("crc error", "got", received, "want", computed)
-		return nil, fmt.Errorf("crc error: got %04x, want %04x\n", received, computed)
+		return nil, fmt.Errorf("crc error: got %04x, want %04x", received, computed)
 	}
 	s := string(b[1 : len(b)-3])
 	result := strings.Split(s, " ")

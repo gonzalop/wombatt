@@ -44,6 +44,7 @@ func RunCommands(ctx context.Context, port common.Port, protocol string, id uint
 
 		select {
 		case <-ctx.Done():
+			<-ch
 			results = append(results, nil)
 			errors = append(errors, ctx.Err())
 		case d := <-ch:
