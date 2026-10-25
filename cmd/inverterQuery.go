@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"strings"
@@ -72,18 +73,7 @@ func (cmd *InverterQueryCmd) Run(globals *Globals, ctx context.Context) error {
 				return fmt.Errorf("unsupported inverter type: %s", cmd.InverterType)
 			}
 
-			if results == nil && len(errs) == 1 {
-				return fmt.Errorf("error running commands on port %s: %w", dev, errs[0])
-			}
-			for i, res := range results {
-				command := cmd.Command[i]
-				if errs[i] != nil {
-					return fmt.Errorf("error running %s on port %s: %w", command, dev, errs[i])
-				}
-				fmt.Printf("Device: %s, Command: %s\n%s\n", dev, command, strings.Repeat("=", 40))
-				common.WriteTo(os.Stdout, res)
-			}
-			return nil
+			return processQueryResults(dev, cmd.Command, results, errs, os.Stdout)
 		}(dev)
 		if err != nil {
 			failed = errors.Join(failed, err)
@@ -91,6 +81,21 @@ func (cmd *InverterQueryCmd) Run(globals *Globals, ctx context.Context) error {
 	}
 	if failed != nil {
 		log.Fatal(failed)
+	}
+	return nil
+}
+
+func processQueryResults(dev string, commands []string, results []any, errs []error, out io.Writer) error {
+	if results == nil && len(errs) > 0 {
+		return fmt.Errorf("error running commands on port %s: %w", dev, errors.Join(errs...))
+	}
+	for i, res := range results {
+		command := commands[i]
+		if errs[i] != nil {
+			return fmt.Errorf("error running %s on port %s: %w", command, dev, errs[i])
+		}
+		fmt.Fprintf(out, "Device: %s, Command: %s\n%s\n", dev, command, strings.Repeat("=", 40))
+		common.WriteTo(out, res)
 	}
 	return nil
 }
