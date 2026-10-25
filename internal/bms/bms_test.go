@@ -203,10 +203,13 @@ func TestBatteryInfo(t *testing.T) {
 
 type blockingReader struct {
 	modbus.RegisterReader
+	blockCh chan struct{}
 }
 
 func (b *blockingReader) ReadHoldingRegisters(id uint8, start uint16, count uint8) ([]byte, error) {
-	time.Sleep(100 * time.Millisecond)
+	if b.blockCh != nil {
+		<-b.blockCh
+	}
 	return nil, nil
 }
 
@@ -214,7 +217,9 @@ func TestReadWithTimeout_ContextCancellation(t *testing.T) {
 	ctx, cancel := context.WithCancel(t.Context())
 	cancel()
 
-	reader := &blockingReader{}
+	blockCh := make(chan struct{})
+	defer close(blockCh)
+	reader := &blockingReader{blockCh: blockCh}
 	start := time.Now()
 	_, err := readWithTimeout(ctx, reader, 5*time.Second, 1, 0, 10)
 	duration := time.Since(start)
@@ -228,15 +233,19 @@ func TestReadWithTimeout_ContextCancellation(t *testing.T) {
 }
 
 func TestReadWithTimeout_DoesNotDeadlockNextCall(t *testing.T) {
-	reader := &blockingReader{}
+	blockCh := make(chan struct{})
+	reader := &blockingReader{blockCh: blockCh}
 
-	// Call 1 times out quickly (50ms), leaving reader sleeping in background for 100ms.
+	// Call 1 times out quickly (50ms), leaving reader blocked until blockCh is closed.
 	ctx1, cancel1 := context.WithTimeout(t.Context(), 50*time.Millisecond)
 	defer cancel1()
 	_, err := readWithTimeout(ctx1, reader, 50*time.Millisecond, 1, 0, 10)
 	if err == nil {
 		t.Fatal("expected timeout error on first call")
 	}
+
+	// Unblock Call 1 so it completes and releases readMu.
+	close(blockCh)
 
 	// Call 2 with a responsive reader must succeed and not be deadlocked.
 	responsiveReader := &testReader{data: []byte{0x01, 0x02}}

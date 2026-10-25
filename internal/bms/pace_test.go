@@ -3,6 +3,7 @@ package bms_test
 import (
 	"bytes"
 	"encoding/binary"
+	"errors"
 	"testing"
 	"time"
 
@@ -131,4 +132,61 @@ func TestPaceBMS_ReadExtraInfo(t *testing.T) {
 	assert.Equal(t, expectedExtraInfo.PackSN, pExtraInfo.PackSN)
 
 	client.AssertExpectations(t)
+}
+
+func TestPaceBMS_DefaultProtocol(t *testing.T) {
+	bms := bms_pkg.NewPace()
+	assert.Equal(t, modbus.TCPProtocol, bms.DefaultProtocol("tcp"))
+	assert.Equal(t, modbus.RTUProtocol, bms.DefaultProtocol("serial"))
+	assert.Equal(t, modbus.RTUProtocol, bms.DefaultProtocol("other"))
+}
+
+func TestPaceBMS_ReadInfo_Errors(t *testing.T) {
+	bms := bms_pkg.NewPace()
+
+	t.Run("read failure", func(t *testing.T) {
+		client := new(mockModbusClient)
+		client.On("ReadHoldingRegisters", uint8(0x01), uint16(0x0000), uint8(37)).Return([]byte(nil), errors.New("read error"))
+		info, err := bms.ReadInfo(t.Context(), client, 0x01, 1*time.Second)
+		assert.Error(t, err)
+		assert.Nil(t, info)
+		assert.Contains(t, err.Error(), "read error")
+		client.AssertExpectations(t)
+	})
+
+	t.Run("unexpected data length", func(t *testing.T) {
+		client := new(mockModbusClient)
+		longResponse := make([]byte, 80) // want 74
+		client.On("ReadHoldingRegisters", uint8(0x01), uint16(0x0000), uint8(37)).Return(longResponse, nil)
+		info, err := bms.ReadInfo(t.Context(), client, 0x01, 1*time.Second)
+		assert.Error(t, err)
+		assert.Nil(t, info)
+		assert.Contains(t, err.Error(), "unexpected data length: got 80, want 74")
+		client.AssertExpectations(t)
+	})
+}
+
+func TestPaceBMS_ReadExtraInfo_Errors(t *testing.T) {
+	bms := bms_pkg.NewPace()
+
+	t.Run("read failure", func(t *testing.T) {
+		client := new(mockModbusClient)
+		client.On("ReadHoldingRegisters", uint8(0x01), uint16(150), uint8(30)).Return([]byte(nil), errors.New("read error"))
+		info, err := bms.ReadExtraInfo(t.Context(), client, 0x01, 1*time.Second)
+		assert.Error(t, err)
+		assert.Nil(t, info)
+		assert.Contains(t, err.Error(), "read error")
+		client.AssertExpectations(t)
+	})
+
+	t.Run("unexpected data length", func(t *testing.T) {
+		client := new(mockModbusClient)
+		longResponse := make([]byte, 70) // want 60
+		client.On("ReadHoldingRegisters", uint8(0x01), uint16(150), uint8(30)).Return(longResponse, nil)
+		info, err := bms.ReadExtraInfo(t.Context(), client, 0x01, 1*time.Second)
+		assert.Error(t, err)
+		assert.Nil(t, info)
+		assert.Contains(t, err.Error(), "unexpected data length: got 70, want 60")
+		client.AssertExpectations(t)
+	})
 }
