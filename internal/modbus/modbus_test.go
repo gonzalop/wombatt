@@ -97,26 +97,44 @@ func TestReader(t *testing.T) {
 
 func TestRunCommands_ContextCancellation(t *testing.T) {
 	port := common.NewTestPort(nil, io.Discard, common.TCPDevice)
-	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
-	defer cancel()
+	ctx, cancel := context.WithCancel(context.Background())
 
-	start := time.Now()
-	results, errs := RunCommands(ctx, port, "ModbusTCP", 1, []string{"cmd1", "cmd2"}, func(reader RegisterReader, id uint8, cmd string) (any, error) {
-		time.Sleep(80 * time.Millisecond)
-		return "ok", nil
-	})
-	elapsed := time.Since(start)
+	started := make(chan struct{})
+	unblock := make(chan struct{})
+	goroutineExited := make(chan struct{})
 
-	if len(results) != 2 || len(errs) != 2 {
-		t.Fatalf("expected 2 results and 2 errs, got %d and %d", len(results), len(errs))
+	go func() {
+		results, errs := RunCommands(ctx, port, "ModbusTCP", 1, []string{"cmd1", "cmd2"}, func(reader RegisterReader, id uint8, cmd string) (any, error) {
+			close(started)
+			<-unblock
+			return "ok", nil
+		})
+		if len(results) != 2 || len(errs) != 2 {
+			t.Errorf("expected 2 results and 2 errs, got %d and %d", len(results), len(errs))
+		}
+		if errs[0] == nil || !errors.Is(errs[0], context.Canceled) {
+			t.Errorf("expected Canceled for cmd1, got: %v", errs[0])
+		}
+		if errs[1] == nil || !errors.Is(errs[1], context.Canceled) {
+			t.Errorf("expected Canceled for cmd2, got: %v", errs[1])
+		}
+		close(goroutineExited)
+	}()
+
+	<-started
+	cancel()
+
+	select {
+	case <-goroutineExited:
+		t.Fatal("RunCommands returned before in-flight goroutine was unblocked")
+	default:
 	}
-	if errs[0] == nil || !errors.Is(errs[0], context.DeadlineExceeded) {
-		t.Errorf("expected DeadlineExceeded for cmd1, got: %v", errs[0])
-	}
-	if errs[1] == nil || !errors.Is(errs[1], context.DeadlineExceeded) {
-		t.Errorf("expected DeadlineExceeded for cmd2, got: %v", errs[1])
-	}
-	if elapsed < 70*time.Millisecond {
-		t.Errorf("expected RunCommands to wait for in-flight goroutine, elapsed: %v", elapsed)
+
+	close(unblock)
+
+	select {
+	case <-goroutineExited:
+	case <-time.After(500 * time.Millisecond):
+		t.Fatal("RunCommands did not return after unblocking in-flight goroutine")
 	}
 }

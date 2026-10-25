@@ -164,3 +164,22 @@ func TestRTUReadHoldingRegisters(t *testing.T) {
 		}
 	}
 }
+
+func TestReadRTUResponse_MaxLength256(t *testing.T) {
+	// 1 byte slave ID + 1 byte function code (0x03) + 1 byte count (251 = 0xFB) + 251 bytes data + 2 bytes CRC = 256 bytes
+	data := make([]byte, 256)
+	data[0] = 0x01
+	data[1] = 0x03
+	data[2] = 0xFB
+	crc := CRC(data[:254])
+	data[254] = byte(crc & 0xFF)
+	data[255] = byte((crc >> 8) & 0xFF)
+
+	frame, err := readRTUResponse(bytes.NewReader(data))
+	if err != nil {
+		t.Fatalf("readRTUResponse failed on valid 256-byte frame: %v", err)
+	}
+	if len(frame.RawData()) != 256 {
+		t.Errorf("expected frame length 256, got %d", len(frame.RawData()))
+	}
+}

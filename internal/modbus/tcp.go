@@ -89,6 +89,9 @@ func (t *TCP) ReadTCPResponse(tid uint16, unitID uint8) ([]byte, error) {
 		}
 		return nil, err
 	}
+	if rtu[0] != unitID {
+		return nil, fmt.Errorf("unexpected unit ID: got 0x%02x; want 0x%02x", rtu[0], unitID)
+	}
 	if rtu[1]&0x80 != 0 {
 		return nil, protocolError(rtu[2])
 	}

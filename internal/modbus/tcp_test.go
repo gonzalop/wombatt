@@ -2,6 +2,7 @@ package modbus
 
 import (
 	"bytes"
+	"cmp"
 	"encoding/hex"
 	"fmt"
 	"io"
@@ -71,7 +72,8 @@ func TestTCPReadHoldingRegisters(t *testing.T) {
 		}
 		port := common.NewTestPort(bytes.NewReader(resp), io.Discard, 0)
 		tcp, _ := Reader(port, TCPProtocol, "")
-		data, err := tcp.ReadHoldingRegisters(1, 0, tt.nregisters)
+		reqID := cmp.Or(tt.id, 1)
+		data, err := tcp.ReadHoldingRegisters(reqID, 0, tt.nregisters)
 		if err != nil && tt.errstr == "" {
 			t.Errorf("read response failed(%s): got %v; want no error", tt.resp, err)
 			continue
@@ -89,5 +91,21 @@ func TestTCPReadHoldingRegisters(t *testing.T) {
 		if len(data) != (int(tt.nregisters) * 2) {
 			t.Errorf("%d wrong data length: got %d; want %d", tid, len(data), int(tt.nregisters)*2)
 		}
+	}
+}
+
+func TestTCP_UnitIDMismatch(t *testing.T) {
+	// TID: 0x0001, Protocol: 0x0000, Length: 0x0005 (UnitID + Function + ByteCount + 2 bytes data)
+	// UnitID in response: 0x02, but requested: 0x01
+	resp, _ := hex.DecodeString("000100000005020302002a")
+	port := common.NewTestPort(bytes.NewReader(resp), io.Discard, common.TCPDevice)
+	tcp, _ := Reader(port, TCPProtocol, "")
+	tid.Store(0)
+	_, err := tcp.ReadHoldingRegisters(1, 0, 1)
+	if err == nil {
+		t.Fatal("expected unit ID mismatch error, got nil")
+	}
+	if !strings.Contains(err.Error(), "unexpected unit ID") {
+		t.Errorf("expected error containing 'unexpected unit ID', got: %v", err)
 	}
 }

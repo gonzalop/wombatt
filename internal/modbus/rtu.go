@@ -135,7 +135,7 @@ func readRTUResponse(port io.Reader) (*RTUFrame, error) {
 		return nil, fmt.Errorf("invalid function code: %02x", b[1])
 	}
 	pending += 2 // Add the 2 CRC bytes.
-	if (3 + pending) >= MaxRTUFrameLength {
+	if (3 + pending) > MaxRTUFrameLength {
 		return nil, fmt.Errorf("invalid data reading frame (out of bounds): %s", hex.EncodeToString(b[0:8]))
 	}
 	if n, err := io.ReadFull(port, b[3:3+pending]); err != nil {
