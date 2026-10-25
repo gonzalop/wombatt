@@ -8,6 +8,7 @@ import (
 	"context"
 	"encoding/binary"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"log/slog"
 	"reflect"
@@ -119,21 +120,33 @@ func readIntoStruct(ctx context.Context, result any, reader modbus.RegisterReade
 var readMu sync.Mutex
 
 func readWithTimeout(ctx context.Context, reader modbus.RegisterReader, timeout time.Duration, id uint8, start uint16, quantityOrCommand uint8) ([]byte, error) {
-	var data []byte
-	var err error
-	result := make(chan struct{}, 1)
+	tctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	type readResult struct {
+		data []byte
+		err  error
+	}
+	ch := make(chan readResult, 1)
 	go func() {
 		readMu.Lock()
 		defer readMu.Unlock()
-		data, err = reader.ReadHoldingRegisters(id, start, quantityOrCommand)
-		result <- struct{}{}
+		if tctx.Err() != nil {
+			return
+		}
+		data, err := reader.ReadHoldingRegisters(id, start, quantityOrCommand)
+		if tctx.Err() != nil {
+			return
+		}
+		ch <- readResult{data: data, err: err}
 	}()
 	select {
-	case <-ctx.Done():
-		return nil, ctx.Err()
-	case <-time.After(timeout):
-		return nil, fmt.Errorf("timed out")
-	case <-result:
-		return data, err
+	case <-tctx.Done():
+		if errors.Is(tctx.Err(), context.DeadlineExceeded) {
+			return nil, fmt.Errorf("timed out")
+		}
+		return nil, tctx.Err()
+	case res := <-ch:
+		return res.data, res.err
 	}
 }

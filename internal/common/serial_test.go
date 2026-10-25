@@ -123,3 +123,79 @@ func TestOpenPortWithBackoffStopsOnCancel(t *testing.T) {
 	assert.ErrorIs(t, err, context.DeadlineExceeded)
 	assert.Less(t, time.Since(start), 2*time.Second)
 }
+
+func TestTCPReadDeadline(t *testing.T) {
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer ln.Close()
+
+	go func() {
+		conn, err := ln.Accept()
+		if err == nil {
+			defer conn.Close()
+			time.Sleep(500 * time.Millisecond)
+		}
+	}()
+
+	opts := &common.PortOptions{
+		Type:        common.TCPDevice,
+		Address:     ln.Addr().String(),
+		ReadTimeout: 100 * time.Millisecond,
+	}
+	port, err := common.OpenPort(opts)
+	assert.NoError(t, err)
+	defer port.Close()
+
+	buf := make([]byte, 10)
+	start := time.Now()
+	_, err = port.Read(buf)
+	duration := time.Since(start)
+
+	assert.Error(t, err)
+	assert.Less(t, duration, 300*time.Millisecond)
+}
+
+func TestReopenWithBackoff_Concurrent(t *testing.T) {
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer ln.Close()
+
+	go func() {
+		for {
+			conn, err := ln.Accept()
+			if err != nil {
+				return
+			}
+			conn.Close()
+		}
+	}()
+
+	opts := &common.PortOptions{
+		Type:        common.TCPDevice,
+		Address:     ln.Addr().String(),
+		ReadTimeout: 100 * time.Millisecond,
+	}
+	port, err := common.OpenPort(opts)
+	assert.NoError(t, err)
+	defer port.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
+	defer cancel()
+
+	done := make(chan error, 2)
+	go func() {
+		done <- port.ReopenWithBackoff(ctx)
+	}()
+	go func() {
+		done <- port.ReopenWithBackoff(ctx)
+	}()
+
+	err1 := <-done
+	err2 := <-done
+	assert.NoError(t, err1)
+	assert.NoError(t, err2)
+}

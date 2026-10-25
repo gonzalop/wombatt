@@ -99,15 +99,23 @@ type internalPort struct {
 	ReadWriteCloser io.ReadWriteCloser
 	*PortOptions
 
-	mu sync.Mutex // For protecting ReadWriteCloser pointer access
+	mu       sync.Mutex // For protecting ReadWriteCloser pointer access
+	reopenMu sync.Mutex // For serializing ReopenWithBackoff
 }
 
 func (p *internalPort) Read(b []byte) (n int, err error) {
 	p.mu.Lock()
 	rwc := p.ReadWriteCloser
+	var timeout time.Duration
+	if p.PortOptions != nil {
+		timeout = p.PortOptions.ReadTimeout
+	}
 	p.mu.Unlock()
 	if rwc == nil {
 		return 0, fmt.Errorf("port is closed")
+	}
+	if conn, ok := rwc.(net.Conn); ok && timeout > 0 {
+		_ = conn.SetReadDeadline(time.Now().Add(timeout))
 	}
 	n, err = rwc.Read(b)
 	if n == 0 && err == nil && len(b) > 0 {
@@ -182,6 +190,10 @@ func openTCP(opts *PortOptions) (Port, error) {
 		return nil, err
 	}
 	o := *opts
+	if o.ReadTimeout == 0 {
+		o.ReadTimeout = timeout
+	}
+	_ = conn.SetReadDeadline(time.Now().Add(o.ReadTimeout))
 	return &internalPort{ReadWriteCloser: conn, PortOptions: &o}, nil
 }
 
@@ -248,6 +260,9 @@ func (p *internalPort) Type() DeviceType {
 // ReopenWithBackoff attempts to close the current port and then re-open it
 // with an exponential backoff strategy until it succeeds.
 func (p *internalPort) ReopenWithBackoff(ctx context.Context) error {
+	p.reopenMu.Lock()
+	defer p.reopenMu.Unlock()
+
 	p.close()
 	port, err := OpenPortWithBackoff(ctx, p.PortOptions, 0)
 	if port != nil {
@@ -295,6 +310,9 @@ func (p *internalPort) ResetInputBuffer() error {
 func (p *internalPort) SetReadTimeout(d time.Duration) error {
 	p.mu.Lock()
 	rwc := p.ReadWriteCloser
+	if p.PortOptions != nil {
+		p.PortOptions.ReadTimeout = d
+	}
 	p.mu.Unlock()
 	if rwc == nil {
 		return fmt.Errorf("port is closed")
@@ -303,7 +321,10 @@ func (p *internalPort) SetReadTimeout(d time.Duration) error {
 		return sp.SetReadTimeout(d)
 	}
 	if conn, ok := rwc.(net.Conn); ok {
-		return conn.SetReadDeadline(time.Now().Add(d))
+		if d > 0 {
+			return conn.SetReadDeadline(time.Now().Add(d))
+		}
+		return conn.SetReadDeadline(time.Time{})
 	}
 	return nil
 }

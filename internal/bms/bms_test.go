@@ -226,3 +226,37 @@ func TestReadWithTimeout_ContextCancellation(t *testing.T) {
 		t.Fatalf("expected readWithTimeout to return immediately on context cancellation, took %v", duration)
 	}
 }
+
+func TestReadWithTimeout_DoesNotDeadlockNextCall(t *testing.T) {
+	reader := &blockingReader{}
+
+	// Call 1 times out quickly (50ms), leaving reader sleeping in background for 100ms.
+	ctx1, cancel1 := context.WithTimeout(t.Context(), 50*time.Millisecond)
+	defer cancel1()
+	_, err := readWithTimeout(ctx1, reader, 50*time.Millisecond, 1, 0, 10)
+	if err == nil {
+		t.Fatal("expected timeout error on first call")
+	}
+
+	// Call 2 with a responsive reader must succeed and not be deadlocked.
+	responsiveReader := &testReader{data: []byte{0x01, 0x02}}
+	ctx2, cancel2 := context.WithTimeout(t.Context(), 300*time.Millisecond)
+	defer cancel2()
+
+	data, err := readWithTimeout(ctx2, responsiveReader, 250*time.Millisecond, 1, 0, 10)
+	if err != nil {
+		t.Fatalf("second call failed unexpectedly: %v", err)
+	}
+	if !bytes.Equal(data, []byte{0x01, 0x02}) {
+		t.Fatalf("got data %v, want [1 2]", data)
+	}
+}
+
+type testReader struct {
+	modbus.RegisterReader
+	data []byte
+}
+
+func (r *testReader) ReadHoldingRegisters(id uint8, start uint16, count uint8) ([]byte, error) {
+	return r.data, nil
+}
