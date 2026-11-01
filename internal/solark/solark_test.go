@@ -1,8 +1,16 @@
 package solark
 
 import (
+	"bytes"
+	"context"
 	"encoding/binary"
+	"errors"
+	"fmt"
+	"io"
 	"testing"
+
+	"wombatt/internal/common"
+	"wombatt/internal/modbus"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -162,4 +170,72 @@ func TestReadIntrinsicAttributesShortRead(t *testing.T) {
 	ia, err := ReadIntrinsicAttributes(mockReader, 1)
 	assert.Error(t, err)
 	assert.Nil(t, ia)
+}
+
+func TestReadRealtimeDataErrors(t *testing.T) {
+	blocks := []struct {
+		start uint16
+		count uint8
+	}{
+		{60, 5}, {79, 13}, {103, 10}, {150, 35}, {186, 11},
+	}
+	readErr := errors.New("bus error")
+	for failing, fb := range blocks {
+		for _, short := range []bool{false, true} {
+			name := fmt.Sprintf("block %d error", fb.start)
+			if short {
+				name = fmt.Sprintf("block %d short read", fb.start)
+			}
+			t.Run(name, func(t *testing.T) {
+				mockReader := new(MockRegisterReader)
+				// Blocks before the failing one succeed with zeroed data.
+				for _, b := range blocks[:failing] {
+					mockReader.On("ReadHoldingRegisters", uint8(1), b.start, b.count).
+						Return(make([]byte, int(b.count)*2), nil).Once()
+				}
+				if short {
+					mockReader.On("ReadHoldingRegisters", uint8(1), fb.start, fb.count).
+						Return(make([]byte, int(fb.count)*2-1), nil).Once()
+				} else {
+					mockReader.On("ReadHoldingRegisters", uint8(1), fb.start, fb.count).
+						Return([]byte(nil), readErr).Once()
+				}
+
+				rtd, err := ReadRealtimeData(mockReader, 1)
+				assert.Error(t, err)
+				assert.Nil(t, rtd)
+				if !short {
+					assert.ErrorIs(t, err, readErr)
+				}
+				mockReader.AssertExpectations(t)
+			})
+		}
+	}
+}
+
+func TestReadIntrinsicAttributesReadError(t *testing.T) {
+	readErr := errors.New("bus error")
+	mockReader := new(MockRegisterReader)
+	mockReader.On("ReadHoldingRegisters", uint8(1), uint16(3), uint8(5)).Return([]byte(nil), readErr).Once()
+
+	ia, err := ReadIntrinsicAttributes(mockReader, 1)
+	assert.ErrorIs(t, err, readErr)
+	assert.ErrorContains(t, err, "registers 3-7")
+	assert.Nil(t, ia)
+}
+
+func TestRunCommands(t *testing.T) {
+	// The port has nothing to read, so every register read fails; the
+	// error text shows which reader each command was dispatched to.
+	port := common.NewTestPort(bytes.NewReader(nil), io.Discard, common.TestByteDevice)
+	commands := []string{"RealtimeData", "IntrinsicAttributes", "Bogus"}
+	wantErr := []string{"registers 60-64", "registers 3-7", "unknown solark command: Bogus"}
+
+	results, errs := RunCommands(context.Background(), port, modbus.RTUProtocol, 1, commands)
+	assert.Len(t, results, len(commands))
+	assert.Len(t, errs, len(commands))
+	for i := range commands {
+		assert.Nil(t, results[i], commands[i])
+		assert.ErrorContains(t, errs[i], wantErr[i], commands[i])
+	}
 }
