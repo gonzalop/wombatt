@@ -79,7 +79,7 @@ func TestReadRealtimeData(t *testing.T) {
 
 	// Group 1: Registers 0x0028 to 0x004F (40 to 79 decimal) - 40 registers
 	data2 := make([]byte, 40*2)                         // 80 bytes
-	putUint32LH(data2[(40-40)*2:], 10005)               // Epv1All: 1000.5kWh
+	putUint32LH(data2[0:], 10005)                       // Epv1All (reg 40): 1000.5kWh
 	putUint32LH(data2[(42-40)*2:], 8002)                // Epv2All: 800.2kWh
 	putUint32LH(data2[(44-40)*2:], 5001)                // Epv3All: 500.1kWh
 	putUint32LH(data2[(46-40)*2:], 20003)               // EinvAll: 2000.3kWh
@@ -141,7 +141,7 @@ func TestReadRealtimeData(t *testing.T) {
 
 	// Group 3: Registers 0x0078 to 0x0098 (120 to 152 decimal) - 33 registers
 	data4 := make([]byte, 33*2)                           // 66 bytes
-	binary.BigEndian.PutUint16(data4[(120-120)*2:], 2000) // VBusP: 200.0V
+	binary.BigEndian.PutUint16(data4[0:], 2000)           // VBusP (reg 120): 200.0V
 	binary.BigEndian.PutUint16(data4[(121-120)*2:], 2400) // GenVolt: 240.0V
 	binary.BigEndian.PutUint16(data4[(122-120)*2:], 6000) // GenFreq: 60.00Hz
 	binary.BigEndian.PutUint16(data4[(123-120)*2:], 5000) // GenPower: 5000W
