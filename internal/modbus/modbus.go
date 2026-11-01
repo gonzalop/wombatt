@@ -39,6 +39,11 @@ func RunCommands(ctx context.Context, port common.Port, protocol string, id uint
 
 		go func(cmd string) {
 			res, err := runCmd(reader, id, cmd)
+			if err != nil {
+				// runCmd may return a typed nil pointer (e.g. (*RealtimeData)(nil)),
+				// which is non-nil as an `any`. Drop it so callers can test `== nil`.
+				res = nil
+			}
 			ch <- &data{res, err}
 		}(cmd)
 

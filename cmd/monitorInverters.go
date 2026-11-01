@@ -217,13 +217,13 @@ func (r *cmdResponse) Publish(ctx context.Context, topicPrefix string, cmdIndex 
 	}
 
 	if m.client == nil && m.webServer == nil {
-		publishToStdout(m, r.Responses)
+		publishToStdout(m, r.Responses, r.Errors)
 	}
 }
 
-func publishToStdout(im *inverterMonitor, results []any) {
+func publishToStdout(im *inverterMonitor, results []any, errs []error) {
 	for i, r := range results {
-		if r == nil {
+		if r == nil || (i < len(errs) && errs[i] != nil) {
 			continue
 		}
 		fmt.Printf("%s -> %s\n=======================\n", im.Device, im.Commands[i])

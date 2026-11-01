@@ -15,6 +15,9 @@ import (
 	"go.bug.st/serial"
 )
 
+// reopenPause is how long forward waits after reopening a port that failed.
+var reopenPause = 500 * time.Millisecond
+
 type ForwardCmd struct {
 	Controller  string `name:"controller-port" required:"" help:"Serial port or address of the controller"`
 	Subordinate string `name:"subordinate-port" required:"" help:"Serial port or address of the subordinate device"`
@@ -71,20 +74,28 @@ func (cmd *ForwardCmd) run(ctx context.Context, controller, subordinate common.P
 		if err := p.ReopenWithBackoff(ctx); err != nil {
 			slog.Error("error reopening", "error", err)
 		}
-		time.Sleep(500 * time.Millisecond)
+		select {
+		case <-ctx.Done():
+		case <-time.After(reopenPause):
+		}
 	}
 
 	readWrite := func(from, to common.Port, fname, tname string) {
 		data, err := read(from)
-		if err != nil {
-			reopenOnError(err, from, fname, "reading")
+		if common.IsTimeout(err) && len(data) == 0 {
+			// An idle line is normal: keep waiting instead of reopening the port.
 			return
 		}
-		slog.Info("writing data", "file", fname, "data", hex.EncodeToString(data))
-		_, err = to.Write(data)
+		if len(data) > 0 {
+			// Forward whatever arrived even if the read also returned an error.
+			slog.Info("writing data", "file", fname, "data", hex.EncodeToString(data))
+			if _, werr := to.Write(data); werr != nil {
+				reopenOnError(werr, to, tname, "writing")
+				return
+			}
+		}
 		if err != nil {
-			reopenOnError(err, to, tname, "writing")
-			return
+			reopenOnError(err, from, fname, "reading")
 		}
 	}
 

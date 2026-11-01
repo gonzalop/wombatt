@@ -1,6 +1,7 @@
 package web
 
 import (
+	"bytes"
 	"context"
 	"embed"
 	"encoding/json"
@@ -155,11 +156,10 @@ func (ls *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (ls *Server) ServeMetrics(w http.ResponseWriter, r *http.Request) {
+	// Render under the lock but write after releasing it, so a slow client
+	// can't block Publish (and the pollers behind it).
+	var buf bytes.Buffer
 	ls.pagesLock.RLock()
-	defer ls.pagesLock.RUnlock()
-
-	w.Header().Set("Content-Type", "text/plain; charset=UTF-8")
-
 	for path, page := range ls.rawPages {
 		// Use full path as source so dashboard can find it
 		source := strings.ReplaceAll(path, "\"", "\\\"")
@@ -177,9 +177,13 @@ func (ls *Server) ServeMetrics(w http.ResponseWriter, r *http.Request) {
 			}
 
 			metricName := "wombatt_" + strings.ToLower(metricNameSanitizer.ReplaceAllString(key, "_"))
-			fmt.Fprintf(w, "%s{source=\"%s\"} %v\n", metricName, source, floatVal)
+			fmt.Fprintf(&buf, "%s{source=\"%s\"} %v\n", metricName, source, floatVal)
 		}
 	}
+	ls.pagesLock.RUnlock()
+
+	w.Header().Set("Content-Type", "text/plain; charset=UTF-8")
+	_, _ = w.Write(buf.Bytes())
 }
 
 func filterFields(page map[string]any, fields string) map[string]any {

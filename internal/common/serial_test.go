@@ -153,8 +153,9 @@ func TestTCPReadDeadline(t *testing.T) {
 	_, err = port.Read(buf)
 	duration := time.Since(start)
 
-	assert.Error(t, err)
-	assert.Less(t, duration, 300*time.Millisecond)
+	assert.True(t, common.IsTimeout(err), "want timeout error, got %v", err)
+	// Generous bound: only catches a missing deadline, not scheduler jitter.
+	assert.Less(t, duration, 2*time.Second)
 }
 
 func TestReopenWithBackoff_Concurrent(t *testing.T) {
@@ -198,4 +199,80 @@ func TestReopenWithBackoff_Concurrent(t *testing.T) {
 	err2 := <-done
 	assert.NoError(t, err1)
 	assert.NoError(t, err2)
+}
+
+func TestTCPResetInputBuffer(t *testing.T) {
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer ln.Close()
+
+	sendGood := make(chan struct{})
+	go func() {
+		conn, err := ln.Accept()
+		if err != nil {
+			return
+		}
+		defer conn.Close()
+		_, _ = conn.Write([]byte("stale-bytes"))
+		<-sendGood
+		_, _ = conn.Write([]byte("good"))
+		<-sendGood // wait for the test to finish reading
+	}()
+
+	port, err := common.OpenPort(&common.PortOptions{
+		Type:        common.TCPDevice,
+		Address:     ln.Addr().String(),
+		ReadTimeout: 2 * time.Second,
+	})
+	assert.NoError(t, err)
+	defer port.Close()
+
+	// Read one byte so the stale write is known to be in the receive buffer.
+	one := make([]byte, 1)
+	_, err = port.Read(one)
+	assert.NoError(t, err)
+
+	assert.NoError(t, port.ResetInputBuffer())
+	sendGood <- struct{}{}
+
+	buf := make([]byte, 32)
+	n, err := port.Read(buf)
+	assert.NoError(t, err)
+	assert.Equal(t, "good", string(buf[:n]))
+	close(sendGood)
+}
+
+func TestTCPSetReadTimeoutZeroClearsDeadline(t *testing.T) {
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer ln.Close()
+
+	go func() {
+		conn, err := ln.Accept()
+		if err != nil {
+			return
+		}
+		defer conn.Close()
+		// Reply well after the original 50ms timeout would have fired.
+		time.Sleep(300 * time.Millisecond)
+		_, _ = conn.Write([]byte("late"))
+	}()
+
+	port, err := common.OpenPort(&common.PortOptions{
+		Type:        common.TCPDevice,
+		Address:     ln.Addr().String(),
+		ReadTimeout: 50 * time.Millisecond,
+	})
+	assert.NoError(t, err)
+	defer port.Close()
+
+	assert.NoError(t, port.SetReadTimeout(0))
+	buf := make([]byte, 8)
+	n, err := port.Read(buf)
+	assert.NoError(t, err)
+	assert.Equal(t, "late", string(buf[:n]))
 }

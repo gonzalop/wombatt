@@ -2,6 +2,7 @@ package common
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -95,6 +96,23 @@ var deviceOpen = map[DeviceType]func(*PortOptions) (Port, error){
 	TCPDevice:      openTCP,
 }
 
+// ErrReadTimeout is returned by Port.Read when no data arrived before the read timeout.
+var ErrReadTimeout = errors.New("read timeout")
+
+// IsTimeout reports whether err is a read timeout from any port type.
+func IsTimeout(err error) bool {
+	if errors.Is(err, ErrReadTimeout) || errors.Is(err, os.ErrDeadlineExceeded) {
+		return true
+	}
+	var ne net.Error
+	return errors.As(err, &ne) && ne.Timeout()
+}
+
+// readDeadliner is implemented by net.Conn and by pollable *os.File (e.g. hidraw).
+type readDeadliner interface {
+	SetReadDeadline(time.Time) error
+}
+
 type internalPort struct {
 	ReadWriteCloser io.ReadWriteCloser
 	*PortOptions
@@ -114,12 +132,12 @@ func (p *internalPort) Read(b []byte) (n int, err error) {
 	if rwc == nil {
 		return 0, fmt.Errorf("port is closed")
 	}
-	if conn, ok := rwc.(net.Conn); ok && timeout > 0 {
-		_ = conn.SetReadDeadline(time.Now().Add(timeout))
+	if d, ok := rwc.(readDeadliner); ok && timeout > 0 {
+		_ = d.SetReadDeadline(time.Now().Add(timeout))
 	}
 	n, err = rwc.Read(b)
 	if n == 0 && err == nil && len(b) > 0 {
-		return 0, fmt.Errorf("read timeout")
+		return 0, ErrReadTimeout
 	}
 	return n, err
 }
@@ -175,6 +193,10 @@ func openHidRaw(opts *PortOptions) (Port, error) {
 		return nil, err
 	}
 	o := *opts
+	if o.ReadTimeout == 0 {
+		// Without a deadline a silent device blocks Read forever.
+		o.ReadTimeout = 5 * time.Second
+	}
 	return &internalPort{ReadWriteCloser: f, PortOptions: &o}, nil
 }
 
@@ -320,11 +342,14 @@ func (p *internalPort) SetReadTimeout(d time.Duration) error {
 	if sp, ok := rwc.(serial.Port); ok {
 		return sp.SetReadTimeout(d)
 	}
-	if conn, ok := rwc.(net.Conn); ok {
+	if dl, ok := rwc.(readDeadliner); ok {
+		deadline := time.Time{}
 		if d > 0 {
-			return conn.SetReadDeadline(time.Now().Add(d))
+			deadline = time.Now().Add(d)
 		}
-		return conn.SetReadDeadline(time.Time{})
+		if err := dl.SetReadDeadline(deadline); err != nil && !errors.Is(err, os.ErrNoDeadline) {
+			return err
+		}
 	}
 	return nil
 }
