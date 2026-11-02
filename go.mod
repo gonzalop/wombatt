@@ -3,9 +3,9 @@ module wombatt
 go 1.26.4
 
 require (
-	github.com/alecthomas/kong v1.16.1
+	github.com/alecthomas/kong v1.17.0
 	github.com/alecthomas/kong-yaml v0.2.0
-	github.com/gonzalop/mq v0.10.0
+	github.com/gonzalop/mq v0.11.0
 	github.com/stretchr/testify v1.12.1
 	go.bug.st/serial v1.8.0
 )
@@ -14,6 +14,6 @@ require (
 	github.com/kr/text v0.2.0 // indirect
 	github.com/stretchr/objx v0.5.3 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
-	golang.org/x/sys v0.43.0 // indirect
+	golang.org/x/sys v0.49.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
