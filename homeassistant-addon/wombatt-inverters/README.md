@@ -45,9 +45,10 @@ After installation, go to the **Configuration** tab of the add-on.
 *   `stop_bits`: Number of stop bits for serial port. Default: `1`
 *   `parity`: Parity for serial port (N, E, O). Default: `N`
 *   `modbus_id`: Modbus slave ID (only used for solark, eg4_18kpv, and eg4_6000xp inverters). Default: `1`
-*   `monitors`: Comma-separated list of monitors. Format: `<device>,<commands>,<mqtt_prefix>[,<inverter_type>]`
+*   `monitors`: Space-separated list of monitors. Format of each monitor: `<device>,<commands>,<mqtt_prefix>[,<inverter_type>]`
     *   The `mqtt_prefix` in this string will prefix all sensor names for this inverter (e.g., `eg4_1` creates sensors like `eg4_1_battery_voltage`)
     *   Example: `/dev/ttyUSB0,QPIRI:QPGS1,eg4_1,pi30`
+    *   Two inverters: `/dev/ttyUSB0,QPIRI:QPGS1,eg4_1,pi30 /dev/ttyUSB1,QPIRI:QPGS1,eg4_2,pi30`
 *   `protocol`: Communication protocol (auto, ModbusRTU, ModbusTCP). Default: `auto`
 *   `poll_interval`: Time between polling cycles. Default: `10s`
 *   `read_timeout`: Timeout when reading from devices. Default: `5s`

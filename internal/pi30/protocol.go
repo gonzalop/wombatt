@@ -55,55 +55,45 @@ func RunCommand(ctx context.Context, port io.ReadWriter, cmd string) (any, error
 			case <-time.After(150 * time.Millisecond):
 			}
 		}
-		type data struct {
-			strs []string
-			err  error
-		}
-		ch := make(chan *data, 1)
-		go func() {
-			err := sendCommand(port, cmd)
-			if err != nil {
-				err = fmt.Errorf("send error in %s: %v", cmd, err)
-				ch <- &data{nil, err}
-				return
-			}
-			resp, err := readResponse(port)
-			if err != nil {
-				err = fmt.Errorf("error reading response in %s: %v", cmd, err)
-				ch <- &data{nil, err}
-				return
-			}
-			ch <- &data{resp, nil}
-		}()
-
-		var resp *data
-		select {
-		case <-ctx.Done():
-			<-ch
+		// The port's read timeout bounds this exchange; a reply that arrives
+		// after ctx is done is dropped.
+		strs, err := exchange(port, cmd)
+		if ctx.Err() != nil {
 			return nil, fmt.Errorf("timed out sending %s: %w", cmd, ctx.Err())
-		case resp = <-ch:
-			if resp.strs == nil && resp.err != nil {
-				return nil, errors.Join(lastErr, resp.err)
-			}
+		}
+		if err != nil {
+			return nil, errors.Join(lastErr, err)
 		}
 
-		switch len(resp.strs) {
+		switch len(strs) {
 		case 0:
 			return nil, fmt.Errorf("invalid response %s", cmd)
 		case 1:
-			if resp.strs[0] == "NAK" {
+			if strs[0] == "NAK" {
 				lastErr = fmt.Errorf("NAK received")
 				continue
 			}
 		}
 		result := StructForCommand(cmd)
-		if err := decodeResponse(resp.strs, result); err != nil {
+		if err := decodeResponse(strs, result); err != nil {
 			lastErr = fmt.Errorf("decode error for %s: %v", cmd, err)
 			continue
 		}
 		return result, nil
 	}
 	return nil, lastErr
+}
+
+// exchange sends cmd and reads its response.
+func exchange(port io.ReadWriter, cmd string) ([]string, error) {
+	if err := sendCommand(port, cmd); err != nil {
+		return nil, fmt.Errorf("send error in %s: %v", cmd, err)
+	}
+	resp, err := readResponse(port)
+	if err != nil {
+		return nil, fmt.Errorf("error reading response in %s: %v", cmd, err)
+	}
+	return resp, nil
 }
 
 func StructForCommand(cmd string) any {

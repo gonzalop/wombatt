@@ -149,12 +149,6 @@ type RealtimeData struct {
 	AFCIMaxArcCH4         uint16 `modbus:"152" name:"AFCI Max Arc CH4"`
 }
 
-func decodeUint32LH(b []byte) uint32 {
-	low := binary.BigEndian.Uint16(b[0:2])
-	high := binary.BigEndian.Uint16(b[2:4])
-	return (uint32(high) << 16) | uint32(low)
-}
-
 // ReadRealtimeData reads the real-time running data from the EG4 18kPV inverter.
 func ReadRealtimeData(reader modbus.RegisterReader, id uint8) (*RealtimeData, error) {
 	// The EG4 18kPV protocol document indicates that registers are read using function code 0x04 (Read Input Registers).
@@ -243,23 +237,23 @@ func ReadRealtimeData(reader modbus.RegisterReader, id uint8) (*RealtimeData, er
 
 	// Populate rtd from Group 1 (registers 40-79, data2)
 	// 32-bit registers are decoded Low word first, High word second per protocol doc §2.8
-	rtd.Epv1All = decodeUint32LH(data2[0:4])
-	rtd.Epv2All = decodeUint32LH(data2[4:8])
-	rtd.Epv3All = decodeUint32LH(data2[8:12])
-	rtd.EinvAll = decodeUint32LH(data2[12:16])
-	rtd.ErecAll = decodeUint32LH(data2[16:20])
-	rtd.EchgAll = decodeUint32LH(data2[20:24])
-	rtd.EdischgAll = decodeUint32LH(data2[24:28])
-	rtd.EepsAll = decodeUint32LH(data2[28:32])
-	rtd.EtogridAll = decodeUint32LH(data2[32:36])
-	rtd.EtouserAll = decodeUint32LH(data2[36:40])
-	rtd.FaultCode = decodeUint32LH(data2[40:44])
-	rtd.WarningCode = decodeUint32LH(data2[44:48])
+	rtd.Epv1All = modbus.Uint32LowWordFirst(data2[0:4])
+	rtd.Epv2All = modbus.Uint32LowWordFirst(data2[4:8])
+	rtd.Epv3All = modbus.Uint32LowWordFirst(data2[8:12])
+	rtd.EinvAll = modbus.Uint32LowWordFirst(data2[12:16])
+	rtd.ErecAll = modbus.Uint32LowWordFirst(data2[16:20])
+	rtd.EchgAll = modbus.Uint32LowWordFirst(data2[20:24])
+	rtd.EdischgAll = modbus.Uint32LowWordFirst(data2[24:28])
+	rtd.EepsAll = modbus.Uint32LowWordFirst(data2[28:32])
+	rtd.EtogridAll = modbus.Uint32LowWordFirst(data2[32:36])
+	rtd.EtouserAll = modbus.Uint32LowWordFirst(data2[36:40])
+	rtd.FaultCode = modbus.Uint32LowWordFirst(data2[40:44])
+	rtd.WarningCode = modbus.Uint32LowWordFirst(data2[44:48])
 	rtd.Tinner = binary.BigEndian.Uint16(data2[48:50])
 	rtd.Tradiator1 = binary.BigEndian.Uint16(data2[50:52])
 	rtd.Tradiator2 = binary.BigEndian.Uint16(data2[52:54])
 	rtd.Tbat = binary.BigEndian.Uint16(data2[54:56])
-	rtd.RunningTime = decodeUint32LH(data2[58:62])
+	rtd.RunningTime = modbus.Uint32LowWordFirst(data2[58:62])
 	rtd.AutoTest = binary.BigEndian.Uint16(data2[62:64])
 	rtd.WAutoTestLimit = binary.BigEndian.Uint16(data2[64:66])
 	rtd.UwAutoTestDefaultTime = binary.BigEndian.Uint16(data2[66:68])
@@ -308,7 +302,7 @@ func ReadRealtimeData(reader modbus.RegisterReader, id uint8) (*RealtimeData, er
 	rtd.GenFreq = binary.BigEndian.Uint16(data4[4:6])
 	rtd.GenPower = binary.BigEndian.Uint16(data4[6:8])
 	rtd.EgenDay = binary.BigEndian.Uint16(data4[8:10])
-	rtd.EgenAll = decodeUint32LH(data4[10:14])
+	rtd.EgenAll = modbus.Uint32LowWordFirst(data4[10:14])
 	rtd.EPSVoltL1N = binary.BigEndian.Uint16(data4[14:16])
 	rtd.EPSVoltL2N = binary.BigEndian.Uint16(data4[16:18])
 	rtd.PepsL1N = binary.BigEndian.Uint16(data4[18:20])
@@ -317,8 +311,8 @@ func ReadRealtimeData(reader modbus.RegisterReader, id uint8) (*RealtimeData, er
 	rtd.SepsL2N = binary.BigEndian.Uint16(data4[24:26])
 	rtd.EepsL1NDay = binary.BigEndian.Uint16(data4[26:28])
 	rtd.EepsL2NDay = binary.BigEndian.Uint16(data4[28:30])
-	rtd.EepsL1NAll = decodeUint32LH(data4[30:34])
-	rtd.EepsL2NAll = decodeUint32LH(data4[34:38])
+	rtd.EepsL1NAll = modbus.Uint32LowWordFirst(data4[30:34])
+	rtd.EepsL2NAll = modbus.Uint32LowWordFirst(data4[34:38])
 	rtd.AFCICurrCH1 = binary.BigEndian.Uint16(data4[40:42])
 	rtd.AFCICurrCH2 = binary.BigEndian.Uint16(data4[42:44])
 	rtd.AFCICurrCH3 = binary.BigEndian.Uint16(data4[44:46])

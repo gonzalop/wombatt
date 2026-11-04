@@ -39,25 +39,23 @@ func (m *mockReader) ReadHoldingRegisters(id uint8, addr uint16, count uint8) ([
 	return nil, fmt.Errorf("ReadHoldingRegisters not implemented for mockReader")
 }
 
-// Helper function to convert uint16 to little-endian byte slice
+// u16ToBytes encodes one register the way Modbus sends it: high byte first.
 func u16ToBytes(val uint16) []byte {
 	buf := make([]byte, 2)
-	binary.LittleEndian.PutUint16(buf, val)
+	binary.BigEndian.PutUint16(buf, val)
 	return buf
 }
 
-// Helper function to convert uint32 to little-endian byte slice (two uint16 registers)
+// u32ToBytes encodes a 32-bit value as two big-endian registers, low word first.
 func u32ToBytes(val uint32) []byte {
 	buf := make([]byte, 4)
-	binary.LittleEndian.PutUint32(buf, val)
+	binary.BigEndian.PutUint16(buf[0:2], uint16(val))
+	binary.BigEndian.PutUint16(buf[2:4], uint16(val>>16))
 	return buf
 }
 
-// Helper function to convert int16 to little-endian byte slice
 func i16ToBytes(val int16) []byte {
-	buf := make([]byte, 2)
-	binary.LittleEndian.PutUint16(buf, uint16(val))
-	return buf
+	return u16ToBytes(uint16(val))
 }
 
 func TestReadRealtimeData(t *testing.T) {
@@ -243,6 +241,21 @@ func TestReadRealtimeData(t *testing.T) {
 
 	// Assert that all fields match
 	assert.Equal(t, expectedData, *actualData)
+}
+
+// TestReadRealtimeDataWireFormat checks decoding against raw bytes as a device sends them.
+func TestReadRealtimeDataWireFormat(t *testing.T) {
+	reader := newMockReader()
+	for i := range uint16(200) {
+		reader.setRegisterData(i, []byte{0, 0})
+	}
+	reader.setRegisterData(4, []byte{0x02, 0x12})  // Vbat: 530 (53.0 V)
+	reader.setRegisterData(40, []byte{0x56, 0x78}) // Epv1All low word
+	reader.setRegisterData(41, []byte{0x12, 0x34}) // Epv1All high word
+	rtd, err := ReadRealtimeData(reader, 1)
+	assert.NoError(t, err)
+	assert.Equal(t, uint16(530), rtd.Vbat)
+	assert.Equal(t, uint32(0x12345678), rtd.Epv1All)
 }
 
 func TestReadRealtimeDataError(t *testing.T) {

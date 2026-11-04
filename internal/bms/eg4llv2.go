@@ -2,9 +2,6 @@ package bms
 
 import (
 	"context"
-	"encoding/hex"
-	"fmt"
-	"log/slog"
 	"time"
 
 	"wombatt/internal/modbus"
@@ -38,22 +35,9 @@ func (*EG4LLv2) DefaultProtocol(deviceType string) string {
 	}
 }
 
-func (e *EG4LLv2) readAndValidateEG4ModbusInfo(ctx context.Context, result any, reader modbus.RegisterReader, id uint8, timeout time.Duration, address uint16, count uint8) error {
-	data, err := readIntoStruct(ctx, result, reader, timeout, id, address, count)
-	if err != nil {
-		return err
-	}
-	expectedLen := int(count) * 2
-	if len(data) != expectedLen {
-		slog.Debug("data received", "data", hex.EncodeToString(data))
-		return fmt.Errorf("unexpected data length: got %d, want %d", len(data), expectedLen)
-	}
-	return nil
-}
-
 func (e *EG4LLv2) ReadInfo(ctx context.Context, reader modbus.RegisterReader, id uint8, timeout time.Duration) (any, error) {
 	var info EG4ModbusBatteryInfo
-	if err := e.readAndValidateEG4ModbusInfo(ctx, &info, reader, id, timeout, modbusBasicInfoAddress, modbusBasicInfoRegisterCount); err != nil {
+	if err := readModbusStruct(ctx, &info, reader, id, timeout, modbusBasicInfoAddress, modbusBasicInfoRegisterCount); err != nil {
 		return nil, err
 	}
 	result := EG4BatteryInfo{EG4ModbusBatteryInfo: info}
@@ -64,7 +48,7 @@ func (e *EG4LLv2) ReadInfo(ctx context.Context, reader modbus.RegisterReader, id
 
 func (e *EG4LLv2) ReadExtraInfo(ctx context.Context, reader modbus.RegisterReader, id uint8, timeout time.Duration) (any, error) {
 	var extra EG4ModbusExtraBatteryInfo
-	if err := e.readAndValidateEG4ModbusInfo(ctx, &extra, reader, id, timeout, modbusExtraInfoAddress, modbusExtraInfoRegisterCount); err != nil {
+	if err := readModbusStruct(ctx, &extra, reader, id, timeout, modbusExtraInfoAddress, modbusExtraInfoRegisterCount); err != nil {
 		return nil, err
 	}
 	return &extra, nil

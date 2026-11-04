@@ -71,11 +71,9 @@ if [ -n "${INVERTERS_PROTOCOL}" ]; then
 fi
 
 if [ -n "${INVERTERS_MONITORS}" ]; then
-  # shellcheck disable=SC2001
-  MONITORS_LIST=$(echo "${INVERTERS_MONITORS}" | tr ',' ' ')
-  for monitor in ${MONITORS_LIST}; do
-    WOMBATT_ARGS+=("${monitor}")
-  done
+  # Monitors are separated by spaces; each monitor uses commas internally.
+  read -ra MONITORS_LIST <<< "${INVERTERS_MONITORS}"
+  WOMBATT_ARGS+=("${MONITORS_LIST[@]}")
 fi
 
 # We don't print full args to avoid accidental leakage (even though we moved secrets to ENV)

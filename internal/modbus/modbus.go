@@ -6,6 +6,7 @@ package modbus
 
 import (
 	"context"
+	"encoding/binary"
 	"fmt"
 
 	"wombatt/internal/common"
@@ -31,33 +32,26 @@ func RunCommands(ctx context.Context, port common.Port, protocol string, id uint
 			errors = append(errors, err)
 			continue
 		}
-		type data struct {
-			res any
-			err error
+		// The port's read timeout bounds this call; a result that arrives
+		// after ctx is done is dropped.
+		res, err := runCmd(reader, id, cmd)
+		if ctxErr := ctx.Err(); ctxErr != nil {
+			res, err = nil, ctxErr
+		} else if err != nil {
+			// runCmd may return a typed nil pointer (e.g. (*RealtimeData)(nil)),
+			// which is non-nil as an `any`. Drop it so callers can test `== nil`.
+			res = nil
 		}
-		ch := make(chan *data, 1)
-
-		go func(cmd string) {
-			res, err := runCmd(reader, id, cmd)
-			if err != nil {
-				// runCmd may return a typed nil pointer (e.g. (*RealtimeData)(nil)),
-				// which is non-nil as an `any`. Drop it so callers can test `== nil`.
-				res = nil
-			}
-			ch <- &data{res, err}
-		}(cmd)
-
-		select {
-		case <-ctx.Done():
-			<-ch
-			results = append(results, nil)
-			errors = append(errors, ctx.Err())
-		case d := <-ch:
-			results = append(results, d.res)
-			errors = append(errors, d.err)
-		}
+		results = append(results, res)
+		errors = append(errors, err)
 	}
 	return results, errors
+}
+
+// Uint32LowWordFirst decodes a 32-bit value sent as two big-endian registers,
+// low word first.
+func Uint32LowWordFirst(b []byte) uint32 {
+	return uint32(binary.BigEndian.Uint16(b[2:4]))<<16 | uint32(binary.BigEndian.Uint16(b[0:2]))
 }
 
 const (

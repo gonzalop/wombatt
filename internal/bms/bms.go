@@ -115,6 +115,20 @@ func readIntoStruct(ctx context.Context, result any, reader modbus.RegisterReade
 	return data, nil
 }
 
+// readModbusStruct reads count registers at address into result and checks
+// that the device sent exactly that many.
+func readModbusStruct(ctx context.Context, result any, reader modbus.RegisterReader, id uint8, timeout time.Duration, address uint16, count uint8) error {
+	data, err := readIntoStruct(ctx, result, reader, timeout, id, address, count)
+	if err != nil {
+		return err
+	}
+	if want := int(count) * 2; len(data) != want {
+		slog.Debug("data received", "data", hex.EncodeToString(data))
+		return fmt.Errorf("unexpected data length: got %d, want %d", len(data), want)
+	}
+	return nil
+}
+
 // readMu serializes reads so a read abandoned on timeout finishes before the
 // next one touches the shared port. The port's own read timeout bounds the wait.
 var readMu sync.Mutex

@@ -6,7 +6,11 @@ import (
 	"github.com/alecthomas/kong"
 )
 
-var Version = "dev" // Default version, overridden by -ldflags
+// Version and BuildDate are set at build time with -ldflags.
+var (
+	Version   = "dev"
+	BuildDate = ""
+)
 
 type Globals struct {
 	Config   kong.ConfigFlag `help:"Location of client config files" type:"path"`
@@ -19,7 +23,11 @@ type VersionFlag bool
 func (v VersionFlag) Decode(ctx *kong.DecodeContext) error { return nil }
 func (v VersionFlag) IsBool() bool                         { return true }
 func (v VersionFlag) BeforeApply(app *kong.Kong, vars kong.Vars) error {
-	fmt.Println(Version)
+	if BuildDate != "" {
+		fmt.Printf("%s (built %s)\n", Version, BuildDate)
+	} else {
+		fmt.Println(Version)
+	}
 	app.Exit(0)
 	return nil
 }

@@ -73,13 +73,11 @@ const (
 
 // DeviceTypeFromString maps string representations of device types to their DeviceType constants.
 var DeviceTypeFromString = map[string]DeviceType{
-	"test":   TestByteDevice,
 	"serial": SerialDevice,
 	"hidraw": HidRawDevice,
 	"tcp":    TCPDevice,
 }
 
-// PortOptions contains the port name and the settings used when opening it.
 // PortOptions contains the necessary parameters for opening a communication port.
 type PortOptions struct {
 	*serial.Mode // Mode contains serial port settings like BaudRate, DataBits, etc.
@@ -219,7 +217,6 @@ func openTCP(opts *PortOptions) (Port, error) {
 	return &internalPort{ReadWriteCloser: conn, PortOptions: &o}, nil
 }
 
-// Port adds one more functions opening a port with retries and exponential backoff.
 // Port defines the interface for a communication port (e.g., serial, TCP, HID).
 type Port interface {
 	io.ReadWriteCloser

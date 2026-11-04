@@ -40,6 +40,8 @@ func (t *TCP) ReadInputRegisters(id uint8, start uint16, count uint8) ([]byte, e
 }
 
 func (t *TCP) readRegisters(id uint8, functionCode RTUFunction, start uint16, count uint8) ([]byte, error) {
+	// Drop any late reply to an earlier request that timed out.
+	_ = t.port.ResetInputBuffer()
 	raw := buildReadRequestRTUFrame(id, functionCode, start, uint16(count))
 	tf := &TCPRTUHeader{
 		TID:    uint16(tid.Add(1) & 0x0ffff),

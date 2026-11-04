@@ -11,20 +11,6 @@ import (
 	"time"
 
 	"wombatt/internal/common"
-	"wombatt/internal/eg4_18kpv"
-	"wombatt/internal/eg4_6000xp"
-	"wombatt/internal/pi30"
-	"wombatt/internal/solark"
-)
-
-// InverterType represents the type of inverter protocol to use.
-type InverterType string
-
-const (
-	InverterTypePI30      InverterType = "pi30"
-	InverterTypeSolark    InverterType = "solark"
-	InverterTypeEG418KPV  InverterType = "eg4_18kpv"
-	InverterTypeEG46000XP InverterType = "eg4_6000xp"
 )
 
 type InverterQueryCmd struct {
@@ -36,12 +22,13 @@ type InverterQueryCmd struct {
 	Parity       string        `help:"Parity for serial port (N, E, O)" default:"N"`
 	ReadTimeout  time.Duration `short:"t" default:"5s" help:"Per inverter timeout for processing all the commands being sent"`
 	DeviceType   string        `short:"T" default:"serial" enum:"${device_types}" help:"One of ${device_types}"`
-	InverterType InverterType  `short:"I" default:"pi30" enum:"pi30,solark,eg4_18kpv,eg4_6000xp" help:"Type of inverter protocol (pi30, solark, eg4_18kpv, eg4_6000xp)"`
+	InverterType string        `short:"I" default:"pi30" enum:"${inverter_types}" help:"Type of inverter protocol. One of ${inverter_types}"`
 	Protocol     string        `short:"R" default:"auto" enum:"ModbusRTU,ModbusTCP,auto" help:"Modbus protocol (auto, ModbusRTU, ModbusTCP)"`
 	ModbusID     int           `short:"i" default:"1" help:"Modbus slave ID"`
 }
 
 func (cmd *InverterQueryCmd) Run(globals *Globals, ctx context.Context) error {
+	driver := inverterDrivers[cmd.InverterType] // kong's enum only allows known types.
 	var failed error
 	for _, dev := range cmd.Address {
 		if ctx.Err() != nil {
@@ -57,22 +44,7 @@ func (cmd *InverterQueryCmd) Run(globals *Globals, ctx context.Context) error {
 			tctx, cancel := context.WithTimeout(ctx, cmd.ReadTimeout)
 			defer cancel()
 
-			var results []any
-			var errs []error
-
-			switch cmd.InverterType {
-			case InverterTypePI30:
-				results, errs = pi30.RunCommands(tctx, port, cmd.Command)
-			case InverterTypeSolark:
-				results, errs = solark.RunCommands(tctx, port, cmd.Protocol, uint8(cmd.ModbusID), cmd.Command)
-			case InverterTypeEG418KPV:
-				results, errs = eg4_18kpv.RunCommands(tctx, port, cmd.Protocol, uint8(cmd.ModbusID), cmd.Command)
-			case InverterTypeEG46000XP:
-				results, errs = eg4_6000xp.RunCommands(tctx, port, cmd.Protocol, uint8(cmd.ModbusID), cmd.Command)
-			default:
-				return fmt.Errorf("unsupported inverter type: %s", cmd.InverterType)
-			}
-
+			results, errs := driver.run(tctx, port, cmd.Protocol, uint8(cmd.ModbusID), cmd.Command)
 			return processQueryResults(dev, cmd.Command, results, errs, os.Stdout)
 		}(dev)
 		if err != nil {

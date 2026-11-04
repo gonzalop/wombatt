@@ -35,6 +35,8 @@ func logSetup(levelName string) {
 	}
 	logger := slog.New(slog.NewTextHandler(os.Stderr, opts))
 	slog.SetDefault(logger)
+	// The log package is only used for log.Fatal, so report it as an error.
+	slog.SetLogLoggerLevel(slog.LevelError)
 }
 
 func main() {
@@ -60,9 +62,10 @@ func main() {
 		kong.Bind(&cli.Globals),
 		kong.BindTo(ctx, (*context.Context)(nil)),
 		kong.Vars{
-			"bms_types":    "EG4LLv2,lifepower4,lifepowerv2,pacemodbus",
-			"device_types": "serial,hidraw,tcp",
-			"protocols":    "auto,ModbusRTU,ModbusTCP,lifepower4",
+			"bms_types":      "EG4LLv2,lifepower4,lifepowerv2,pacemodbus",
+			"device_types":   "serial,hidraw,tcp",
+			"inverter_types": cmd.InverterTypes(),
+			"protocols":      "auto,ModbusRTU,ModbusTCP,lifepower4",
 		})
 	logSetup(cli.Globals.LogLevel)
 	err := kctx.Run()

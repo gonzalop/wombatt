@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"log/slog"
@@ -11,11 +12,8 @@ import (
 	"time"
 
 	"wombatt/internal/common"
-	"wombatt/internal/eg4_18kpv"
-	"wombatt/internal/eg4_6000xp"
 	"wombatt/internal/mqttha"
 	"wombatt/internal/pi30"
-	"wombatt/internal/solark"
 	"wombatt/internal/web"
 )
 
@@ -118,44 +116,29 @@ func runInverterMonitor(ctx context.Context, cmd *MonitorInvertersCmd, monitors 
 					port, err := common.NewPort(m.Device, cmd.DeviceType, int(cmd.BaudRate), cmd.DataBits, cmd.StopBits, cmd.Parity)
 					if err != nil {
 						slog.Error("error opening device", "device", m.Device, "error", err)
-						responses[i] = &cmdResponse{nil, []error{err}, m}
+						responses[i] = newCmdResponse(m, nil, []error{err})
 						return
 					}
 					defer port.Close()
 					ctx_to, cancel := context.WithTimeout(ctx, cmd.ReadTimeout)
 					defer cancel()
 
-					var results []any
-					var errors []error
-
 					slog.Info("fetching info from inverter", "inverter-name", m.Device, "inverter-type", m.InverterType, "commands", m.Commands)
-
-					switch m.InverterType {
-					case "pi30":
-						results, errors = pi30.RunCommands(ctx_to, port, m.Commands)
-					case "solark":
-						// For Solark, the supported commands are "RealtimeData" and "IntrinsicAttributes".
-						results, errors = solark.RunCommands(ctx_to, port, cmd.Protocol, uint8(cmd.ModbusID), m.Commands)
-					case "eg4_18kpv":
-						results, errors = eg4_18kpv.RunCommands(ctx_to, port, cmd.Protocol, uint8(cmd.ModbusID), m.Commands)
-					case "eg4_6000xp":
-						results, errors = eg4_6000xp.RunCommands(ctx_to, port, cmd.Protocol, uint8(cmd.ModbusID), m.Commands)
-					default:
-						errors = append(errors, fmt.Errorf("unknown inverter type: %s", m.InverterType))
-					}
+					// getMonitors already checked that the inverter type exists.
+					results, errs := inverterDrivers[m.InverterType].run(ctx_to, port, cmd.Protocol, uint8(cmd.ModbusID), m.Commands)
 
 					if ctx.Err() != nil {
 						return
 					}
 
-					responses[i] = &cmdResponse{results, errors, m}
+					r := newCmdResponse(m, results, errs)
+					responses[i] = r
 
 					okCommands := []string{}
-					for k := range errors {
-						if errors[k] != nil {
-							continue
+					for k, err := range r.Errors {
+						if err == nil {
+							okCommands = append(okCommands, m.Commands[k])
 						}
-						okCommands = append(okCommands, m.Commands[k])
 					}
 					slog.Info("publishing info from inverter", "inverter-name", m.Device, "commands", okCommands)
 				}(i, m)
@@ -185,6 +168,25 @@ type cmdResponse struct {
 	Responses []any
 	Errors    []error
 	monitor   *inverterMonitor
+}
+
+// newCmdResponse makes one result and one error per command of m. When a
+// failure returns fewer entries (port not opened, no reader), every missing
+// command gets an error, so Publish still clears its old data.
+func newCmdResponse(m *inverterMonitor, results []any, errs []error) *cmdResponse {
+	n := len(m.Commands)
+	r := &cmdResponse{Responses: make([]any, n), Errors: make([]error, n), monitor: m}
+	copy(r.Responses, results)
+	copy(r.Errors, errs)
+	for i := range n {
+		if r.Responses[i] == nil && r.Errors[i] == nil {
+			r.Errors[i] = errors.Join(errs...)
+			if r.Errors[i] == nil {
+				r.Errors[i] = fmt.Errorf("no response for %s", m.Commands[i])
+			}
+		}
+	}
+	return r
 }
 
 func (r *cmdResponse) ValidateResponses() {
@@ -235,38 +237,8 @@ func publishToStdout(im *inverterMonitor, results []any, errs []error) {
 func invertersDiscoveryConfig(ctx context.Context, mqttTopicPrefix string, monitors []*inverterMonitor) {
 	for _, m := range monitors {
 		for _, c := range m.Commands {
-			var st any
-			switch m.InverterType {
-			case "pi30":
-				st = pi30.StructForCommand(c)
-			case "solark":
-				// For Solark, we publish the entire RealtimeData and IntrinsicAttributes structs.
-				// We don't have individual commands like PI30, so we'll use placeholder names.
-				if c == "RealtimeData" {
-					st = &solark.RealtimeData{}
-				} else if c == "IntrinsicAttributes" {
-					st = &solark.IntrinsicAttributes{}
-				} else {
-					continue // Skip unknown commands for Solark
-				}
-			case "eg4_18kpv":
-				if c == "RealtimeData" {
-					st = &eg4_18kpv.RealtimeData{}
-				} else {
-					continue // Skip unknown commands
-				}
-			case "eg4_6000xp":
-				if c == "RealtimeData" {
-					st = &eg4_6000xp.RealtimeData{}
-				} else {
-					continue // Skip unknown commands
-				}
-			default:
-				continue // Skip unknown inverter types
-			}
-
-			switch st.(type) {
-			case *pi30.EmptyResponse:
+			st := inverterDrivers[m.InverterType].discoveryStruct(c)
+			if st == nil {
 				continue
 			}
 			addStructDiscoveryConfig(ctx, m, st, mqttTopicPrefix)
@@ -293,15 +265,14 @@ func addStructDiscoveryConfig(ctx context.Context, m *inverterMonitor, st any, t
 	common.TraverseStruct(st, f)
 }
 
-func (im *inverterMonitor) publishToMQTT(ctx context.Context, mqttTopicPrefix string, results []any, errors []error) {
+func (im *inverterMonitor) publishToMQTT(ctx context.Context, mqttTopicPrefix string, results []any, errs []error) {
 	config := make(map[string]any)
 	f := func(info map[string]string, value any) {
 		config[info["name"]] = value
 	}
 	for i, st := range results {
-		if errors[i] != nil {
-			slog.Error("error running command", "commandIndex", i, "error", errors[i])
-			continue
+		if errs[i] != nil {
+			continue // Publish already logged it.
 		}
 		common.TraverseStruct(st, f)
 	}
@@ -341,8 +312,8 @@ func getMonitors(args []string) ([]*inverterMonitor, error) {
 		if len(p) > 3 {
 			inverterType = p[3]
 		}
-		if inverterType != "pi30" && inverterType != "solark" && inverterType != "eg4_18kpv" && inverterType != "eg4_6000xp" {
-			return nil, fmt.Errorf("invalid inverter type: '%s'. Must be 'pi30', 'solark', 'eg4_18kpv' or 'eg4_6000xp'", inverterType)
+		if _, ok := inverterDrivers[inverterType]; !ok {
+			return nil, fmt.Errorf("invalid inverter type: '%s'. Must be one of %s", inverterType, InverterTypes())
 		}
 		monitors = append(monitors, &inverterMonitor{
 			Device:       dev,

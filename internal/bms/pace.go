@@ -2,9 +2,6 @@ package bms
 
 import (
 	"context"
-	"encoding/hex"
-	"fmt"
-	"log/slog"
 	"time"
 
 	"wombatt/internal/modbus"
@@ -38,22 +35,9 @@ func (*Pace) DefaultProtocol(deviceType string) string {
 	}
 }
 
-func (e *Pace) readAndValidatePaceModbusInfo(ctx context.Context, result any, reader modbus.RegisterReader, id uint8, timeout time.Duration, address uint16, count uint8) error {
-	data, err := readIntoStruct(ctx, result, reader, timeout, id, address, count)
-	if err != nil {
-		return err
-	}
-	expectedLen := int(count) * 2
-	if len(data) != expectedLen {
-		slog.Debug("data received", "data", hex.EncodeToString(data))
-		return fmt.Errorf("unexpected data length: got %d, want %d", len(data), expectedLen)
-	}
-	return nil
-}
-
 func (e *Pace) ReadInfo(ctx context.Context, reader modbus.RegisterReader, id uint8, timeout time.Duration) (any, error) {
 	var info PaceModbusBatteryInfo
-	if err := e.readAndValidatePaceModbusInfo(ctx, &info, reader, id, timeout, paceBasicInfoAddress, paceBasicInfoRegisterCount); err != nil {
+	if err := readModbusStruct(ctx, &info, reader, id, timeout, paceBasicInfoAddress, paceBasicInfoRegisterCount); err != nil {
 		return nil, err
 	}
 	result := PaceBatteryInfo{PaceModbusBatteryInfo: info}
@@ -63,7 +47,7 @@ func (e *Pace) ReadInfo(ctx context.Context, reader modbus.RegisterReader, id ui
 
 func (e *Pace) ReadExtraInfo(ctx context.Context, reader modbus.RegisterReader, id uint8, timeout time.Duration) (any, error) {
 	var extra PaceModbusExtraBatteryInfo
-	if err := e.readAndValidatePaceModbusInfo(ctx, &extra, reader, id, timeout, paceExtraInfoAddress, paceExtraInfoRegisterCount); err != nil {
+	if err := readModbusStruct(ctx, &extra, reader, id, timeout, paceExtraInfoAddress, paceExtraInfoRegisterCount); err != nil {
 		return nil, err
 	}
 	return &extra, nil
@@ -71,7 +55,7 @@ func (e *Pace) ReadExtraInfo(ctx context.Context, reader modbus.RegisterReader, 
 
 type PaceModbusBatteryInfo struct {
 	// The following fields must be in the same order as the Modbus registers available
-	// starting at address 0 and reading 39 registers.
+	// starting at address 0 and reading 37 registers.
 	// Reference at https://github.com/gonzalop/wombatt/blob/main/docs/ref/PACE-BMS-Modbus-Protocol-for-RS485-V1.3-20170627.pdf
 	Current           int16      `name:"current" dclass:"current" unit:"A" multiplier:"0.01" precision:"2" icon:"mdi:current-dc"`
 	Voltage           uint16     `name:"battery_voltage" dclass:"voltage" unit:"V" multiplier:"0.01" precision:"2"`

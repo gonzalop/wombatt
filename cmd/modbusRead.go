@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
+	"io"
 	"log"
 	"log/slog"
 	"os"
@@ -120,7 +121,7 @@ func (cmd *ModbusReadCmd) Run(globals *Globals) error {
 	if cmd.OutputFormat == "" {
 		fmt.Printf("%v ID#%d:\n%s\n", cmd.Address, cmd.ID, hex.Dump(data))
 	} else {
-		if err := printRegisters(cmd.OutputFormat, data); err != nil {
+		if err := printRegisters(os.Stdout, cmd.OutputFormat, data); err != nil {
 			log.Fatal(err.Error())
 		}
 	}
@@ -149,7 +150,7 @@ func readOutputFormatFile(fileName string) (string, error) {
 	return strings.Join(lines, ","), nil
 }
 
-func printRegisters(format string, data []byte) error {
+func printRegisters(w io.Writer, format string, data []byte) error {
 	var fields []reflect.StructField
 	for ii, v := range strings.Split(format, ",") {
 		s := strings.TrimSpace(v)
@@ -200,16 +201,12 @@ func printRegisters(format string, data []byte) error {
 
 	inst, err := createStruct(fields, data)
 	if err != nil {
-		log.Fatalf("%v: check the output format syntax\n", err.Error())
+		return fmt.Errorf("%v: check the output format syntax", err)
 	}
-	if err := printStruct(inst); err != nil {
-		log.Fatal(err.Error())
-	}
-
-	return nil
+	return printStruct(w, inst)
 }
 
-func printStruct(inst any) (err error) {
+func printStruct(w io.Writer, inst any) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("%v", r)
@@ -217,7 +214,7 @@ func printStruct(inst any) (err error) {
 	}()
 
 	cb := func(info map[string]string, val any) {
-		fmt.Fprintf(os.Stdout, "%s: %v%s\n", info["desc"], val, info["unit"])
+		fmt.Fprintf(w, "%s: %v%s\n", info["desc"], val, info["unit"])
 	}
 	common.TraverseStruct(inst, cb)
 	return nil

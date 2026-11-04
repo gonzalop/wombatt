@@ -49,7 +49,7 @@ configuration:
         description: "Communication protocol (auto, ModbusRTU, ModbusTCP)."
       monitors:
         name: Monitors
-        description: "List of monitors. Format: device,commands,mqtt_prefix[,type] (e.g. /dev/ttyUSB0,QPIRI:QPGS1,eg4_1,pi30)."
+        description: "Space-separated list of monitors. Format of each: device,commands,mqtt_prefix[,type] (e.g. /dev/ttyUSB0,QPIRI:QPGS1,eg4_1,pi30)."
       poll_interval:
         name: Poll Interval
         description: "Interval between data polls (e.g., 10s)."
