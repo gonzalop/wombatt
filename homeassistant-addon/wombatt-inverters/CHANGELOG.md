@@ -1,5 +1,38 @@
 # Changelog
 
+## 0.9.0 - 2026-11-04
+
+### ⚠️ Breaking Changes
+- **EG4 6000XP Values**: Registers are now decoded big-endian, as the device sends them, and 32-bit values low word first. Before, every 16-bit reading had its bytes swapped, so the published values were wrong. Expect all 6000XP readings to change, and reset any history or alerts built on the old values.
+- **EG4 18kPV 32-bit Values**: 32-bit counters (lifetime energy and similar) are now decoded low word first, as the protocol spec says. They were wrong before.
+
+### 🚀 Improvements
+- **EG4 18kPV Reads**: Input registers are read in blocks aligned to the 40-register groups the protocol requires (0-39, 40-79, 80-119, 120-152). Some devices rejected the old reads with Modbus exception 0x02.
+- **Stale Data Removal**: When a port can't be opened or the reader can't be set up, that inverter's old readings are now removed from the web page and `/metrics`.
+- **Hung Devices**: hidraw devices now have a 5 second read timeout, and TCP connections use the configured read timeout. A device that stopped answering could block the monitor forever.
+- **Quieter Logs**: A failed command is logged once instead of twice when MQTT is enabled.
+
+### 🐛 Bug Fixes
+- **Monitors Option**: The `monitors` option is now split on spaces only. Each monitor uses commas internally, so the documented example (`/dev/ttyUSB0,QPIRI:QPGS1,eg4_1,pi30`) failed at startup. Separate several inverters with spaces.
+- **EG4 State Names**: The EG4 18kPV and 6000XP `State` field now shows names (e.g. "PV charging") instead of the raw number.
+- **PI30 Machine Type**: `machine_type` now shows grid-tie, off-grid or hybrid instead of the raw number.
+- **PI30 Retry Errors**: An I/O error on a retry is no longer hidden behind the previous NAK error. Both are reported.
+- **MQTT Disconnect**: The disconnect timeout on shutdown was 250 nanoseconds instead of 250 milliseconds.
+- **Crash on Failed Reads**: A failed EG4 or Solark read no longer crashes the monitor when neither MQTT nor the web server is enabled.
+- **Modbus TCP**: Late replies are discarded before each request, and replies from a different unit id are rejected. Behind a TCP gateway, a late reply could be read as the answer to the next request.
+- **Modbus RTU**: 256-byte frames, the largest size allowed, are no longer rejected.
+- **Web Dashboard**: Device names and values are escaped before display, and a slow refresh can no longer overlap the next one. A slow `/metrics` client no longer delays updates.
+- **Reconnect Race**: Two reconnect attempts at the same time no longer leak a file descriptor.
+
+### 🛠 Maintenance
+- `wombatt --version` now prints the build date.
+- Shutdown now waits for in-flight commands, so they no longer leak goroutines.
+- More tests for Solark, Modbus and port handling. Fixed flaky tests.
+- **Dependency Updates**:
+  - Updated `github.com/gonzalop/mq` to v0.11.0.
+  - Bumped `github.com/alecthomas/kong` to v1.17.0.
+  - Bumped `golang.org/x/sys` to v0.49.0.
+
 ## 0.8.0 - 2026-10-16
 
 ### ⚠️ Breaking Changes

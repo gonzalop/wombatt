@@ -1,5 +1,30 @@
 # Changelog
 
+## 0.9.0 - 2026-11-04
+
+### ⚠️ Breaking Changes
+- **Pace Warning Flags**: `WarningFlag` had 15 labels for 16 bits, so bits 14 to 0 had the wrong names ("environment high temp" was missing, and "charging high temp" was labeled "discharging low temp"). Labels now follow the PACE V1.3 spec. Update any automations that match on the old warning text.
+
+### 🚀 Improvements
+- **Hung Devices**: TCP connections now use the configured read timeout, and hidraw devices default to 5 seconds. A battery that stopped answering could block the monitor forever.
+
+### 🐛 Bug Fixes
+- **Overlapping Reads**: A read abandoned on timeout now finishes before the next read uses the port, and queued reads that already timed out are dropped. Before, they could mix replies between batteries or deadlock later reads.
+- **Lifepower4 Alarm Info**: The checksum and end-of-message bytes are no longer included in the parsed data.
+- **MQTT Disconnect**: The disconnect timeout on shutdown was 250 nanoseconds instead of 250 milliseconds.
+- **Web Dashboard**: Device names and values are escaped before display, and a slow refresh can no longer overlap the next one. A slow `/metrics` client no longer delays updates.
+- **Reconnect Race**: Two reconnect attempts at the same time no longer leak a file descriptor.
+- **String Fields**: Model, serial and firmware strings nested inside another struct no longer cause a crash.
+
+### 🛠 Maintenance
+- `wombatt --version` now prints the build date.
+- The EG4-LL v2 and Pace drivers share their read-and-check code.
+- More Pace error-path tests. Fixed flaky tests.
+- **Dependency Updates**:
+  - Updated `github.com/gonzalop/mq` to v0.11.0.
+  - Bumped `github.com/alecthomas/kong` to v1.17.0.
+  - Bumped `golang.org/x/sys` to v0.49.0.
+
 ## 0.8.0 - 2026-10-16
 
 ### 🚀 Improvements
